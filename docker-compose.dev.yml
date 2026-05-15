@@ -1,0 +1,65 @@
+services:
+
+  olivia-mongo-db:
+    image: mongo:8.0.9
+    container_name: olivia-mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - olivia-mongo-db:/data/db
+    networks:
+      - olivia-network
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=olivia
+      - MONGO_INITDB_ROOT_PASSWORD=olivia
+      - MONGO_INITDB_DATABASE=olivia
+      - TZ=Europe/Rome
+
+  olivia-mongo-compass:
+    image: haohanyang/compass-web:0.2.5
+    container_name: olivia-mongo-compass
+    ports:
+      - "8080:8080"
+    networks:
+      - olivia-network
+    environment:
+      - CW_MONGO_URI=mongodb://olivia:olivia@olivia-mongo-db:27017/olivia?authSource=admin
+
+  olivia-backend:
+    build: ./olivia-backend
+    container_name: olivia-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./olivia-backend:/app
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - olivia-network
+    environment:
+      - MONGODB_URL=mongodb://olivia:olivia@olivia-mongo-db:27017/olivia?authSource=admin
+      - MONGODB_DB=olivia
+      - DEBUG=true
+    depends_on:
+      - olivia-mongo-db
+
+  olivia-frontend:
+    build: ./olivia-frontend
+    container_name: olivia-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./olivia-frontend:/app
+      - /app/node_modules
+    networks:
+      - olivia-network
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - olivia-backend
+
+volumes:
+  olivia-mongo-db:
+
+networks:
+  olivia-network:
+    name: olivia-network

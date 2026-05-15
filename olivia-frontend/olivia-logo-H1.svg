@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80" viewBox="0 0 240 80" role="img" aria-label="olivia">
+  
+  <g transform="translate(0, 4)">
+    <ellipse cx="30" cy="40" rx="22" ry="28" fill="#4A5528"></ellipse>
+    <ellipse cx="23" cy="30" rx="5" ry="7" fill="#6B7A3A" opacity="0.55"></ellipse>
+    <path d="M30 12 C 30 8, 30 6, 30 3" stroke="#4A5528" stroke-width="1.6" stroke-linecap="round" fill="none"></path>
+    <path d="M30 4 C 34 2, 38 2, 41 0 C 40 4, 36 6, 31 6 Z" fill="#6B7A3A"></path>
+  </g>
+  
+  <text x="56" y="54" font-family="Fraunces, &#39;Times New Roman&#39;, serif" font-size="52" font-weight="500" fill="#4A5528" letter-spacing="-1">livia</text>
+</svg>

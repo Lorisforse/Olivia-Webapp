@@ -1,0 +1,5 @@
+[project]
+name = "olivia-api"
+version = "0.1.0"
+description = "FastAPI backend for Olivia"
+requires-python = ">=3.12"
