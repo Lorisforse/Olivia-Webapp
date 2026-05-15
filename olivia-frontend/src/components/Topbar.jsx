@@ -2,7 +2,7 @@ export default function Topbar({ activeNav = 'pazienti' }) {
   return (
     <div className="topbar">
       <div className="topbar-brand">
-        Olivia MD <span>|</span> <em>Gestione pazienti</em>
+        Olivia <span>|</span> <em>Gestione pazienti</em>
       </div>
       <div className="topbar-nav">
         <div className={`topnav-item${activeNav === 'pazienti' ? ' active' : ''}`}>Pazienti</div>

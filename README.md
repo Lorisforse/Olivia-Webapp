@@ -1,4 +1,4 @@
-# Olivia MD — Web Dashboard
+# Olivia — Web Dashboard
 
 > **[🌐 Live Demo](https://lorisforse.github.io/Olivia-Webapp/)** — modalità demo con dati di esempio
 
@@ -6,9 +6,9 @@
 
 ## 🇮🇹 Italiano
 
-### Cos'è Olivia MD
+### Cos'è Olivia
 
-Olivia MD è una dashboard web clinica destinata a nutrizionisti e medici, sviluppata come progetto di tesi triennale in Informatica presso **ITPS — Università degli Studi di Bari**.
+Olivia è una dashboard web clinica destinata a nutrizionisti e medici, sviluppata come progetto di tesi triennale in Informatica presso **ITPS — Università degli Studi di Bari**.
 
 Il sistema si integra con un chatbot Telegram esistente (**Olivia**) che interagisce quotidianamente con i pazienti raccogliendo dati su pasti, idratazione, peso e umore. La webapp condivide lo stesso database MongoDB del bot e consente al medico di:
 
@@ -65,9 +65,9 @@ Olivia-Webapp/
 
 ## 🇬🇧 English
 
-### What is Olivia MD
+### What is Olivia
 
-Olivia MD is a clinical web dashboard for nutritionists and doctors, developed as a bachelor's thesis project in Computer Science at **ITPS — University of Bari**.
+Olivia is a clinical web dashboard for nutritionists and doctors, developed as a bachelor's thesis project in Computer Science at **ITPS — University of Bari**.
 
 The system integrates with an existing Telegram chatbot (**Olivia**) that interacts daily with patients, collecting data on meals, hydration, weight, and mood. The webapp shares the same MongoDB database as the bot and allows doctors to:
 
