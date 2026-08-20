@@ -1,0 +1,39 @@
+# Bot Telegram Olivia sul VPS — usa l'immagine già pubblicata dal repo del bot
+# (build+push automatico su ghcr.io ad ogni push su main, vedi
+# olivia-chatbot/.github/workflows/build.yml). Nessuna build locale: qui ci
+# limitiamo a tirarla giù e a collegarla al Mongo che gira già sul VPS.
+#
+# Questo file vive FUORI da olivia-chatbot/ di proposito: il codice del bot è
+# di terzi e non lo tocchiamo, ma orchestrare il suo deploy è territorio nostro.
+#
+#   docker compose --env-file deploy/.env.bot -f deploy/docker-compose.bot.yml up -d
+#
+# Il bot fa solo long-polling verso l'API Telegram: nessuna porta in ingresso
+# da pubblicare, nessuna regola firewall necessaria per lui.
+
+services:
+  olivia-bot:
+    image: ghcr.io/davidelofrese/olivia-chatbot:latest
+    container_name: olivia-bot
+    restart: unless-stopped
+    networks:
+      - olivia-network
+    environment:
+      - OLIVIA_TELEGRAM_TOKEN=${OLIVIA_TELEGRAM_TOKEN}
+      - OLIVIA_LLM_API_KEY=${OLIVIA_LLM_API_KEY}
+      - OLIVIA_LLM_BASE_URL=${OLIVIA_LLM_BASE_URL}
+      - OLIVIA_LLM_DEFAULT_MODEL=${OLIVIA_LLM_DEFAULT_MODEL}
+      - OLIVIA_MONGO_DB_HOST=olivia-mongo-db
+      - OLIVIA_MONGO_DB_PORT=27017
+      - OLIVIA_MONGO_DB_USERNAME=olivia
+      - OLIVIA_MONGO_DB_PASSWORD=olivia
+      - OLIVIA_MONGO_DB_DATABASE=olivia
+    volumes:
+      - olivia-bot-logs:/app/logs
+
+volumes:
+  olivia-bot-logs:
+
+networks:
+  olivia-network:
+    external: true
