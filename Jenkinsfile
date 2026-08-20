@@ -42,10 +42,21 @@ pipeline {
 
         stage('Healthcheck') {
             steps {
+                // Niente curl verso 127.0.0.1: da dentro il container Jenkins quello
+                // è il SUO loopback, non quello del VPS host dove backend/frontend
+                // sono davvero in ascolto. Si passa dal socket Docker (sempre valido,
+                // indipendente dalla rete) invece che da una richiesta di rete.
                 sh '''
                     sleep 5
-                    curl -fsS http://127.0.0.1:8001/ > /dev/null || (echo "Backend non risponde" && exit 1)
-                    curl -fsS http://127.0.0.1:8082/ > /dev/null || (echo "Frontend non risponde" && exit 1)
+                    for name in olivia-backend olivia-frontend; do
+                        status=$(docker inspect --format="{{.State.Status}}" "$name" || echo "missing")
+                        echo "$name: $status"
+                        if [ "$status" != "running" ]; then
+                            echo "ERRORE: $name non e' running"
+                            docker logs --tail 50 "$name"
+                            exit 1
+                        fi
+                    done
                 '''
             }
         }
