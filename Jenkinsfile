@@ -5,7 +5,7 @@ pipeline {
         COMPOSE_FILE = 'docker-compose.prod.yml'
         // File con i segreti/URL reali, tenuto SOLO sul VPS, mai nel repo.
         // Va creato una volta a mano copiando .env.prod.example.
-        ENV_FILE = '/srv/olivia/.env.prod'
+        ENV_FILE = '/opt/olivia/.env.prod'
     }
 
     triggers {

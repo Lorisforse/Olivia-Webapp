@@ -20,24 +20,30 @@ qui sotto solo i passi lato server.
       gira in Docker serve il socket dell'host montato: `-v /var/run/docker.sock:/var/run/docker.sock`
       e il pacchetto `docker-ce-cli` + plugin compose installati nell'immagine Jenkins).
 
-## 1. MongoDB (prima volta, dati puliti)
+## 1. MongoDB (prima volta, dati puliti) — ✅ fatto
 
 Loris ha deciso di ripartire da un database vuoto sul VPS (non migrare il dump
-universitario nei dati di produzione — quello resta solo per analisi separata,
-vedi conversazione). Avviare Mongo una tantum, non fa parte della pipeline Jenkins:
+universitario nei dati di produzione — quello resta solo per analisi separata).
+`/opt/olivia/` conteneva un tentativo precedente (compose con la rete
+`olivia-network-olivia` sbagliata, mai davvero popolato di dati reali) — rimosso
+insieme al suo volume, poi ripartito pulito con il repo vero:
 
 ```bash
-mkdir -p /srv/olivia
-# copiare qui il repo, o almeno la cartella deploy/, es. via git clone/scp
+cd /opt/olivia && docker compose down -v   # via il tentativo precedente + suo volume
+cd / && rm -rf /opt/olivia/*
+git clone https://github.com/Lorisforse/Olivia-Webapp.git /opt/olivia
+cd /opt/olivia
 docker compose -f deploy/docker-compose.mongo.yml up -d
-docker ps --filter name=olivia-mongo-db   # conferma che sia su
 ```
+
+Mongo è su, sulla rete `olivia-network` corretta. Non fa parte della pipeline
+Jenkins di proposito: un database è stato persistente, non va ricostruito ad
+ogni deploy del codice come backend/frontend.
 
 ## 2. File di ambiente (segreti, mai nel repo)
 
 ```bash
-mkdir -p /srv/olivia
-nano /srv/olivia/.env.prod
+nano /opt/olivia/.env.prod
 ```
 
 Copiare il contenuto di `Olivia-Webapp-Codice/.env.prod.example` compilando i

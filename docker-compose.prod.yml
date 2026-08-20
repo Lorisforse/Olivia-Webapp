@@ -1,8 +1,9 @@
 # Compose di produzione per il VPS. Va lanciato con:
-#   docker compose --env-file /srv/olivia/.env.prod -f docker-compose.prod.yml up -d --build
+#   docker compose --env-file /opt/olivia/.env.prod -f docker-compose.prod.yml up -d --build
 #
 # Presuppone che esista già sul VPS una rete Docker esterna "olivia-network"
-# (creata dal deploy del bot Telegram, che ci gira anche il MongoDB condiviso).
+# (creata a mano insieme a Mongo, vedi deploy/docker-compose.mongo.yml — ci si
+# collegherà anche il bot Telegram quando verrà migrato qui).
 # Verificare con: docker network ls | grep olivia-network
 
 services:
