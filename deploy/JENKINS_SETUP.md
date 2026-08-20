@@ -40,14 +40,22 @@ Mongo è su, sulla rete `olivia-network` corretta. Non fa parte della pipeline
 Jenkins di proposito: un database è stato persistente, non va ricostruito ad
 ogni deploy del codice come backend/frontend.
 
-## 2. File di ambiente (segreti, mai nel repo)
+## 2. File di ambiente (segreti, mai nel repo, mai su un path dell'host)
 
-```bash
-nano /opt/olivia/.env.prod
-```
+Jenkins gira nel suo container e non vede il filesystem del VPS host — un file
+tipo `/opt/olivia/.env.prod` per lui non esiste. Il segreto va invece caricato
+come **credenziale Jenkins** (stesso pattern del job `budget-bot`):
 
-Copiare il contenuto di `Olivia-Webapp-Codice/.env.prod.example` compilando i
-valori reali (URL Mongo di produzione, dominio scelto per `VITE_API_URL`).
+1. Prepara in locale (non nel repo) un file con il contenuto di
+   `Olivia-Webapp-Codice/.env.prod.example` compilato con i valori reali (URL
+   Mongo di produzione, dominio scelto per `VITE_API_URL`).
+2. In Jenkins → **Manage Jenkins → Credentials → System → Global credentials
+   → Add Credentials**
+   - Kind: **Secret file**
+   - File: carica il file preparato al punto 1
+   - ID: **`olivia-env-prod`** (deve combaciare esattamente con quello usato
+     nel `Jenkinsfile`, `withCredentials([file(credentialsId: 'olivia-env-prod', ...)])`)
+3. Salva. Il file caricato non serve più localmente, puoi cancellarlo.
 
 ## 3. Job Jenkins
 

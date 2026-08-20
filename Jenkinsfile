@@ -3,9 +3,6 @@ pipeline {
 
     environment {
         COMPOSE_FILE = 'docker-compose.prod.yml'
-        // File con i segreti/URL reali, tenuto SOLO sul VPS, mai nel repo.
-        // Va creato una volta a mano copiando .env.prod.example.
-        ENV_FILE = '/opt/olivia/.env.prod'
     }
 
     options {
@@ -29,15 +26,17 @@ pipeline {
             }
         }
 
-        stage('Build immagini') {
+        stage('Build e deploy') {
             steps {
-                sh 'docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" build'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh 'docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" up -d'
+                // Segreto tenuto nello store credenziali di Jenkins (Secret file),
+                // non su un path del filesystem host: Jenkins gira nel suo container
+                // e non vede /opt/olivia. Stesso pattern del job budget-bot.
+                withCredentials([file(credentialsId: 'olivia-env-prod', variable: 'ENV_FILE')]) {
+                    sh '''
+                        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
+                        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
+                    '''
+                }
             }
         }
 
