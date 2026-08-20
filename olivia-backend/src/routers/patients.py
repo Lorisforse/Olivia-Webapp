@@ -5,7 +5,7 @@ from bson import DBRef, ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
 from src.database import get_database
-from src.models.helpers import extract
+from src.models.helpers import extract, sanitize_bson
 from src.schemas.diet import DietResponse
 from src.schemas.patient import PatientCreate, PatientDetail, PatientListItem, PatientUpdate
 
@@ -185,7 +185,7 @@ async def get_patient_diet(patient_id: str, db=Depends(get_database)):
         name=diet_doc.get("name", ""),
         tips=diet_doc.get("tips", []),
         weekly_plan=diet_doc.get("meal_plan", {}),
-        substitutions=diet_doc.get("substitutions", ""),
+        substitutions=sanitize_bson(diet_doc.get("substitutions", "")),
     )
 
 

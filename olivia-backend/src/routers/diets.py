@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
 
 from src.database import get_database
+from src.models.helpers import sanitize_bson
 from src.schemas.diet import DietCreate, DietResponse, DietUpdate
 
 router = APIRouter()
@@ -18,7 +19,9 @@ def _to_response(doc: dict) -> DietResponse:
         name=doc.get("name", ""),
         tips=doc.get("tips", []),
         weekly_plan=doc.get("meal_plan", {}),
-        substitutions=doc.get("substitutions", ""),
+        # le regole di sostituzione vere hanno ObjectId annidati (rule_id):
+        # vanno convertiti in stringa prima che pydantic provi a serializzarli
+        substitutions=sanitize_bson(doc.get("substitutions", "")),
     )
 
 
