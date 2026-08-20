@@ -1,0 +1,33 @@
+# MongoDB per Olivia sul VPS. NON fa parte della pipeline Jenkins: il database
+# è uno stato persistente, non va ricreato o riavviato a ogni deploy del codice
+# come backend/frontend — si avvia UNA VOLTA a mano e poi resta su.
+#
+#   docker compose -f deploy/docker-compose.mongo.yml up -d
+#
+# Stessa immagine e stesse credenziali usate in sviluppo
+# (olivia-chatbot/docker-compose.dev.yml), così bot e webapp restano
+# intercambiabili tra ambiente locale e VPS. Nessuna porta pubblicata verso
+# l'host: solo i container sulla rete "olivia-network" possono raggiungerlo,
+# non è esposto su internet.
+
+services:
+  olivia-mongo-db:
+    image: mongo:8.0.9
+    container_name: olivia-mongo-db
+    restart: unless-stopped
+    networks:
+      - olivia-network
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=olivia
+      - MONGO_INITDB_ROOT_PASSWORD=olivia
+      - MONGO_INITDB_DATABASE=olivia
+      - TZ=Europe/Rome
+    volumes:
+      - olivia-mongo-db:/data/db
+
+volumes:
+  olivia-mongo-db:
+
+networks:
+  olivia-network:
+    external: true

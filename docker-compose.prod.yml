@@ -1,0 +1,40 @@
+# Compose di produzione per il VPS. Va lanciato con:
+#   docker compose --env-file /srv/olivia/.env.prod -f docker-compose.prod.yml up -d --build
+#
+# Presuppone che esista già sul VPS una rete Docker esterna "olivia-network"
+# (creata dal deploy del bot Telegram, che ci gira anche il MongoDB condiviso).
+# Verificare con: docker network ls | grep olivia-network
+
+services:
+  olivia-backend:
+    build:
+      context: ./olivia-backend
+    container_name: olivia-backend
+    restart: unless-stopped
+    # Pubblicata solo su localhost: ci pensa nginx/traefik dell'host a fare da reverse proxy pubblico
+    ports:
+      - "127.0.0.1:8001:8000"
+    networks:
+      - olivia-network
+    environment:
+      - MONGODB_URL=${MONGODB_URL}
+      - MONGODB_DB=${MONGODB_DB:-olivia}
+      - DEBUG=false
+
+  olivia-frontend:
+    build:
+      context: ./olivia-frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_BASE: /
+    container_name: olivia-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:80"
+    networks:
+      - olivia-network
+
+networks:
+  olivia-network:
+    external: true

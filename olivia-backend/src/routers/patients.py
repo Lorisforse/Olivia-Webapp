@@ -43,7 +43,7 @@ def _oid(patient_id: str) -> ObjectId:
 
 def _doc_to_list_item(doc: dict) -> PatientListItem:
     profile = doc.get("profile", {})
-    diet_id = _diet_id(doc.get("active_diet_plan"))
+    diet_id = _diet_id(doc.get("active_nutrition_plan"))
     return PatientListItem(
         id=str(doc["_id"]),
         chat_id=doc.get("chat_id"),
@@ -63,7 +63,7 @@ def _doc_to_list_item(doc: dict) -> PatientListItem:
 
 def _doc_to_detail(doc: dict) -> PatientDetail:
     profile = doc.get("profile", {})
-    diet_id = _diet_id(doc.get("active_diet_plan"))
+    diet_id = _diet_id(doc.get("active_nutrition_plan"))
     return PatientDetail(
         id=str(doc["_id"]),
         chat_id=doc.get("chat_id"),
@@ -130,7 +130,7 @@ async def create_patient(payload: PatientCreate, db=Depends(get_database)):
         "chat_id": None,
         "username": None,
         "profile": profile,
-        "active_diet_plan": None,
+        "active_nutrition_plan": None,
         "notifications": [],
         "created_at": datetime.now(),
         "last_interaction_at": None,
@@ -171,12 +171,12 @@ async def get_patient_diet(patient_id: str, db=Depends(get_database)):
     if not doc:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    diet_ref = doc.get("active_diet_plan")
+    diet_ref = doc.get("active_nutrition_plan")
     diet_oid = _diet_id(diet_ref)
     if not diet_oid:
         raise HTTPException(status_code=404, detail="No active diet plan")
 
-    diet_doc = await db["diet-plans"].find_one({"_id": ObjectId(diet_oid)})
+    diet_doc = await db["nutrition-plans"].find_one({"_id": ObjectId(diet_oid)})
     if not diet_doc:
         raise HTTPException(status_code=404, detail="Diet plan not found")
 
@@ -184,7 +184,7 @@ async def get_patient_diet(patient_id: str, db=Depends(get_database)):
         id=str(diet_doc["_id"]),
         name=diet_doc.get("name", ""),
         tips=diet_doc.get("tips", []),
-        weekly_plan=diet_doc.get("weekly_plan", {}),
+        weekly_plan=diet_doc.get("meal_plan", {}),
         substitutions=diet_doc.get("substitutions", ""),
     )
 
@@ -200,11 +200,11 @@ async def assign_diet(patient_id: str, diet_id: str, db=Depends(get_database)):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid diet id")
 
-    if not await db["diet-plans"].find_one({"_id": diet_oid}, {"_id": 1}):
+    if not await db["nutrition-plans"].find_one({"_id": diet_oid}, {"_id": 1}):
         raise HTTPException(status_code=404, detail="Diet plan not found")
 
     await db["users"].update_one(
         {"_id": oid},
-        {"$set": {"active_diet_plan": {"$ref": "diet-plans", "$id": diet_oid}}},
+        {"$set": {"active_nutrition_plan": {"$ref": "nutrition-plans", "$id": diet_oid}}},
     )
     return {"ok": True}

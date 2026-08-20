@@ -1,0 +1,26 @@
+# Build di produzione: bundle statico servito da nginx (non il dev server di Vite)
+
+# --- Stage 1: build ---
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+# In dev/GitHub Pages il base path è /Olivia-Webapp/ (vedi vite.config.js).
+# Sul VPS l'app vive sulla root del suo (sotto)dominio, quindi va sovrascritto.
+ARG VITE_API_URL
+ARG VITE_BASE=/
+ENV VITE_API_URL=${VITE_API_URL}
+RUN npx vite build --base=${VITE_BASE}
+
+# --- Stage 2: serve ---
+FROM nginx:1.27-alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80

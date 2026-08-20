@@ -160,20 +160,20 @@ async def seed():
 
     # clear collections
     await db["users"].delete_many({})
-    await db["diet-plans"].delete_many({})
-    print("Cleared users and diet-plans collections.")
+    await db["nutrition-plans"].delete_many({})
+    print("Cleared users and nutrition-plans collections.")
 
-    # insert diet plans
+    # insert diet plans (stessa collection/nomi campo usati dal bot: "nutrition-plans" / "meal_plan")
     diet_docs = []
     for i, dp in enumerate(DIET_PLANS):
         doc = {
             "name": dp["name"],
             "tips": dp["tips"],
             "substitutions": dp["substitutions"],
-            "weekly_plan": build_weekly_plan(seed=i * 17),
+            "meal_plan": build_weekly_plan(seed=i * 17),
         }
         diet_docs.append(doc)
-    diet_result = await db["diet-plans"].insert_many(diet_docs)
+    diet_result = await db["nutrition-plans"].insert_many(diet_docs)
     diet_ids = diet_result.inserted_ids
     print(f"Inserted {len(diet_ids)} diet plans.")
 
@@ -185,14 +185,14 @@ async def seed():
         # First 4 patients get bot + diet, next 3 get only bot, last 3 are pending
         chat_id = None
         username = None
-        active_diet_plan = None
+        active_nutrition_plan = None
         last_interaction = None
 
         if idx < 4:
             chat_id = 100_000_000 + idx
             username = p["name"].split()[0].lower() + str(idx)
             diet_oid = diet_ids[idx % len(diet_ids)]
-            active_diet_plan = {"$ref": "diet-plans", "$id": diet_oid}
+            active_nutrition_plan = {"$ref": "nutrition-plans", "$id": diet_oid}
             last_interaction = now - timedelta(hours=random.randint(1, 48))
         elif idx < 7:
             chat_id = 200_000_000 + idx
@@ -203,7 +203,7 @@ async def seed():
             "chat_id": chat_id,
             "username": username,
             "profile": profile,
-            "active_diet_plan": active_diet_plan,
+            "active_nutrition_plan": active_nutrition_plan,
             "notifications": [],
             "created_at": now - timedelta(days=30 - idx * 3),
             "last_interaction_at": last_interaction,

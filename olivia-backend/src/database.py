@@ -13,7 +13,8 @@ def get_database():
 
 
 def get_users_col(database): return database["users"]
-def get_diet_plans_col(database): return database["diet-plans"]
+# Il bot chiama questa collection "nutrition-plans" (vedi olivia-chatbot/src/models/nutrition_plan.py)
+def get_nutrition_plans_col(database): return database["nutrition-plans"]
 def get_meal_logs_col(database): return database["meal-logs"]
 def get_weight_logs_col(database): return database["weight-logs"]
 def get_hydration_logs_col(database): return database["hydration-logs"]
