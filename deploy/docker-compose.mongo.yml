@@ -1,14 +1,20 @@
-# MongoDB per Olivia sul VPS. NON fa parte della pipeline Jenkins: il database
-# è uno stato persistente, non va ricreato o riavviato a ogni deploy del codice
-# come backend/frontend — si avvia UNA VOLTA a mano e poi resta su.
+# MongoDB (+ Mongo Compass web) per Olivia sul VPS. NON fa parte della pipeline
+# Jenkins: il database è uno stato persistente, non va ricreato o riavviato a
+# ogni deploy del codice come backend/frontend — si avvia UNA VOLTA a mano e
+# poi resta su.
 #
 #   docker compose -f deploy/docker-compose.mongo.yml up -d
 #
 # Stessa immagine e stesse credenziali usate in sviluppo
 # (olivia-chatbot/docker-compose.dev.yml), così bot e webapp restano
-# intercambiabili tra ambiente locale e VPS. Nessuna porta pubblicata verso
-# l'host: solo i container sulla rete "olivia-network" possono raggiungerlo,
-# non è esposto su internet.
+# intercambiabili tra ambiente locale e VPS.
+#
+# Mongo (27017) resta interno: nessuna porta pubblicata, solo i container
+# sulla rete "olivia-network" lo raggiungono, non è esposto su internet.
+# Mongo Compass (8081) invece va pensato per essere raggiunto da fuori, per
+# amministrare il DB — protetto dalla regola firewall IONOS su :8081
+# (sincronizzata con l'IP di casa via deploy/update-ionos-firewall.sh), non
+# da nginx/localhost.
 
 services:
   olivia-mongo-db:
@@ -24,6 +30,17 @@ services:
       - TZ=Europe/Rome
     volumes:
       - olivia-mongo-db:/data/db
+
+  olivia-mongo-compass:
+    image: haohanyang/compass-web:0.2.5
+    container_name: olivia-mongo-compass
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    networks:
+      - olivia-network
+    environment:
+      - CW_MONGO_URI=mongodb://olivia:olivia@olivia-mongo-db:27017/olivia?authSource=admin
 
 volumes:
   olivia-mongo-db:
