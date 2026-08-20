@@ -3,6 +3,7 @@ dist/
 .env
 .env.prod
 .env.bot
+dump/
 __pycache__/
 *.pyc
 .venv/

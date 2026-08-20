@@ -8,9 +8,18 @@ pipeline {
         ENV_FILE = '/opt/olivia/.env.prod'
     }
 
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        disableConcurrentBuilds()
+        timestamps()
+    }
+
     triggers {
-        // Richiede il webhook GitHub configurato su questo job (vedi deploy/JENKINS_SETUP.md)
-        githubPush()
+        // Un webhook GitHub->Jenkins non funzionerebbe qui: Jenkins sta dietro il
+        // firewall IONOS che accetta solo l'IP di casa, i server di GitHub
+        // arriverebbero da IP diversi e sarebbero bloccati. Polling invece parte
+        // da dentro (Jenkins chiede a GitHub), stesso pattern del job budget-bot.
+        pollSCM('H/2 * * * *')
     }
 
     stages {

@@ -57,18 +57,15 @@ valori reali (URL Mongo di produzione, dominio scelto per `VITE_API_URL`).
    branch `*/main`, script path `Jenkinsfile` (è nella root del repo).
    Repo pubblico → nessuna credenziale Git necessaria.
 
-## 4. Trigger automatico su push
+## 4. Trigger automatico su push — ✅ già a posto
 
-Il `Jenkinsfile` usa `triggers { githubPush() }`, quindi serve un webhook:
-
-1. Su GitHub → repo `Olivia-Webapp` → Settings → Webhooks → Add webhook
-   - Payload URL: `http://<host-jenkins>:<porta>/github-webhook/`
-   - Content type: `application/json`
-   - Evento: solo `push`
-2. Nel job Jenkins → Configure → spuntare **"GitHub hook trigger for GITScm polling"**.
-
-Se Jenkins non è raggiungibile pubblicamente da GitHub, alternativa: polling
-SCM (`pollSCM('H/5 * * * *')`) invece del webhook.
+Niente webhook: Jenkins sta dietro il firewall IONOS (solo IP di casa ammesso),
+i server di GitHub non riuscirebbero mai a chiamarlo. Il `Jenkinsfile` usa
+`triggers { pollSCM('H/2 * * * *') }` — è Jenkins stesso a controllare GitHub
+ogni ~2 minuti (stesso pattern già in uso nel job `budget-bot`). Va confermato
+in automatico dopo la prima build; se non risultasse spuntato da solo, in
+Jenkins → Configure → Triggers spuntare a mano **"Esegui polling del sistema
+di gestione del codice sorgente"** con pianificazione `H/2 * * * *`.
 
 ## 5. Reverse proxy + dominio
 
