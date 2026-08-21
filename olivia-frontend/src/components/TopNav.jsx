@@ -1,23 +1,24 @@
 import { useState, useEffect, useRef } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import OliviaLogo from './OliviaLogo'
+import { useAuth } from '../context/AuthContext'
 
-const OliviaLogo = () => (
-  <svg width="120" height="40" viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Olivia">
-    <g transform="translate(0, 4)">
-      <ellipse cx="30" cy="40" rx="22" ry="28" fill="#E8E4D6"/>
-      <ellipse cx="23" cy="30" rx="5" ry="7" fill="#FAF8F2" opacity="0.55"/>
-      <path d="M30 12 C 30 8, 30 6, 30 3" stroke="#E8E4D6" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
-      <path d="M30 4 C 34 2, 38 2, 41 0 C 40 4, 36 6, 31 6 Z" fill="#FAF8F2"/>
-    </g>
-    <text x="56" y="54" fontFamily="Fraunces, 'Times New Roman', serif" fontSize="52" fontWeight="500" fill="#FAF8F2" letterSpacing="-1">livia</text>
-  </svg>
-)
+// Titoli da ignorare nel calcolo delle iniziali: "Dr.ssa Elena Russo" -> "ER"
+const HONORIFICS = /^(dr|dr\.ssa|dott|dott\.ssa|prof|prof\.ssa|sig|sig\.ra)\.?$/i
+
+function initials(name) {
+  const parts = String(name || '').split(/\s+/).filter(p => p && !HONORIFICS.test(p))
+  if (!parts.length) return String(name || '?').slice(0, 2).toUpperCase()
+  return parts.slice(0, 2).map(p => p[0].toUpperCase()).join('')
+}
 
 export default function TopNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const btnRef = useRef(null)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
 
   const isPazientiActive =
     location.pathname.startsWith('/pazienti') ||
@@ -38,10 +39,16 @@ export default function TopNav() {
 
   useEffect(() => { setMenuOpen(false) }, [location.pathname])
 
+  function handleLogout() {
+    setMenuOpen(false)
+    signOut()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <header className="topbar">
       <NavLink to="/" className="topbar__brand" aria-label="Olivia — torna alla Home">
-        <OliviaLogo />
+        <OliviaLogo height={40} />
       </NavLink>
 
       <nav className="topbar__nav" aria-label="Sezioni principali">
@@ -66,14 +73,15 @@ export default function TopNav() {
         aria-expanded={String(menuOpen)}
         aria-label="Profilo utente"
       >
-        <span className="avatar">ER</span>
+        <span className="avatar">{initials(user?.name)}</span>
       </button>
 
       {menuOpen && (
         <div ref={menuRef} className="user-menu" role="menu">
           <div className="user-menu__head">
-            <div className="user-menu__name">Dr.ssa Elena Russo</div>
-            <div className="user-menu__role">Nutrizionista</div>
+            <div className="user-menu__name">{user?.name || 'Utente'}</div>
+            <div className="user-menu__role">{user?.role || 'Nutrizionista'}</div>
+            {user?.email && <div className="user-menu__role">{user.email}</div>}
           </div>
           <div className="user-menu__sep" />
           <button className="user-menu__item" role="menuitem">
@@ -89,7 +97,7 @@ export default function TopNav() {
             Impostazioni studio
           </button>
           <div className="user-menu__sep" />
-          <button className="user-menu__item" role="menuitem" style={{ color: 'var(--danger)' }}>
+          <button className="user-menu__item" role="menuitem" onClick={handleLogout} style={{ color: 'var(--danger)' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
             </svg>

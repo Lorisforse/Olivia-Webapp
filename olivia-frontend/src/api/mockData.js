@@ -186,3 +186,12 @@ export function getMockLogs(patientId) {
   if (!p?.chat_id) return { days: [] }
   return { days: [6, 5, 4, 3, 2, 1, 0].map(n => mockDay(n, p.weight ?? 70)) }
 }
+
+export function getMockUser() {
+  return {
+    id: 'demo-user',
+    email: 'demo@olivia.it',
+    name: 'Dr.ssa Elena Russo',
+    role: 'Nutrizionista',
+  }
+}

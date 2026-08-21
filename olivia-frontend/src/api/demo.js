@@ -8,6 +8,17 @@ export function activateDemo() {
   window.dispatchEvent(new CustomEvent('olivia:demo-activated'))
 }
 
+/**
+ * Errore 401 del backend. Va distinto dagli altri: significa che il server c'è
+ * e risponde, quindi non deve far scattare la modalità demo ma il logout.
+ */
+export class UnauthorizedError extends Error {
+  constructor(message = 'Non autorizzato') {
+    super(message)
+    this.name = 'UnauthorizedError'
+  }
+}
+
 const TIMEOUT_MS = 3000
 
 export async function withDemo(realFn, mockFn) {
@@ -22,7 +33,8 @@ export async function withDemo(realFn, mockFn) {
 
   try {
     return await race
-  } catch {
+  } catch (err) {
+    if (err instanceof UnauthorizedError) throw err
     activateDemo()
     return mockFn()
   }

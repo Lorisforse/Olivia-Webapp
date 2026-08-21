@@ -1,8 +1,10 @@
-import os
 from motor.motor_asyncio import AsyncIOMotorClient
 
-MONGODB_URL = os.getenv('MONGODB_URL', 'mongodb://localhost:27017')
-MONGODB_DB = os.getenv('MONGODB_DB', 'olivia')
+from src.settings import settings
+
+# Le variabili d'ambiente vincono sul .env letto da Settings (vedi src/settings.py).
+MONGODB_URL = settings.mongodb_url
+MONGODB_DB = settings.mongodb_db
 
 client = AsyncIOMotorClient(MONGODB_URL)
 db = client[MONGODB_DB]
@@ -13,6 +15,9 @@ def get_database():
 
 
 def get_users_col(database): return database["users"]
+# Account di accesso alla dashboard (medici/nutrizionisti): collection separata da
+# "users", che invece appartiene ai pazienti del bot e non va toccata.
+def get_webapp_users_col(database): return database["webapp-users"]
 # Il bot chiama questa collection "nutrition-plans" (vedi olivia-chatbot/src/models/nutrition_plan.py)
 def get_nutrition_plans_col(database): return database["nutrition-plans"]
 def get_meal_logs_col(database): return database["meal-logs"]

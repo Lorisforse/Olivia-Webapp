@@ -1,14 +1,34 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import TopNav from './components/TopNav'
 import HomePage from './pages/Home/HomePage'
 import PazientiPage from './pages/Pazienti/PazientiPage'
 import PatientDetail from './pages/PatientDetail'
 import NuovoPaziente from './pages/NuovoPaziente/NuovoPaziente'
 import DietePage from './pages/Diete/DietePage'
+import LoginPage from './pages/Login/LoginPage'
+import { useAuth } from './context/AuthContext'
+
+/**
+ * Cancello sulle pagine cliniche: senza sessione si finisce sul login, che poi
+ * riporta alla pagina richiesta (location in state).
+ */
+function RequireAuth({ children }) {
+  const { user, checking } = useAuth()
+  const location = useLocation()
+
+  // Con una sessione ripristinata da storage si entra subito: la validazione
+  // contro il backend prosegue in background e, se fallisce, riporta al login.
+  if (user) return children
+  if (checking) return <div className="loading-screen">Caricamento…</div>
+  return <Navigate to="/login" replace state={{ from: location }} />
+}
 
 export default function App() {
   const [isDemo, setIsDemo] = useState(false)
+  const { user } = useAuth()
+  const location = useLocation()
+  const isLoginPage = location.pathname === '/login'
 
   useEffect(() => {
     const handler = () => setIsDemo(true)
@@ -18,16 +38,17 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopNav />
+      {user && !isLoginPage && <TopNav />}
       {isDemo && (
         <div className="demo-banner">Modalità demo — dati di esempio</div>
       )}
       <Routes>
-        <Route path='/' element={<HomePage />} />
-        <Route path='/pazienti' element={<PazientiPage />} />
-        <Route path='/pazienti/:id' element={<PatientDetail />} />
-        <Route path='/nuovo-paziente' element={<NuovoPaziente />} />
-        <Route path='/diete' element={<DietePage />} />
+        <Route path='/login' element={<LoginPage />} />
+        <Route path='/' element={<RequireAuth><HomePage /></RequireAuth>} />
+        <Route path='/pazienti' element={<RequireAuth><PazientiPage /></RequireAuth>} />
+        <Route path='/pazienti/:id' element={<RequireAuth><PatientDetail /></RequireAuth>} />
+        <Route path='/nuovo-paziente' element={<RequireAuth><NuovoPaziente /></RequireAuth>} />
+        <Route path='/diete' element={<RequireAuth><DietePage /></RequireAuth>} />
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
     </div>

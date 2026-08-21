@@ -21,6 +21,9 @@ services:
       - MONGODB_URL=${MONGODB_URL}
       - MONGODB_DB=${MONGODB_DB:-olivia}
       - DEBUG=false
+      # Firma dei token di login. Senza valore nel .env.prod il backend parte
+      # con il segreto di sviluppo e lo segnala nei log: va impostato.
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-cambiami}
 
   olivia-frontend:
     build:

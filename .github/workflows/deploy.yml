@@ -39,6 +39,12 @@ jobs:
         working-directory: olivia-frontend
         run: npm run build
 
+      # GitHub Pages serve file statici: senza questa copia un ricaricamento su
+      # una rotta del router (es. /login) risponderebbe 404.
+      - name: SPA fallback
+        working-directory: olivia-frontend
+        run: cp dist/index.html dist/404.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

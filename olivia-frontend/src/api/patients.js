@@ -1,9 +1,16 @@
-import { withDemo } from './demo'
+import { authHeaders, notifyUnauthorized } from './auth'
+import { UnauthorizedError, withDemo } from './demo'
 import { getMockPatients, getMockPatient, getMockLogs } from './mockData'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+const JSON_HEADERS = { 'Content-Type': 'application/json' }
+
 async function _json(res) {
+  if (res.status === 401) {
+    notifyUnauthorized()
+    throw new UnauthorizedError()
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   if (res.status === 204) return null
   return res.json()
@@ -11,14 +18,14 @@ async function _json(res) {
 
 export async function getPatients() {
   return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/`)),
+    async () => _json(await fetch(`${API_URL}/patients/`, { headers: authHeaders() })),
     getMockPatients,
   )
 }
 
 export async function getPatient(id) {
   return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}`)),
+    async () => _json(await fetch(`${API_URL}/patients/${id}`, { headers: authHeaders() })),
     () => getMockPatient(id),
   )
 }
@@ -27,7 +34,7 @@ export async function createPatient(payload) {
   return withDemo(
     async () => _json(await fetch(`${API_URL}/patients/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...JSON_HEADERS, ...authHeaders() },
       body: JSON.stringify(payload),
     })),
     () => ({ id: `demo-new-${Date.now()}`, ...payload }),
@@ -38,7 +45,7 @@ export async function updatePatient(id, payload) {
   return withDemo(
     async () => _json(await fetch(`${API_URL}/patients/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...JSON_HEADERS, ...authHeaders() },
       body: JSON.stringify(payload),
     })),
     () => null,
@@ -47,14 +54,17 @@ export async function updatePatient(id, payload) {
 
 export async function getPatientDiet(id) {
   return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}/diet`)),
+    async () => _json(await fetch(`${API_URL}/patients/${id}/diet`, { headers: authHeaders() })),
     () => null,
   )
 }
 
 export async function assignDiet(patientId, dietId) {
   return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${patientId}/diet/${dietId}`, { method: 'POST' })),
+    async () => _json(await fetch(`${API_URL}/patients/${patientId}/diet/${dietId}`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })),
     () => null,
   )
 }
@@ -65,7 +75,7 @@ export async function getPatientLogs(id, { from, to } = {}) {
   if (to) params.set('to', to)
   const qs = params.toString()
   return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}/logs${qs ? '?' + qs : ''}`)),
+    async () => _json(await fetch(`${API_URL}/patients/${id}/logs${qs ? '?' + qs : ''}`, { headers: authHeaders() })),
     () => getMockLogs(id),
   )
 }
@@ -76,7 +86,7 @@ export async function getDailyReports(id, { from, to } = {}) {
   if (to) params.set('to', to)
   const qs = params.toString()
   return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}/reports/daily${qs ? '?' + qs : ''}`)),
+    async () => _json(await fetch(`${API_URL}/patients/${id}/reports/daily${qs ? '?' + qs : ''}`, { headers: authHeaders() })),
     () => ({ days: [] }),
   )
 }
@@ -87,7 +97,7 @@ export async function getWeeklyReports(id, { from, to } = {}) {
   if (to) params.set('to', to)
   const qs = params.toString()
   return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}/reports/weekly${qs ? '?' + qs : ''}`)),
+    async () => _json(await fetch(`${API_URL}/patients/${id}/reports/weekly${qs ? '?' + qs : ''}`, { headers: authHeaders() })),
     () => ({ weeks: [] }),
   )
 }

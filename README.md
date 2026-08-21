@@ -45,6 +45,24 @@ npm run dev
 
 Il frontend si connette al backend su `http://localhost:8000`. Se il backend non è raggiungibile, l'app entra automaticamente in **modalità demo** con dati di esempio.
 
+### Accesso
+
+La dashboard è protetta da login: senza un token valido le API cliniche rispondono `401`.
+Gli account dello studio vivono nella collection `webapp-users`, separata dai pazienti del
+bot, e si creano da riga di comando:
+
+```bash
+cd olivia-backend
+python create_user.py --email medico@olivia.it --name "Dr.ssa Elena Russo" --password "SceltaTua123"
+```
+
+La spunta **Resta connesso** salva la sessione per 30 giorni (`localStorage`); senza spunta
+dura quanto la scheda del browser (`sessionStorage`). Il segreto con cui vengono firmati i
+token si imposta con `JWT_SECRET` nel `.env`.
+
+In modalità demo, quando il backend non risponde, il login accetta le credenziali di
+esempio già precompilate nel form.
+
 ### Struttura del progetto
 
 ```
@@ -53,11 +71,11 @@ Olivia-Webapp/
 ├── olivia-frontend/               # React + Vite
 │   └── src/
 │       ├── api/                   # Layer API + mock data
-│       ├── pages/                 # Home, Pazienti, Diete, NuovoPaziente
+│       ├── pages/                 # Login, Home, Pazienti, Diete, NuovoPaziente
 │       └── styles/                # Design system CSS
 └── olivia-backend/                # FastAPI
     └── src/
-        ├── routers/               # patients, diets, logs, reports
+        ├── routers/               # auth, patients, diets, logs, reports
         └── schemas/               # Pydantic schemas
 ```
 
@@ -104,6 +122,24 @@ npm run dev
 
 The frontend connects to the backend at `http://localhost:8000`. If the backend is unreachable, the app automatically switches to **demo mode** with sample data.
 
+### Sign in
+
+The dashboard is behind a login: without a valid token the clinical API returns `401`.
+Practice accounts live in the `webapp-users` collection, separate from the bot's patients,
+and are created from the command line:
+
+```bash
+cd olivia-backend
+python create_user.py --email doctor@olivia.it --name "Dr. Elena Russo" --password "YourChoice123"
+```
+
+The **Resta connesso** ("keep me signed in") checkbox stores the session for 30 days in
+`localStorage`; without it the session lasts as long as the browser tab (`sessionStorage`).
+The token signing secret is set through `JWT_SECRET` in `.env`.
+
+In demo mode, when the backend is unreachable, the login accepts the sample credentials
+already filled in the form.
+
 ### Project structure
 
 ```
@@ -112,11 +148,11 @@ Olivia-Webapp/
 ├── olivia-frontend/               # React + Vite
 │   └── src/
 │       ├── api/                   # API layer + mock data
-│       ├── pages/                 # Home, Patients, Diets, NewPatient
+│       ├── pages/                 # Login, Home, Patients, Diets, NewPatient
 │       └── styles/                # CSS design system
 └── olivia-backend/                # FastAPI
     └── src/
-        ├── routers/               # patients, diets, logs, reports
+        ├── routers/               # auth, patients, diets, logs, reports
         └── schemas/               # Pydantic schemas
 ```
 

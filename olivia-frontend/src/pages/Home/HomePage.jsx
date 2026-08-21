@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getPatients } from '../../api/patients'
 import { getDiets } from '../../api/diets'
+import { useAuth } from '../../context/AuthContext'
 
 function deriveStatus(p) {
   if (!p.chat_id) return 'waiting'
@@ -14,6 +15,14 @@ function formatDate(dt) {
   return new Date(dt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+// "Dr.ssa Elena Russo" -> "Elena": il saluto usa solo il nome proprio.
+const HONORIFICS = /^(dr|dr\.ssa|dott|dott\.ssa|prof|prof\.ssa)\.?$/i
+
+function firstName(name) {
+  const parts = String(name || '').split(/\s+/).filter(p => p && !HONORIFICS.test(p))
+  return parts[0] || ''
+}
+
 function formatToday() {
   const d = new Date()
   const s = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -22,6 +31,7 @@ function formatToday() {
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [stats, setStats] = useState({ active: '—', nodiet: '—', diets: '—', lastDiet: '—' })
 
   useEffect(() => {
@@ -46,8 +56,8 @@ export default function HomePage() {
     <main className="page">
       <header className="page-header">
         <div>
-          <div className="page-eyebrow">Studio · Dr.ssa Russo</div>
-          <h1 className="page-title">Benvenuta, Elena</h1>
+          <div className="page-eyebrow">Studio · {user?.name || 'Olivia'}</div>
+          <h1 className="page-title">{firstName(user?.name) ? `Ciao, ${firstName(user.name)}` : 'Ciao'}</h1>
           <p className="page-subtitle">{formatToday()} · panoramica dello studio</p>
         </div>
       </header>
