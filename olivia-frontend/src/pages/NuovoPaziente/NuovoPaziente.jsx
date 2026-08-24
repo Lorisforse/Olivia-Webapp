@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPatient } from '../../api/patients'
 import SuccessOverlay from '../../components/SuccessOverlay'
+import { splitList } from '../../utils/text'
 
 function ageFromDob(dob) {
   if (!dob) return null
@@ -72,8 +73,15 @@ export default function NuovoPaziente() {
         weight: parseFloat(form.weight),
         height: parseFloat(form.height),
         goal: form.goal,
-        allergies: form.allergies || null,
+        allergies: splitList(form.allergies),
         notes: form.clinicalNotes || null,
+        wakes_up_at: form.timeWake || null,
+        breakfast_at: form.timeBreakfast || null,
+        lunch_at: form.timeLunch || null,
+        dinner_at: form.timeDinner || null,
+        physical_activity: activity === 'si' ? true : activity === 'no' ? false : null,
+        physical_activity_which: activity === 'si' ? (form.activityWhat || null) : null,
+        physical_activity_frequency: activity === 'si' ? (form.activityFreq || null) : null,
       })
       setCreatedName(fullName)
     } catch (err) {

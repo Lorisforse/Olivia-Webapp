@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getPatient, updatePatient, getPatientLogs } from '../../api/patients'
 import LoadingScreen from '../../components/LoadingScreen'
+import { splitList } from '../../utils/text'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 function deriveStatus(p) {
@@ -451,6 +452,7 @@ export default function PatientDetail() {
       ...form,
       weight: form.weight ? parseFloat(form.weight) : undefined,
       height: form.height ? parseFloat(form.height) : undefined,
+      allergies: splitList(form.allergies),
     })
     setPatient(p => ({ ...p, ...form }))
     setToast('Scheda aggiornata')
