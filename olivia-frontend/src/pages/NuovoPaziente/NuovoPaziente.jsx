@@ -62,7 +62,7 @@ export default function NuovoPaziente() {
     setSubmitting(true)
     try {
       await createPatient({
-        name: `${form.firstName.trim()} ${form.lastName.trim()}`,
+        full_name: `${form.firstName.trim()} ${form.lastName.trim()}`,
         gender: sex === 'F' ? 'Femmina' : sex === 'M' ? 'Maschio' : 'Non specificato',
         age: ageFromDob(form.dob),
         living_at: form.city,
