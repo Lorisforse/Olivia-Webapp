@@ -1,6 +1,4 @@
-import { authHeaders, notifyUnauthorized } from './auth'
-import { UnauthorizedError, withDemo } from './demo'
-import { getMockDiets, getMockDiet } from './mockData'
+import { authHeaders, notifyUnauthorized, UnauthorizedError } from './auth'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -17,44 +15,25 @@ async function _json(res) {
 }
 
 export async function getDiets() {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/diets/`, { headers: authHeaders() })),
-    getMockDiets,
-  )
+  return _json(await fetch(`${API_URL}/diets/`, { headers: authHeaders() }))
 }
 
 export async function getDiet(id) {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/diets/${id}`, { headers: authHeaders() })),
-    () => getMockDiet(id),
-  )
+  return _json(await fetch(`${API_URL}/diets/${id}`, { headers: authHeaders() }))
 }
 
 export async function createDiet(payload) {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/diets/`, {
-      method: 'POST',
-      headers: { ...JSON_HEADERS, ...authHeaders() },
-      body: JSON.stringify(payload),
-    })),
-    () => ({
-      id: `demo-diet-${Date.now()}`,
-      name: payload.name,
-      tips: [],
-      weekly_plan: {},
-      substitutions: '',
-      created_at: new Date().toISOString(),
-    }),
-  )
+  return _json(await fetch(`${API_URL}/diets/`, {
+    method: 'POST',
+    headers: { ...JSON_HEADERS, ...authHeaders() },
+    body: JSON.stringify(payload),
+  }))
 }
 
 export async function updateDiet(id, payload) {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/diets/${id}`, {
-      method: 'PATCH',
-      headers: { ...JSON_HEADERS, ...authHeaders() },
-      body: JSON.stringify(payload),
-    })),
-    () => null,
-  )
+  return _json(await fetch(`${API_URL}/diets/${id}`, {
+    method: 'PATCH',
+    headers: { ...JSON_HEADERS, ...authHeaders() },
+    body: JSON.stringify(payload),
+  }))
 }

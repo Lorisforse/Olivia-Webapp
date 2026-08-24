@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import TopNav from './components/TopNav'
 import HomePage from './pages/Home/HomePage'
@@ -25,23 +24,13 @@ function RequireAuth({ children }) {
 }
 
 export default function App() {
-  const [isDemo, setIsDemo] = useState(false)
   const { user } = useAuth()
   const location = useLocation()
   const isLoginPage = location.pathname === '/login'
 
-  useEffect(() => {
-    const handler = () => setIsDemo(true)
-    window.addEventListener('olivia:demo-activated', handler)
-    return () => window.removeEventListener('olivia:demo-activated', handler)
-  }, [])
-
   return (
     <div className="app">
       {user && !isLoginPage && <TopNav />}
-      {isDemo && (
-        <div className="demo-banner">Modalità demo — dati di esempio</div>
-      )}
       <Routes>
         <Route path='/login' element={<LoginPage />} />
         <Route path='/' element={<RequireAuth><HomePage /></RequireAuth>} />

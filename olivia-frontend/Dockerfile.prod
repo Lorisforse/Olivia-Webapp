@@ -10,8 +10,8 @@ RUN npm ci
 
 COPY . .
 
-# In dev/GitHub Pages il base path è /Olivia-Webapp/ (vedi vite.config.js).
-# Sul VPS l'app vive sulla root del suo (sotto)dominio, quindi va sovrascritto.
+# L'app vive sulla root del suo (sotto)dominio; VITE_BASE resta configurabile
+# nel caso servisse mai un deploy sotto un sottopercorso.
 ARG VITE_API_URL
 ARG VITE_BASE=/
 ENV VITE_API_URL=${VITE_API_URL}

@@ -1,6 +1,4 @@
-import { authHeaders, notifyUnauthorized } from './auth'
-import { UnauthorizedError, withDemo } from './demo'
-import { getMockPatients, getMockPatient, getMockLogs } from './mockData'
+import { authHeaders, notifyUnauthorized, UnauthorizedError } from './auth'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -17,56 +15,38 @@ async function _json(res) {
 }
 
 export async function getPatients() {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/`, { headers: authHeaders() })),
-    getMockPatients,
-  )
+  return _json(await fetch(`${API_URL}/patients/`, { headers: authHeaders() }))
 }
 
 export async function getPatient(id) {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}`, { headers: authHeaders() })),
-    () => getMockPatient(id),
-  )
+  return _json(await fetch(`${API_URL}/patients/${id}`, { headers: authHeaders() }))
 }
 
 export async function createPatient(payload) {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/`, {
-      method: 'POST',
-      headers: { ...JSON_HEADERS, ...authHeaders() },
-      body: JSON.stringify(payload),
-    })),
-    () => ({ id: `demo-new-${Date.now()}`, ...payload }),
-  )
+  return _json(await fetch(`${API_URL}/patients/`, {
+    method: 'POST',
+    headers: { ...JSON_HEADERS, ...authHeaders() },
+    body: JSON.stringify(payload),
+  }))
 }
 
 export async function updatePatient(id, payload) {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}`, {
-      method: 'PATCH',
-      headers: { ...JSON_HEADERS, ...authHeaders() },
-      body: JSON.stringify(payload),
-    })),
-    () => null,
-  )
+  return _json(await fetch(`${API_URL}/patients/${id}`, {
+    method: 'PATCH',
+    headers: { ...JSON_HEADERS, ...authHeaders() },
+    body: JSON.stringify(payload),
+  }))
 }
 
 export async function getPatientDiet(id) {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}/diet`, { headers: authHeaders() })),
-    () => null,
-  )
+  return _json(await fetch(`${API_URL}/patients/${id}/diet`, { headers: authHeaders() }))
 }
 
 export async function assignDiet(patientId, dietId) {
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${patientId}/diet/${dietId}`, {
-      method: 'POST',
-      headers: authHeaders(),
-    })),
-    () => null,
-  )
+  return _json(await fetch(`${API_URL}/patients/${patientId}/diet/${dietId}`, {
+    method: 'POST',
+    headers: authHeaders(),
+  }))
 }
 
 export async function getPatientLogs(id, { from, to } = {}) {
@@ -74,10 +54,7 @@ export async function getPatientLogs(id, { from, to } = {}) {
   if (from) params.set('from', from)
   if (to) params.set('to', to)
   const qs = params.toString()
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}/logs${qs ? '?' + qs : ''}`, { headers: authHeaders() })),
-    () => getMockLogs(id),
-  )
+  return _json(await fetch(`${API_URL}/patients/${id}/logs${qs ? '?' + qs : ''}`, { headers: authHeaders() }))
 }
 
 export async function getDailyReports(id, { from, to } = {}) {
@@ -85,10 +62,7 @@ export async function getDailyReports(id, { from, to } = {}) {
   if (from) params.set('from', from)
   if (to) params.set('to', to)
   const qs = params.toString()
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}/reports/daily${qs ? '?' + qs : ''}`, { headers: authHeaders() })),
-    () => ({ days: [] }),
-  )
+  return _json(await fetch(`${API_URL}/patients/${id}/reports/daily${qs ? '?' + qs : ''}`, { headers: authHeaders() }))
 }
 
 export async function getWeeklyReports(id, { from, to } = {}) {
@@ -96,8 +70,5 @@ export async function getWeeklyReports(id, { from, to } = {}) {
   if (from) params.set('from', from)
   if (to) params.set('to', to)
   const qs = params.toString()
-  return withDemo(
-    async () => _json(await fetch(`${API_URL}/patients/${id}/reports/weekly${qs ? '?' + qs : ''}`, { headers: authHeaders() })),
-    () => ({ weeks: [] }),
-  )
+  return _json(await fetch(`${API_URL}/patients/${id}/reports/weekly${qs ? '?' + qs : ''}`, { headers: authHeaders() }))
 }

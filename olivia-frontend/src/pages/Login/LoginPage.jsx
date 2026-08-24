@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import OliviaLogo from '../../components/OliviaLogo'
-import { DEMO_CREDENTIALS, probeBackend } from '../../api/auth'
-import { UnauthorizedError } from '../../api/demo'
+import { UnauthorizedError } from '../../api/auth'
 import { useAuth } from '../../context/AuthContext'
 
 const POINTS = [
@@ -49,20 +48,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [demo, setDemo] = useState(false)
-
-  // Se il backend non risponde la dashboard gira sui dati di esempio: in quel
-  // caso il login è simbolico, quindi precompiliamo le credenziali demo.
-  useEffect(() => {
-    let cancelled = false
-    probeBackend().then(online => {
-      if (cancelled || online) return
-      setDemo(true)
-      setEmail(DEMO_CREDENTIALS.email)
-      setPassword(DEMO_CREDENTIALS.password)
-    })
-    return () => { cancelled = true }
-  }, [])
 
   if (user) return <Navigate to={from} replace />
 
@@ -121,13 +106,6 @@ export default function LoginPage() {
           <div className="page-eyebrow">Area riservata</div>
           <h1 className="login-card__title">Accedi allo studio</h1>
           <p className="login-card__sub">Usa le credenziali del tuo account clinico.</p>
-
-          {demo && (
-            <div className="login-note">
-              <strong>Modalità demo.</strong> Il backend non risponde, quindi la dashboard
-              mostra dati di esempio: le credenziali sono già compilate, premi Accedi.
-            </div>
-          )}
 
           {error && <div className="login-error" role="alert">{error}</div>}
 

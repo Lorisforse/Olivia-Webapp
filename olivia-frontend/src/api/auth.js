@@ -1,12 +1,16 @@
-import { UnauthorizedError, withDemo } from './demo'
-import { getMockUser } from './mockData'
-
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const STORAGE_KEY = 'olivia.session'
 
-// Credenziali mostrate (e precompilate) quando il backend non risponde e la
-// dashboard gira in modalità demo, come sulla GitHub Pages pubblica.
-export const DEMO_CREDENTIALS = { email: 'demo@olivia.it', password: 'demo' }
+/**
+ * Errore 401 del backend: credenziali non valide o sessione scaduta.
+ * Va distinto dagli altri errori perché comporta un logout, non un errore generico.
+ */
+export class UnauthorizedError extends Error {
+  constructor(message = 'Non autorizzato') {
+    super(message)
+    this.name = 'UnauthorizedError'
+  }
+}
 
 // "Resta connesso" = localStorage, che sopravvive alla chiusura del browser.
 // Senza spunta si usa sessionStorage: la sessione muore con la scheda.
@@ -62,50 +66,28 @@ export function notifyUnauthorized() {
 }
 
 export async function login({ email, password, remember }) {
-  const session = await withDemo(
-    async () => {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, remember_me: !!remember }),
-      })
-      if (res.status === 401) throw new UnauthorizedError('Credenziali non valide')
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      return { token: data.access_token, expiresAt: data.expires_at, user: data.user }
-    },
-    () => ({ token: 'demo-token', expiresAt: null, user: getMockUser() }),
-  )
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, remember_me: !!remember }),
+  })
+  if (res.status === 401) throw new UnauthorizedError('Credenziali non valide')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json()
+  const session = { token: data.access_token, expiresAt: data.expires_at, user: data.user }
   saveSession(session, remember)
   return session.user
 }
 
 /** Validazione della sessione salvata nel browser all'avvio dell'app. */
 export async function fetchMe() {
-  return withDemo(
-    async () => {
-      const res = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() })
-      if (res.status === 401) {
-        notifyUnauthorized()
-        throw new UnauthorizedError()
-      }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return res.json()
-    },
-    () => readSession()?.user ?? getMockUser(),
-  )
-}
-
-/** true se il backend risponde: usata dal login per riconoscere la modalità demo. */
-export async function probeBackend() {
-  return withDemo(
-    async () => {
-      const res = await fetch(`${API_URL}/`)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      return true
-    },
-    () => false,
-  )
+  const res = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() })
+  if (res.status === 401) {
+    notifyUnauthorized()
+    throw new UnauthorizedError()
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
 }
 
 export function logout() {

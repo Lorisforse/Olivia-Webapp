@@ -914,19 +914,6 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
 }
 
 /* ============================================================
-   DEMO BANNER
-   ============================================================ */
-.demo-banner {
-  background: var(--brand-900);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
-  text-align: center;
-  padding: 7px 16px;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* ============================================================
    LOGIN
    ============================================================ */
 .login {

@@ -1,7 +1,5 @@
 # Olivia — Web Dashboard
 
-> **[🌐 Live Demo](https://lorisforse.github.io/Olivia-Webapp/)** — modalità demo con dati di esempio
-
 ---
 
 ## 🇮🇹 Italiano
@@ -24,7 +22,7 @@ Il sistema si integra con un chatbot Telegram esistente (**Olivia**) che interag
 | Frontend | React 19 + Vite + CSS custom |
 | Backend | FastAPI (Python) |
 | Database | MongoDB (condiviso con il bot) |
-| Deploy | GitHub Pages (frontend) + Docker (backend) |
+| Deploy | Docker Compose su VPS, CI/CD Jenkins (frontend + backend) |
 
 ### Avvio in locale
 
@@ -43,7 +41,7 @@ npm install
 npm run dev
 ```
 
-Il frontend si connette al backend su `http://localhost:8000`. Se il backend non è raggiungibile, l'app entra automaticamente in **modalità demo** con dati di esempio.
+Il frontend si connette al backend su `http://localhost:8000` (override con `VITE_API_URL`). Senza backend raggiungibile l'app non funziona: non esiste più una modalità con dati di esempio.
 
 ### Accesso
 
@@ -60,23 +58,21 @@ La spunta **Resta connesso** salva la sessione per 30 giorni (`localStorage`); s
 dura quanto la scheda del browser (`sessionStorage`). Il segreto con cui vengono firmati i
 token si imposta con `JWT_SECRET` nel `.env`.
 
-In modalità demo, quando il backend non risponde, il login accetta le credenziali di
-esempio già precompilate nel form.
-
 ### Struttura del progetto
 
 ```
 Olivia-Webapp/
-├── .github/workflows/deploy.yml   # CI/CD → GitHub Pages
-├── olivia-frontend/               # React + Vite
+├── Jenkinsfile                     # CI/CD → build e deploy su VPS
+├── docker-compose.prod.yml         # Servizi di produzione (frontend + backend)
+├── olivia-frontend/                # React + Vite
 │   └── src/
-│       ├── api/                   # Layer API + mock data
-│       ├── pages/                 # Login, Home, Pazienti, Diete, NuovoPaziente
-│       └── styles/                # Design system CSS
-└── olivia-backend/                # FastAPI
+│       ├── api/                    # Layer API
+│       ├── pages/                  # Login, Home, Pazienti, Diete, NuovoPaziente
+│       └── styles/                 # Design system CSS
+└── olivia-backend/                 # FastAPI
     └── src/
-        ├── routers/               # auth, patients, diets, logs, reports
-        └── schemas/               # Pydantic schemas
+        ├── routers/                # auth, patients, diets, logs, reports
+        └── schemas/                # Pydantic schemas
 ```
 
 ---
@@ -101,7 +97,7 @@ The system integrates with an existing Telegram chatbot (**Olivia**) that intera
 | Frontend | React 19 + Vite + custom CSS |
 | Backend | FastAPI (Python) |
 | Database | MongoDB (shared with the bot) |
-| Deploy | GitHub Pages (frontend) + Docker (backend) |
+| Deploy | Docker Compose on a VPS, Jenkins CI/CD (frontend + backend) |
 
 ### Running locally
 
@@ -120,7 +116,7 @@ npm install
 npm run dev
 ```
 
-The frontend connects to the backend at `http://localhost:8000`. If the backend is unreachable, the app automatically switches to **demo mode** with sample data.
+The frontend connects to the backend at `http://localhost:8000` (override with `VITE_API_URL`). Without a reachable backend the app does not work: there is no more sample-data mode.
 
 ### Sign in
 
@@ -137,23 +133,21 @@ The **Resta connesso** ("keep me signed in") checkbox stores the session for 30 
 `localStorage`; without it the session lasts as long as the browser tab (`sessionStorage`).
 The token signing secret is set through `JWT_SECRET` in `.env`.
 
-In demo mode, when the backend is unreachable, the login accepts the sample credentials
-already filled in the form.
-
 ### Project structure
 
 ```
 Olivia-Webapp/
-├── .github/workflows/deploy.yml   # CI/CD → GitHub Pages
-├── olivia-frontend/               # React + Vite
+├── Jenkinsfile                     # CI/CD → build and deploy on the VPS
+├── docker-compose.prod.yml         # Production services (frontend + backend)
+├── olivia-frontend/                # React + Vite
 │   └── src/
-│       ├── api/                   # API layer + mock data
-│       ├── pages/                 # Login, Home, Patients, Diets, NewPatient
-│       └── styles/                # CSS design system
-└── olivia-backend/                # FastAPI
+│       ├── api/                    # API layer
+│       ├── pages/                  # Login, Home, Patients, Diets, NewPatient
+│       └── styles/                 # CSS design system
+└── olivia-backend/                 # FastAPI
     └── src/
-        ├── routers/               # auth, patients, diets, logs, reports
-        └── schemas/               # Pydantic schemas
+        ├── routers/                # auth, patients, diets, logs, reports
+        └── schemas/                # Pydantic schemas
 ```
 
 ---
