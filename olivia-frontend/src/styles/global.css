@@ -951,11 +951,11 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
 .error-screen { color: var(--danger); }
 .loading-olive {
   transform-origin: 50% 9%;
-  animation: loading-swing 1.6s ease-in-out infinite alternate;
+  animation: loading-swing .9s ease-in-out infinite alternate;
 }
 .loading-olive__leaf {
   transform-origin: 23px 3px;
-  animation: loading-flutter 1.1s ease-in-out infinite alternate;
+  animation: loading-flutter .65s ease-in-out infinite alternate;
 }
 @keyframes loading-swing { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
 @keyframes loading-flutter { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }

@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from 'react'
  * l'animazione di caricamento fa in tempo a essere vista invece di
  * lampeggiare per un istante. Non rallenta la fetch: solo la UI.
  */
-export function useMinDuration(active, minMs = 700) {
+// 1900ms copre un ciclo completo di andata e ritorno dell'oliva in
+// LoadingScreen (animazione `loading-swing`, .9s per verso) più un margine.
+export function useMinDuration(active, minMs = 1900) {
   const [shown, setShown] = useState(active)
   const startedAt = useRef(active ? Date.now() : null)
 
