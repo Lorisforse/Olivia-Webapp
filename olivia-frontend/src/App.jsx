@@ -6,6 +6,7 @@ import PatientDetail from './pages/PatientDetail'
 import NuovoPaziente from './pages/NuovoPaziente/NuovoPaziente'
 import DietePage from './pages/Diete/DietePage'
 import LoginPage from './pages/Login/LoginPage'
+import LoadingScreen from './components/LoadingScreen'
 import { useAuth } from './context/AuthContext'
 
 /**
@@ -19,7 +20,7 @@ function RequireAuth({ children }) {
   // Con una sessione ripristinata da storage si entra subito: la validazione
   // contro il backend prosegue in background e, se fallisce, riporta al login.
   if (user) return children
-  if (checking) return <div className="loading-screen">Caricamento…</div>
+  if (checking) return <LoadingScreen />
   return <Navigate to="/login" replace state={{ from: location }} />
 }
 

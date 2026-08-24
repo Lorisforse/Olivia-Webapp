@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { getPatients, assignDiet as assignDietToPatient } from '../../api/patients'
 import { getDiets, createDiet } from '../../api/diets'
+import LoadingScreen from '../../components/LoadingScreen'
 
 function getInitials(name) {
   if (!name) return '?'
@@ -148,7 +149,7 @@ export default function DietePage() {
     }
   }
 
-  if (loading) return <div className="loading-screen">Caricamento piani dietetici…</div>
+  if (loading) return <LoadingScreen label="Caricamento piani dietetici…" />
   if (error) return <div className="error-screen">Errore: {error}</div>
 
   return (

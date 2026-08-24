@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getPatient, updatePatient, getPatientLogs } from '../../api/patients'
+import LoadingScreen from '../../components/LoadingScreen'
 
 function deriveStatus(p) {
   if (!p.chat_id) return 'waiting'
@@ -301,7 +302,7 @@ function BotTab({ patientId, status }) {
     )
   }
 
-  if (loading) return <div className="loading-screen">Caricamento attività bot…</div>
+  if (loading) return <LoadingScreen label="Caricamento attività bot…" />
 
   if (!logs.length) {
     return (
@@ -453,7 +454,7 @@ export default function PatientDetail() {
     setTimeout(() => setToast(''), 2000)
   }
 
-  if (loading) return <div className="loading-screen">Caricamento paziente…</div>
+  if (loading) return <LoadingScreen label="Caricamento paziente…" />
   if (error || !patient) return (
     <div className="error-screen">
       {error || 'Paziente non trovato.'}

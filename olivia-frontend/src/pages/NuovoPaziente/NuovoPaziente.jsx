@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPatient } from '../../api/patients'
+import SuccessOverlay from '../../components/SuccessOverlay'
 
 function ageFromDob(dob) {
   if (!dob) return null
@@ -29,6 +30,7 @@ export default function NuovoPaziente() {
   const [activity, setActivity] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState('')
+  const [createdName, setCreatedName] = useState('')
   const [form, setForm] = useState({
     firstName: '', lastName: '', dob: '', city: '',
     weight: '', height: '', goal: '', allergies: '',
@@ -61,8 +63,9 @@ export default function NuovoPaziente() {
     }
     setSubmitting(true)
     try {
+      const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`
       await createPatient({
-        full_name: `${form.firstName.trim()} ${form.lastName.trim()}`,
+        full_name: fullName,
         gender: sex === 'F' ? 'Femmina' : sex === 'M' ? 'Maschio' : 'Non specificato',
         age: ageFromDob(form.dob),
         living_at: form.city,
@@ -72,7 +75,7 @@ export default function NuovoPaziente() {
         allergies: form.allergies || null,
         notes: form.clinicalNotes || null,
       })
-      showToast('Paziente creato', () => navigate('/pazienti'))
+      setCreatedName(fullName)
     } catch (err) {
       showToast('Errore: ' + err.message)
       setSubmitting(false)
@@ -283,6 +286,13 @@ export default function NuovoPaziente() {
       </main>
 
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
+
+      <SuccessOverlay
+        show={!!createdName}
+        title="Paziente creato"
+        message={`Scheda di ${createdName} creata e pronta in elenco.`}
+        onDone={() => navigate('/pazienti')}
+      />
     </>
   )
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getPatients, assignDiet } from '../../api/patients'
 import { getDiets } from '../../api/diets'
+import LoadingScreen from '../../components/LoadingScreen'
 
 const STATUS_CONFIG = {
   active:  { label: 'Attivo',      pill: 'ok',   action: 'Vedi attività' },
@@ -137,7 +138,7 @@ export default function PazientiPage() {
     }
   }, [assignModal, assignDietId])
 
-  if (loading) return <div className="loading-screen">Caricamento pazienti…</div>
+  if (loading) return <LoadingScreen label="Caricamento pazienti…" />
   if (error) return <div className="error-screen">Errore: {error}</div>
 
   return (

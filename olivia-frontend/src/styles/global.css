@@ -844,6 +844,66 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ============================================================
+   SUCCESS OVERLAY
+   ============================================================ */
+.success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(31, 36, 25, .28);
+  animation: success-fade .15s ease;
+}
+.success-card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 32px 28px;
+  width: min(280px, 84vw);
+  text-align: center;
+  animation: success-pop .45s cubic-bezier(.2, 1.4, .4, 1);
+}
+.success-badge {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+}
+.success-badge__check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: success-draw .5s ease .35s forwards;
+}
+.success-card__title { font-size: 16px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+.success-card__msg { font-size: 13px; color: var(--ink-3); }
+.success-confetti { position: absolute; inset: 0; pointer-events: none; }
+.success-confetti__dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 0 50% 50% 50%;
+  background: var(--dot-color);
+  opacity: 0;
+  animation: success-confetti .9s ease-out var(--dot-delay) forwards;
+}
+@keyframes success-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes success-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+@keyframes success-draw { to { stroke-dashoffset: 0; } }
+@keyframes success-confetti {
+  0% { opacity: 0; transform: rotate(var(--dot-angle)) translate(0, 0) scale(.4); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--dot-angle)) translate(46px, 0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .success-overlay, .success-card, .success-badge__check, .success-confetti__dot { animation: none !important; }
+  .success-badge__check { stroke-dashoffset: 0; }
+}
+
+/* ============================================================
    EMPTY STATE
    ============================================================ */
 .empty-state {
@@ -887,8 +947,21 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
   height: 200px;
   font-size: 13px;
 }
-.loading-screen { color: var(--ink-4); }
+.loading-screen { color: var(--ink-4); flex-direction: column; gap: 12px; }
 .error-screen { color: var(--danger); }
+.loading-olive {
+  transform-origin: 50% 9%;
+  animation: loading-swing 1.6s ease-in-out infinite alternate;
+}
+.loading-olive__leaf {
+  transform-origin: 23px 3px;
+  animation: loading-flutter 1.1s ease-in-out infinite alternate;
+}
+@keyframes loading-swing { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
+@keyframes loading-flutter { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .loading-olive, .loading-olive__leaf { animation: none; }
+}
 
 /* section subhead (inside form) */
 .section-subhead {
