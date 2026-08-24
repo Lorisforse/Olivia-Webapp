@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getPatients, assignDiet } from '../../api/patients'
 import { getDiets } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
+import { useMinDuration } from '../../hooks/useMinDuration'
 
 const STATUS_CONFIG = {
   active:  { label: 'Attivo',      pill: 'ok',   action: 'Vedi attività' },
@@ -54,6 +55,7 @@ export default function PazientiPage() {
   const [patients, setPatients] = useState([])
   const [diets, setDiets] = useState([])
   const [loading, setLoading] = useState(true)
+  const showLoading = useMinDuration(loading)
   const [error, setError] = useState(null)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
@@ -138,7 +140,7 @@ export default function PazientiPage() {
     }
   }, [assignModal, assignDietId])
 
-  if (loading) return <LoadingScreen label="Caricamento pazienti…" />
+  if (showLoading) return <LoadingScreen label="Caricamento pazienti…" />
   if (error) return <div className="error-screen">Errore: {error}</div>
 
   return (

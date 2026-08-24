@@ -7,6 +7,7 @@ import NuovoPaziente from './pages/NuovoPaziente/NuovoPaziente'
 import DietePage from './pages/Diete/DietePage'
 import LoginPage from './pages/Login/LoginPage'
 import LoadingScreen from './components/LoadingScreen'
+import { useMinDuration } from './hooks/useMinDuration'
 import { useAuth } from './context/AuthContext'
 
 /**
@@ -16,11 +17,12 @@ import { useAuth } from './context/AuthContext'
 function RequireAuth({ children }) {
   const { user, checking } = useAuth()
   const location = useLocation()
+  const showChecking = useMinDuration(checking)
 
   // Con una sessione ripristinata da storage si entra subito: la validazione
   // contro il backend prosegue in background e, se fallisce, riporta al login.
   if (user) return children
-  if (checking) return <LoadingScreen />
+  if (showChecking) return <LoadingScreen />
   return <Navigate to="/login" replace state={{ from: location }} />
 }
 

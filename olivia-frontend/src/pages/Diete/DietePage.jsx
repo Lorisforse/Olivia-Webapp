@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { getPatients, assignDiet as assignDietToPatient } from '../../api/patients'
 import { getDiets, createDiet } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
+import { useMinDuration } from '../../hooks/useMinDuration'
 
 function getInitials(name) {
   if (!name) return '?'
@@ -31,6 +32,7 @@ export default function DietePage() {
   const [diets, setDiets] = useState([])
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
+  const showLoading = useMinDuration(loading)
   const [error, setError] = useState(null)
   const [query, setQuery] = useState('')
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -149,7 +151,7 @@ export default function DietePage() {
     }
   }
 
-  if (loading) return <LoadingScreen label="Caricamento piani dietetici…" />
+  if (showLoading) return <LoadingScreen label="Caricamento piani dietetici…" />
   if (error) return <div className="error-screen">Errore: {error}</div>
 
   return (

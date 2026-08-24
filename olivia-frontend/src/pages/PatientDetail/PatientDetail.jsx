@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getPatient, updatePatient, getPatientLogs } from '../../api/patients'
 import LoadingScreen from '../../components/LoadingScreen'
+import { useMinDuration } from '../../hooks/useMinDuration'
 
 function deriveStatus(p) {
   if (!p.chat_id) return 'waiting'
@@ -276,6 +277,7 @@ function ProfileTab({ patient, onSave }) {
 function BotTab({ patientId, status }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
+  const showLoading = useMinDuration(loading)
 
   useEffect(() => {
     if (status === 'waiting') { setLoading(false); return }
@@ -302,7 +304,7 @@ function BotTab({ patientId, status }) {
     )
   }
 
-  if (loading) return <LoadingScreen label="Caricamento attività bot…" />
+  if (showLoading) return <LoadingScreen label="Caricamento attività bot…" />
 
   if (!logs.length) {
     return (
@@ -432,6 +434,7 @@ export default function PatientDetail() {
   const [patient, setPatient] = useState(null)
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(true)
+  const showLoading = useMinDuration(loading)
   const [error, setError] = useState(null)
   const [toast, setToast] = useState('')
 
@@ -454,7 +457,7 @@ export default function PatientDetail() {
     setTimeout(() => setToast(''), 2000)
   }
 
-  if (loading) return <LoadingScreen label="Caricamento paziente…" />
+  if (showLoading) return <LoadingScreen label="Caricamento paziente…" />
   if (error || !patient) return (
     <div className="error-screen">
       {error || 'Paziente non trovato.'}
