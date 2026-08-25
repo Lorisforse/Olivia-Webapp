@@ -9,7 +9,17 @@ async function _json(res) {
     notifyUnauthorized()
     throw new UnauthorizedError()
   }
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  if (!res.ok) {
+    // Il body (se c'è) va comunque letto e allegato all'errore: per un 422
+    // FastAPI manda in `detail` l'elenco dei campi che hanno fallito la
+    // validazione — utile in console per capire cosa correggere, anche se
+    // in UI mostriamo sempre un messaggio generico.
+    const detail = await res.json().catch(() => null)
+    const err = new Error(`HTTP ${res.status}`)
+    err.status = res.status
+    err.detail = detail
+    throw err
+  }
   if (res.status === 204) return null
   return res.json()
 }

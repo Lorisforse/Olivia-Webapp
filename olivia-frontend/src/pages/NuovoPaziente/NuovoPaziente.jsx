@@ -30,7 +30,7 @@ export default function NuovoPaziente() {
   const [sex, setSex] = useState('')
   const [activity, setActivity] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [toast, setToast] = useState('')
+  const [formError, setFormError] = useState('')
   const [createdName, setCreatedName] = useState('')
   const [form, setForm] = useState({
     firstName: '', lastName: '', dob: '', city: '',
@@ -47,19 +47,15 @@ export default function NuovoPaziente() {
     setForm(f => ({ ...f, [key]: val }))
   }
 
-  function showToast(msg, cb) {
-    setToast(msg)
-    setTimeout(() => { setToast(''); if (cb) cb() }, 1800)
-  }
-
   async function handleSubmit(e) {
     e.preventDefault()
+    setFormError('')
     if (!form.firstName || !form.lastName || !sex || !form.dob || !form.city) {
-      showToast('Compila tutti i campi obbligatori dell\'anagrafica')
+      setFormError('Mancano dei campi obbligatori nei dati anagrafici.')
       return
     }
     if (!form.weight || !form.height || !form.goal) {
-      showToast('Compila tutti i campi clinici obbligatori')
+      setFormError('Mancano dei campi obbligatori nei dati clinici.')
       return
     }
     setSubmitting(true)
@@ -85,7 +81,8 @@ export default function NuovoPaziente() {
       })
       setCreatedName(fullName)
     } catch (err) {
-      showToast('Errore: ' + err.message)
+      console.error('Creazione paziente fallita:', err.detail || err)
+      setFormError('Non siamo riusciti a salvare la scheda. Controlla i dati e riprova.')
       setSubmitting(false)
     }
   }
@@ -282,6 +279,17 @@ export default function NuovoPaziente() {
             )}
           </div>
 
+          {formError && (
+            <div className="form-error" role="alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="13" />
+                <line x1="12" y1="16.5" x2="12" y2="16.51" />
+              </svg>
+              <span>{formError}</span>
+            </div>
+          )}
+
           <div className="form-footer">
             <button type="button" className="btn btn--ghost" onClick={() => navigate('/pazienti')}>Annulla</button>
             <div className="form-footer-right">
@@ -292,8 +300,6 @@ export default function NuovoPaziente() {
           </div>
         </form>
       </main>
-
-      <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
 
       <SuccessOverlay
         show={!!createdName}
