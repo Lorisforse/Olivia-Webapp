@@ -75,10 +75,10 @@ export default function LoginPage() {
   return (
     <div className="login">
       <aside className="login__brand">
-        <OliviaLogo height={44} />
+        <OliviaLogo height={64} />
 
         <div className="login__brand-body">
-          <h2 className="login__claim">La dieta continua<br />anche fuori dallo studio.</h2>
+          <h2 className="login__claim">La dieta continua<br />anche tra una visita e l'altra.</h2>
           <ul className="login__points">
             {POINTS.map(point => (
               <li key={point.title} className="login__point">
@@ -104,7 +104,7 @@ export default function LoginPage() {
       <main className="login__panel">
         <div className="login-card">
           <div className="page-eyebrow">Area riservata</div>
-          <h1 className="login-card__title">Accedi allo studio</h1>
+          <h1 className="login-card__title">Bentornato</h1>
           <p className="login-card__sub">Usa le credenziali del tuo account clinico.</p>
 
           {error && <div className="login-error" role="alert">{error}</div>}
@@ -118,7 +118,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 autoFocus
-                placeholder="nome@studio.it"
+                placeholder="nome@esempio.it"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 aria-invalid={error ? 'true' : undefined}
@@ -164,7 +164,7 @@ export default function LoginPage() {
           </form>
 
           <p className="login-card__foot">
-            Gli account vengono creati dall'amministratore dello studio.
+            Gli account vengono creati dall'amministratore.
           </p>
         </div>
       </main>

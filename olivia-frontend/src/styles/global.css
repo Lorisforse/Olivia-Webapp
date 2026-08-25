@@ -1121,7 +1121,7 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
   padding: 48px 32px;
   background: var(--bg);
 }
-.login-card { width: 100%; max-width: 384px; }
+.login-card { width: 100%; max-width: 384px; text-align: center; }
 .login-card__title {
   font-size: 26px;
   font-weight: 600;
@@ -1137,6 +1137,7 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
   flex-direction: column;
   gap: 16px;
   margin-top: 26px;
+  text-align: left;
 }
 .login__submit { width: 100%; margin-top: 6px; }
 .login__submit:disabled { opacity: .6; cursor: default; }
