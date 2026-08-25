@@ -21,6 +21,15 @@ def _diet_id(diet_ref) -> str | None:
         return str(diet_ref["$id"])
     return None
 
+# Collection scritte dal bot che referenziano il paziente con un DBRef
+# `user` (Beanie `Link[User]`) — vanno ripulite quando il paziente viene
+# eliminato, altrimenti restano log/report orfani nel Mongo condiviso.
+_PATIENT_LOG_COLLECTIONS = [
+    "meal-logs", "hydration-logs", "weight-logs", "wellness-logs",
+    "daily-reports", "weekly-reports", "chat-logs", "training-logs",
+    "notification-logs",
+]
+
 _PROFILE_FIELDS = [
     "name", "gender", "age", "job", "living_at", "phone", "email",
     "weight", "height",
@@ -138,6 +147,18 @@ async def create_patient(payload: PatientCreate, db=Depends(get_database)):
     result = await db["users"].insert_one(doc)
     created = await db["users"].find_one({"_id": result.inserted_id})
     return _doc_to_detail(created)
+
+
+@router.delete("/{patient_id}", status_code=204)
+async def delete_patient(patient_id: str, db=Depends(get_database)):
+    oid = _oid(patient_id)
+    if not await db["users"].find_one({"_id": oid}, {"_id": 1}):
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    for collection in _PATIENT_LOG_COLLECTIONS:
+        await db[collection].delete_many({"user.$id": oid})
+
+    await db["users"].delete_one({"_id": oid})
 
 
 @router.get("/{patient_id}", response_model=PatientDetail)

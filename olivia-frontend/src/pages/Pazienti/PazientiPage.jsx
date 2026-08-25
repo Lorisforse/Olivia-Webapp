@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getPatients, assignDiet } from '../../api/patients'
+import { getPatients, assignDiet, deletePatient } from '../../api/patients'
 import { getDiets } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
+import DeletePatientModal from '../../components/DeletePatientModal'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 const STATUS_CONFIG = {
@@ -64,6 +65,7 @@ export default function PazientiPage() {
   const [assignDietId, setAssignDietId] = useState('')
   const [assignDate, setAssignDate] = useState(new Date().toISOString().slice(0, 10))
   const [assigning, setAssigning] = useState(false)
+  const [deleteModal, setDeleteModal] = useState(null)
 
   useEffect(() => {
     Promise.all([getPatients(), getDiets()])
@@ -139,6 +141,13 @@ export default function PazientiPage() {
       setAssigning(false)
     }
   }, [assignModal, assignDietId])
+
+  const handleConfirmDelete = useCallback(async (patient) => {
+    await deletePatient(patient.id)
+    setPatients(prev => prev.filter(p => p.id !== patient.id))
+    setDeleteModal(null)
+    showToast('Paziente eliminato')
+  }, [])
 
   if (showLoading) return <LoadingScreen label="Caricamento pazienti…" />
   if (error) return <div className="error-screen">Errore: {error}</div>
@@ -250,12 +259,27 @@ export default function PazientiPage() {
                       }
                     </td>
                     <td className="col-actions">
-                      <button
-                        className="btn btn--secondary btn--sm"
-                        onClick={e => handleRowAction(e, p)}
-                      >
-                        {cfg.action}
-                      </button>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                        <button
+                          className="btn btn--secondary btn--sm"
+                          onClick={e => handleRowAction(e, p)}
+                        >
+                          {cfg.action}
+                        </button>
+                        <button
+                          className="btn-icon"
+                          onClick={e => { e.stopPropagation(); setDeleteModal(p) }}
+                          aria-label={`Elimina ${p.name || 'paziente'}`}
+                          title="Elimina paziente"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6" /><path d="M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
@@ -313,6 +337,12 @@ export default function PazientiPage() {
           </div>
         </div>
       )}
+
+      <DeletePatientModal
+        patient={deleteModal}
+        onCancel={() => setDeleteModal(null)}
+        onConfirm={handleConfirmDelete}
+      />
 
       <Toast message={toast} onHide={() => setToast('')} />
     </>
