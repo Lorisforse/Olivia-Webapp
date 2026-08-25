@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPatient } from '../../api/patients'
 import SuccessOverlay from '../../components/SuccessOverlay'
+import Breadcrumb from '../../components/Breadcrumb'
 import { splitList } from '../../utils/text'
 
 function ageFromDob(dob) {
@@ -121,18 +122,8 @@ export default function NuovoPaziente() {
 
   return (
     <>
+      <Breadcrumb parent="Pazienti" parentTo="/pazienti" current="Nuovo paziente" />
       <main className="page page--narrow">
-        <button
-          className="back-link"
-          onClick={() => navigate('/pazienti')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          Tutti i pazienti
-        </button>
-
         <header className="page-header" style={{ marginBottom: 24 }}>
           <div>
             <h1 className="page-title">Nuovo paziente</h1>

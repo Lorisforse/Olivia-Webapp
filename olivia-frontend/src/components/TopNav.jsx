@@ -63,8 +63,6 @@ export default function TopNav() {
         </NavLink>
       </nav>
 
-      <div className="topbar__spacer" />
-
       <button
         ref={btnRef}
         className="topbar__avatar-btn"
