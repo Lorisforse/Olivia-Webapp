@@ -24,6 +24,9 @@ function ChevronDown() {
   )
 }
 
+const ANAGRAFICA_KEYS = ['firstName', 'lastName', 'sex', 'dob', 'city']
+const CLINICI_KEYS = ['weight', 'height', 'goal']
+
 export default function NuovoPaziente() {
   const navigate = useNavigate()
   const [open, setOpen] = useState({ anagrafica: true, clinici: true, abitudini: false })
@@ -31,6 +34,7 @@ export default function NuovoPaziente() {
   const [activity, setActivity] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
+  const [invalidFields, setInvalidFields] = useState({})
   const [createdName, setCreatedName] = useState('')
   const [form, setForm] = useState({
     firstName: '', lastName: '', dob: '', city: '',
@@ -45,19 +49,47 @@ export default function NuovoPaziente() {
 
   function setF(key, val) {
     setForm(f => ({ ...f, [key]: val }))
+    if (val && invalidFields[key]) setInvalidFields(v => ({ ...v, [key]: false }))
+  }
+
+  function pickSex(val) {
+    setSex(val)
+    if (invalidFields.sex) setInvalidFields(v => ({ ...v, sex: false }))
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
+    const missing = {}
+    if (!form.firstName) missing.firstName = true
+    if (!form.lastName) missing.lastName = true
+    if (!sex) missing.sex = true
+    if (!form.dob) missing.dob = true
+    if (!form.city) missing.city = true
+    if (!form.weight) missing.weight = true
+    if (!form.height) missing.height = true
+    if (!form.goal) missing.goal = true
+
+    if (Object.keys(missing).length) {
+      const missingAnagrafica = ANAGRAFICA_KEYS.some(k => missing[k])
+      const missingClinici = CLINICI_KEYS.some(k => missing[k])
+      setInvalidFields(missing)
+      setOpen(o => ({
+        ...o,
+        anagrafica: o.anagrafica || missingAnagrafica,
+        clinici: o.clinici || missingClinici,
+      }))
+      setFormError(
+        missingAnagrafica && missingClinici
+          ? 'Mancano dei campi obbligatori nei dati anagrafici e clinici.'
+          : missingAnagrafica
+            ? 'Mancano dei campi obbligatori nei dati anagrafici.'
+            : 'Mancano dei campi obbligatori nei dati clinici.'
+      )
+      return
+    }
+
     setFormError('')
-    if (!form.firstName || !form.lastName || !sex || !form.dob || !form.city) {
-      setFormError('Mancano dei campi obbligatori nei dati anagrafici.')
-      return
-    }
-    if (!form.weight || !form.height || !form.goal) {
-      setFormError('Mancano dei campi obbligatori nei dati clinici.')
-      return
-    }
+    setInvalidFields({})
     setSubmitting(true)
     try {
       const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`
@@ -124,18 +156,18 @@ export default function NuovoPaziente() {
                 <div className="form-grid">
                   <div className="field">
                     <label htmlFor="firstName">Nome<span className="req">*</span></label>
-                    <input className="input" id="firstName" placeholder="es. Sofia" value={form.firstName} onChange={e => setF('firstName', e.target.value)} />
+                    <input className={`input${invalidFields.firstName ? ' invalid' : ''}`} id="firstName" placeholder="es. Sofia" value={form.firstName} onChange={e => setF('firstName', e.target.value)} />
                   </div>
                   <div className="field">
                     <label htmlFor="lastName">Cognome<span className="req">*</span></label>
-                    <input className="input" id="lastName" placeholder="es. Bianchi" value={form.lastName} onChange={e => setF('lastName', e.target.value)} />
+                    <input className={`input${invalidFields.lastName ? ' invalid' : ''}`} id="lastName" placeholder="es. Bianchi" value={form.lastName} onChange={e => setF('lastName', e.target.value)} />
                   </div>
                   <div className="field">
                     <label>Sesso<span className="req">*</span></label>
-                    <div className="radio-row">
+                    <div className={`radio-row${invalidFields.sex ? ' invalid' : ''}`}>
                       {[['F', 'Femminile'], ['M', 'Maschile'], ['X', 'Non specificato']].map(([v, l]) => (
                         <label key={v} className={`radio-pill${sex === v ? ' active' : ''}`}>
-                          <input type="radio" name="sex" value={v} checked={sex === v} onChange={() => setSex(v)} />
+                          <input type="radio" name="sex" value={v} checked={sex === v} onChange={() => pickSex(v)} />
                           {l}
                         </label>
                       ))}
@@ -143,11 +175,11 @@ export default function NuovoPaziente() {
                   </div>
                   <div className="field">
                     <label htmlFor="dob">Data di nascita<span className="req">*</span></label>
-                    <input className="input" id="dob" type="date" value={form.dob} onChange={e => setF('dob', e.target.value)} />
+                    <input className={`input${invalidFields.dob ? ' invalid' : ''}`} id="dob" type="date" value={form.dob} onChange={e => setF('dob', e.target.value)} />
                   </div>
                   <div className="field field--full">
                     <label htmlFor="city">Città<span className="req">*</span></label>
-                    <input className="input" id="city" placeholder="es. Milano" value={form.city} onChange={e => setF('city', e.target.value)} />
+                    <input className={`input${invalidFields.city ? ' invalid' : ''}`} id="city" placeholder="es. Milano" value={form.city} onChange={e => setF('city', e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -170,20 +202,20 @@ export default function NuovoPaziente() {
                   <div className="field">
                     <label htmlFor="weight">Peso<span className="req">*</span></label>
                     <div className="input-wrap">
-                      <input className="input input--with-suffix" id="weight" type="number" min="30" max="250" step="0.1" placeholder="65.0" value={form.weight} onChange={e => setF('weight', e.target.value)} />
+                      <input className={`input input--with-suffix${invalidFields.weight ? ' invalid' : ''}`} id="weight" type="number" min="30" max="250" step="0.1" placeholder="65.0" value={form.weight} onChange={e => setF('weight', e.target.value)} />
                       <span className="suffix">kg</span>
                     </div>
                   </div>
                   <div className="field">
                     <label htmlFor="height">Altezza<span className="req">*</span></label>
                     <div className="input-wrap">
-                      <input className="input input--with-suffix" id="height" type="number" min="100" max="230" step="1" placeholder="170" value={form.height} onChange={e => setF('height', e.target.value)} />
+                      <input className={`input input--with-suffix${invalidFields.height ? ' invalid' : ''}`} id="height" type="number" min="100" max="230" step="1" placeholder="170" value={form.height} onChange={e => setF('height', e.target.value)} />
                       <span className="suffix">cm</span>
                     </div>
                   </div>
                   <div className="field field--full">
                     <label htmlFor="goal">Obiettivo<span className="req">*</span></label>
-                    <select className="select" id="goal" value={form.goal} onChange={e => setF('goal', e.target.value)}>
+                    <select className={`select${invalidFields.goal ? ' invalid' : ''}`} id="goal" value={form.goal} onChange={e => setF('goal', e.target.value)}>
                       <option value="" disabled>Seleziona un obiettivo…</option>
                       <option value="Perdita di peso">Perdita di peso</option>
                       <option value="Mantenimento">Mantenimento</option>
