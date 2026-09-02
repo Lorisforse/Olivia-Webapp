@@ -197,16 +197,20 @@ async def get_patient_diet(patient_id: str, db=Depends(get_database)):
     if not diet_oid:
         raise HTTPException(status_code=404, detail="No active diet plan")
 
-    diet_doc = await db["nutrition-plans"].find_one({"_id": ObjectId(diet_oid)})
+    diet_object_id = ObjectId(diet_oid)
+    diet_doc = await db["nutrition-plans"].find_one({"_id": diet_object_id})
     if not diet_doc:
         raise HTTPException(status_code=404, detail="Diet plan not found")
 
+    has_pdf = await db["webapp-diet-pdfs"].find_one({"plan_id": diet_object_id}, {"_id": 1}) is not None
     return DietResponse(
         id=str(diet_doc["_id"]),
         name=diet_doc.get("name", ""),
         tips=diet_doc.get("tips", []),
         weekly_plan=diet_doc.get("meal_plan", {}),
         substitutions=sanitize_bson(diet_doc.get("substitutions", "")),
+        created_at=diet_object_id.generation_time,
+        has_pdf=has_pdf,
     )
 
 

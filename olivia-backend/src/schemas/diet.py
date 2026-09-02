@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Any, Optional
+
 from pydantic import BaseModel
 
 
@@ -27,3 +29,22 @@ class DietResponse(BaseModel):
     # semplice stringa: i piani creati dal bot restituiscono un dict qui.
     # I piani creati dalla webapp restano stringa finché non esiste un editor dedicato.
     substitutions: str | dict[str, Any] = ""
+    # Derivato dall'ObjectId (_id.generation_time): il bot non scrive un campo
+    # data sui piani, quindi lo ricaviamo qui senza toccare la sua collection.
+    created_at: Optional[datetime] = None
+    # True se esiste il PDF originale in "webapp-diet-pdfs" (vedi router diets).
+    has_pdf: bool = False
+
+
+class ParsedPlanResponse(BaseModel):
+    """Risultato del parsing di un PDF (endpoint POST /diets/parse-pdf).
+    Non viene salvato nulla: il medico rivede la griglia e poi crea il piano."""
+    weekly_plan: dict[str, dict[str, str]] = {}
+    tips: list[str] = []
+    warnings: list[str] = []
+
+
+class DietPdfInfo(BaseModel):
+    filename: str
+    size: int
+    uploaded_at: datetime

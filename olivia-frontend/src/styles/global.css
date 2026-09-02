@@ -1215,3 +1215,107 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
   .login__points { display: none; }
   .login__panel { padding: 36px 20px 56px; align-items: flex-start; }
 }
+
+/* ============================================================
+   PIANO ALIMENTARE — griglia settimanale (editor + sola lettura)
+   Righe = pasti, colonne = giorni. Scorre in orizzontale nel suo
+   contenitore quando non ci sta: il body non deve mai scrollare.
+   ============================================================ */
+.plan-grid-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.plan-table,
+.plan-edit-table {
+  width: 100%;
+  min-width: 860px;
+  font-size: 13px;
+  border-collapse: collapse;
+}
+.plan-table th,
+.plan-edit-table th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-4);
+  background: var(--surface-2);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.plan-table thead th,
+.plan-edit-table thead th { position: sticky; top: 0; z-index: 2; }
+.plan-table th[scope='row'],
+.plan-edit-table th[scope='row'] {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  vertical-align: top;
+  width: 132px;
+  border-right: 1px solid var(--line);
+}
+.plan-table__corner {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--surface-2);
+}
+
+.plan-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  border-right: 1px solid var(--line-soft);
+  vertical-align: top;
+  line-height: 1.45;
+  color: var(--ink-2);
+  min-width: 140px;
+}
+.plan-table tr:last-child td { border-bottom: 0; }
+.plan-table td:last-child,
+.plan-edit-table td:last-child { border-right: 0; }
+.plan-table__empty { color: var(--ink-5); }
+
+.plan-edit-table td {
+  padding: 6px;
+  border-bottom: 1px solid var(--line-soft);
+  border-right: 1px solid var(--line-soft);
+  vertical-align: top;
+}
+.plan-edit-table textarea {
+  width: 100%;
+  min-width: 150px;
+  min-height: 76px;
+  resize: vertical;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.plan-edit-table textarea:focus {
+  outline: none;
+  border-color: var(--brand-300);
+  box-shadow: 0 0 0 3px var(--brand-50);
+}
+
+/* Banner degli avvisi restituiti da /diets/parse-pdf */
+.plan-warn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--warn-bg);
+  border: 1px solid #E4C98F;
+  color: var(--warn);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.plan-warn strong { font-weight: 600; }
+.plan-warn ul { margin: 2px 0 0; padding-left: 18px; }

@@ -26,3 +26,8 @@ def get_hydration_logs_col(database): return database["hydration-logs"]
 def get_wellness_logs_col(database): return database["wellness-logs"]
 def get_daily_reports_col(database): return database["daily-reports"]
 def get_weekly_reports_col(database): return database["weekly-reports"]
+# Collection solo-webapp (il bot non la conosce, come "webapp-users"): archivia il
+# PDF originale del piano dietetico caricato dal medico, così può riscaricarlo.
+# Referenzia il piano con `plan_id` -> "nutrition-plans": nessun campo aggiunto
+# alla collection del bot.
+def get_diet_pdfs_col(database): return database["webapp-diet-pdfs"]

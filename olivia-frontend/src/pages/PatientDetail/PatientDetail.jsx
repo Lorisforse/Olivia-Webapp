@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getPatient, updatePatient, getPatientLogs } from '../../api/patients'
+import { getPatient, updatePatient, getPatientLogs, getPatientDiet } from '../../api/patients'
+import { downloadDietPdf } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
 import Breadcrumb from '../../components/Breadcrumb'
+import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
 import { splitList } from '../../utils/text'
+import { saveBlob } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 function deriveStatus(p) {
@@ -430,6 +433,94 @@ function BotTab({ patientId, status }) {
   )
 }
 
+function DietTab({ patientId }) {
+  const [diet, setDiet] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const showLoading = useMinDuration(loading)
+  const [downloading, setDownloading] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => {
+    setLoading(true)
+    getPatientDiet(patientId)
+      .then(setDiet)
+      .catch(err => { if (err.status !== 404) setMsg('Errore nel caricamento del piano'); setDiet(null) })
+      .finally(() => setLoading(false))
+  }, [patientId])
+
+  async function handleDownload() {
+    setDownloading(true)
+    try {
+      const { blob, filename } = await downloadDietPdf(diet.id)
+      saveBlob(blob, filename)
+    } catch {
+      setMsg('Impossibile scaricare il PDF')
+      setTimeout(() => setMsg(''), 2400)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  if (showLoading) return <LoadingScreen label="Caricamento piano alimentare…" />
+
+  if (!diet) {
+    return (
+      <div className="card">
+        <div className="card__body">
+          <div className="empty-state">
+            <div className="empty-state__icon"><MealIcon /></div>
+            <h3>Nessun piano assegnato</h3>
+            <p>Assegna un piano dietetico a questo paziente dalla sezione <strong>Diete</strong>.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="card">
+        <div className="card__header">
+          <h2 className="card__title">{diet.name}</h2>
+          {diet.has_pdf && (
+            <button className="btn btn--secondary btn--sm" onClick={handleDownload} disabled={downloading}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              {downloading ? 'Scaricamento…' : 'Scarica PDF'}
+            </button>
+          )}
+        </div>
+        <div className="card__body">
+          <WeeklyPlanGrid plan={diet.weekly_plan} />
+        </div>
+      </div>
+
+      {Array.isArray(diet.tips) && diet.tips.length > 0 && (
+        <div className="card mt-16">
+          <div className="card__header"><h2 className="card__title">Consigli alimentari</h2></div>
+          <div className="card__body">
+            <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.65 }}>
+              {diet.tips.map((t, i) => <li key={i}>{t}</li>)}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {typeof diet.substitutions === 'string' && diet.substitutions.trim() && (
+        <div className="card mt-16">
+          <div className="card__header"><h2 className="card__title">Sostituzioni</h2></div>
+          <div className="card__body" style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
+            {diet.substitutions}
+          </div>
+        </div>
+      )}
+
+      <div className={`toast${msg ? ' show' : ''}`}>{msg}</div>
+    </div>
+  )
+}
+
 export default function PatientDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -502,7 +593,7 @@ export default function PatientDetail() {
         </div>
 
         <nav className="tabs" role="tablist">
-          {[['profile', 'Profilo'], ['bot', 'Attività bot']].map(([id, label]) => (
+          {[['profile', 'Profilo'], ['diet', 'Piano alimentare'], ['bot', 'Attività bot']].map(([id, label]) => (
             <button
               key={id}
               className={`tab${activeTab === id ? ' active' : ''}`}
@@ -515,6 +606,7 @@ export default function PatientDetail() {
         </nav>
 
         {activeTab === 'profile' && <ProfileTab patient={patient} onSave={handleSave} />}
+        {activeTab === 'diet' && <DietTab patientId={patient.id} />}
         {activeTab === 'bot' && <BotTab patientId={patient.id} status={status} />}
       </main>
 
