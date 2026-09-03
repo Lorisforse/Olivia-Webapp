@@ -137,3 +137,14 @@ class PatientUpdate(BaseModel):
     personal_qualities: Optional[str] = None
     personal_flaws: Optional[str] = None
     identifies_in_garment: Optional[str] = None
+
+
+class OnboardingResponse(BaseModel):
+    """Dati per collegare il paziente al bot Telegram: il paziente inquadra il QR
+    (o apre il deep link), avvia il bot, e il bot associa il suo chat_id a questo
+    documento cercandolo per `patient_id` (vedi olivia-chatbot/src/user.py)."""
+    patient_id: str
+    bot_username: str
+    deep_link: str
+    qr_svg: str          # data URI (image/svg+xml), pronto per <img src=...>
+    connected: bool       # True se il paziente ha già avviato il bot (chat_id valorizzato)

@@ -1319,3 +1319,47 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
 }
 .plan-warn strong { font-weight: 600; }
 .plan-warn ul { margin: 2px 0 0; padding-left: 18px; }
+
+/* ============================================================
+   ONBOARDING PAZIENTE — QR + istruzioni (scheda paziente, tab bot)
+   ============================================================ */
+.onboarding-grid {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.onboarding-grid > div { flex: 1; min-width: 260px; }
+.onboarding-qr {
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fff;
+  padding: 8px;
+}
+.onboarding-steps {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+.onboarding-steps li { margin-bottom: 6px; }
+.onboarding-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.onboarding-link code {
+  flex: 1;
+  min-width: 200px;
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 7px 10px;
+  overflow-x: auto;
+  white-space: nowrap;
+  color: var(--ink-3);
+}

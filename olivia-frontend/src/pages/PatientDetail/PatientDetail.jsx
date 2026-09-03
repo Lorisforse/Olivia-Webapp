@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { getPatient, updatePatient, getPatientLogs, getPatientDiet } from '../../api/patients'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { getPatient, updatePatient, getPatientLogs, getPatientDiet, getPatientOnboarding } from '../../api/patients'
 import { downloadDietPdf } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
 import Breadcrumb from '../../components/Breadcrumb'
@@ -279,6 +279,92 @@ function ProfileTab({ patient, onSave }) {
   )
 }
 
+function OnboardingPanel({ patientId }) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const showLoading = useMinDuration(loading)
+  const [error, setError] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    setError(false)
+    getPatientOnboarding(patientId)
+      .then(setData)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
+  }, [patientId])
+
+  function copyLink() {
+    if (!data) return
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 1600) }
+    const fallback = () => {
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = data.deep_link
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        ta.remove()
+        done()
+      } catch { /* l'utente può comunque selezionare il link a mano */ }
+    }
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(data.deep_link).then(done, fallback)
+    } else {
+      fallback()
+    }
+  }
+
+  if (showLoading) return <LoadingScreen label="Preparazione onboarding…" />
+
+  if (error || !data) {
+    return (
+      <div className="card">
+        <div className="card__body">
+          <div className="empty-state">
+            <div className="empty-state__icon"><ChatIcon /></div>
+            <h3>Onboarding non disponibile</h3>
+            <p>Non è stato possibile generare il QR di collegamento. Riprova più tardi.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="card">
+      <div className="card__header">
+        <h2 className="card__title">Collega il paziente al bot</h2>
+        <span className="pill pill--wait">Non connesso</span>
+      </div>
+      <div className="card__body">
+        <div className="onboarding-grid">
+          <img className="onboarding-qr" src={data.qr_svg} alt="QR code per collegare il paziente al bot Telegram" width={200} height={200} />
+          <div>
+            <ol className="onboarding-steps">
+              <li>Il paziente inquadra questo QR con la fotocamera del telefono (o apre il link qui sotto).</li>
+              <li>Si apre la chat con <strong>@{data.bot_username}</strong> su Telegram.</li>
+              <li>Preme <strong>Avvia</strong>: il bot collega il suo account a questa scheda e inizia la registrazione di pasti, peso e umore.</li>
+            </ol>
+            <div className="onboarding-link">
+              <code>{data.deep_link}</code>
+              <button className="btn btn--secondary btn--sm" onClick={copyLink}>
+                {copied ? 'Copiato' : 'Copia link'}
+              </button>
+            </div>
+            <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>
+              Il collegamento vale solo per questo paziente. Finché non lo avvia, la scheda resta “In attesa”.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BotTab({ patientId, status }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -295,18 +381,7 @@ function BotTab({ patientId, status }) {
   }, [patientId, status])
 
   if (status === 'waiting') {
-    return (
-      <div className="card">
-        <div className="card__body">
-          <div className="empty-state">
-            <div className="empty-state__icon"><ChatIcon /></div>
-            <h3>Bot non ancora attivato</h3>
-            <p>Il paziente non ha ancora connesso il bot Telegram. Invia il link di onboarding per iniziare la registrazione di pasti, peso e umore.</p>
-            <button className="btn btn--primary btn--sm">Invia link di onboarding</button>
-          </div>
-        </div>
-      </div>
-    )
+    return <OnboardingPanel patientId={patientId} />
   }
 
   if (showLoading) return <LoadingScreen label="Caricamento attività bot…" />
@@ -521,11 +596,18 @@ function DietTab({ patientId }) {
   )
 }
 
+const TABS = ['profile', 'diet', 'bot']
+
 export default function PatientDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [patient, setPatient] = useState(null)
-  const [activeTab, setActiveTab] = useState('profile')
+  // Da PazientiPage si può arrivare puntando a un tab specifico via ?tab= (es. onboarding).
+  const [activeTab, setActiveTab] = useState(() => {
+    const t = new URLSearchParams(location.search).get('tab')
+    return TABS.includes(t) ? t : 'profile'
+  })
   const [loading, setLoading] = useState(true)
   const showLoading = useMinDuration(loading)
   const [error, setError] = useState(null)

@@ -59,6 +59,11 @@ export async function getPatientDiet(id) {
   return _json(await fetch(`${API_URL}/patients/${id}/diet`, { headers: authHeaders() }))
 }
 
+/** QR + deep link per collegare il paziente al bot Telegram. */
+export async function getPatientOnboarding(id) {
+  return _json(await fetch(`${API_URL}/patients/${id}/onboarding`, { headers: authHeaders() }))
+}
+
 export async function assignDiet(patientId, dietId) {
   return _json(await fetch(`${API_URL}/patients/${patientId}/diet/${dietId}`, {
     method: 'POST',

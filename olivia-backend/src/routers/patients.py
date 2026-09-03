@@ -1,13 +1,21 @@
 from datetime import datetime
 from typing import Optional
 
+import segno
 from bson import DBRef, ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
 from src.database import get_database
 from src.models.helpers import extract, sanitize_bson
 from src.schemas.diet import DietResponse
-from src.schemas.patient import PatientCreate, PatientDetail, PatientListItem, PatientUpdate
+from src.schemas.patient import (
+    OnboardingResponse,
+    PatientCreate,
+    PatientDetail,
+    PatientListItem,
+    PatientUpdate,
+)
+from src.settings import settings
 
 router = APIRouter()
 
@@ -135,7 +143,13 @@ async def create_patient(payload: PatientCreate, db=Depends(get_database)):
         if val is not None:
             profile[field] = {"value": val, "state": "set"}
 
+    # `patient_id` è la chiave con cui il bot collega il paziente via
+    # `/start <patient_id>` (olivia-chatbot/src/user.py::get_or_update_user).
+    # Il bot lo definisce come stringa libera; noi usiamo l'_id in esadecimale.
+    oid = ObjectId()
     doc = {
+        "_id": oid,
+        "patient_id": str(oid),
         "chat_id": None,
         "username": None,
         "profile": profile,
@@ -144,8 +158,8 @@ async def create_patient(payload: PatientCreate, db=Depends(get_database)):
         "created_at": datetime.now(),
         "last_interaction_at": None,
     }
-    result = await db["users"].insert_one(doc)
-    created = await db["users"].find_one({"_id": result.inserted_id})
+    await db["users"].insert_one(doc)
+    created = await db["users"].find_one({"_id": oid})
     return _doc_to_detail(created)
 
 
@@ -167,6 +181,35 @@ async def get_patient(patient_id: str, db=Depends(get_database)):
     if not doc:
         raise HTTPException(status_code=404, detail="Patient not found")
     return _doc_to_detail(doc)
+
+
+@router.get("/{patient_id}/onboarding", response_model=OnboardingResponse)
+async def patient_onboarding(patient_id: str, db=Depends(get_database)):
+    """QR + deep link per collegare il paziente al bot Telegram."""
+    oid = _oid(patient_id)
+    doc = await db["users"].find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    # Pazienti creati prima dell'introduzione di `patient_id` (o dal bot senza
+    # averlo impostato): lo si riempie ora con l'_id, senza mai sovrascriverne
+    # uno già presente.
+    pid = doc.get("patient_id")
+    if not pid:
+        pid = str(doc["_id"])
+        await db["users"].update_one({"_id": oid}, {"$set": {"patient_id": pid}})
+
+    bot_username = settings.bot_username.lstrip("@")
+    deep_link = f"https://t.me/{bot_username}?start={pid}"
+    qr_svg = segno.make(deep_link, error="m").svg_data_uri(scale=5, border=2, dark="#1f2419")
+
+    return OnboardingResponse(
+        patient_id=pid,
+        bot_username=bot_username,
+        deep_link=deep_link,
+        qr_svg=qr_svg,
+        connected=doc.get("chat_id") is not None,
+    )
 
 
 @router.patch("/{patient_id}", response_model=PatientDetail)

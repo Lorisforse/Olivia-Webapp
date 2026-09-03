@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 720   # sessione normale: 12 ore
     jwt_remember_days: int = 30     # login con "resta connesso"
 
+    # Username del bot Telegram (senza @), per il deep link di onboarding
+    # https://t.me/<bot_username>?start=<patient_id>. Override con BOT_USERNAME
+    # nel .env; cambiarlo richiede solo un riavvio del container, non un rebuild.
+    bot_username: str = 'olivia_loris_bot'
+
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
 

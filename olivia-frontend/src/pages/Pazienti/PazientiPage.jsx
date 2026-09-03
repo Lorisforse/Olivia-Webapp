@@ -9,7 +9,7 @@ import { useMinDuration } from '../../hooks/useMinDuration'
 const STATUS_CONFIG = {
   active:  { label: 'Attivo',      pill: 'ok',   action: 'Vedi attività' },
   nodiet:  { label: 'Senza dieta', pill: 'warn', action: 'Assegna dieta' },
-  waiting: { label: 'In attesa',   pill: 'wait', action: 'Invia link' },
+  waiting: { label: 'In attesa',   pill: 'wait', action: 'Onboarding' },
 }
 
 function deriveStatus(p) {
@@ -120,9 +120,9 @@ export default function PazientiPage() {
   function handleRowAction(e, patient) {
     e.stopPropagation()
     const st = patient._status
-    if (st === 'active') navigate(`/pazienti/${patient.id}`)
-    else if (st === 'nodiet') setAssignModal(patient)
-    else showToast(`Link di onboarding inviato a ${patient.name}`)
+    if (st === 'nodiet') setAssignModal(patient)
+    // 'active' -> attività bot, 'waiting' -> QR di onboarding: entrambi nel tab bot
+    else navigate(`/pazienti/${patient.id}?tab=bot`)
   }
 
   const handleConfirmAssign = useCallback(async () => {
