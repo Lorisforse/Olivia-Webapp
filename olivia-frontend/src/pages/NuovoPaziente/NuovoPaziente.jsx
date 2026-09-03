@@ -184,7 +184,6 @@ export default function NuovoPaziente() {
                     <input className={`input${invalidFields.timeWake ? ' invalid' : ''}`} id="timeWake" type="time" value={form.timeWake} onChange={e => setF('timeWake', e.target.value)} />
                   </div>
                 </div>
-                <span className="field-help">Lavoro e ora di sveglia servono al bot per personalizzare i promemoria: compilandoli qui, non li chiederà in chat.</span>
               </div>
             )}
           </div>
@@ -230,7 +229,6 @@ export default function NuovoPaziente() {
                   <div className="field field--full">
                     <label htmlFor="allergies">Allergie / intolleranze</label>
                     <textarea className="textarea" id="allergies" placeholder={'es. lattosio, glutine, frutta a guscio… Scrivi "nessuna" se non rilevanti.'} value={form.allergies} onChange={e => setF('allergies', e.target.value)} />
-                    <span className="field-help">Testo libero — il bot ne tiene conto nei suggerimenti.</span>
                   </div>
                 </div>
               </div>
@@ -243,7 +241,7 @@ export default function NuovoPaziente() {
               <span className="section__num">3</span>
               <div className="section__meta">
                 <div className="section__title">
-                  Abitudini <span className="muted" style={{ fontWeight: 400 }}>— opzionale</span>
+                  Abitudini <span className="muted" style={{ fontWeight: 400 }}>· opzionale</span>
                 </div>
                 <div className="section__sub">Orari della giornata, attività fisica, note libere</div>
               </div>
