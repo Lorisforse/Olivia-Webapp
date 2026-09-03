@@ -335,7 +335,7 @@ export default function DietePage() {
       const count = selected.size
       setSelected(new Set())
       setAssignTarget(null)
-      showToast(`Piano assegnato a ${count} paziente${count === 1 ? '' : 'i'}`)
+      showToast(`Piano assegnato a ${count} pazient${count === 1 ? 'e' : 'i'}`)
     } catch {
       showToast('Errore durante l\'assegnazione')
     } finally {
@@ -444,7 +444,7 @@ export default function DietePage() {
                       </td>
                       <td>
                         {count > 0
-                          ? <span className="tag" style={{ background: 'var(--brand-50)', color: 'var(--brand-700)', borderColor: 'var(--brand-100)' }}>{count} paziente{count === 1 ? '' : 'i'}</span>
+                          ? <span className="tag" style={{ background: 'var(--brand-50)', color: 'var(--brand-700)', borderColor: 'var(--brand-100)' }}>{count} pazient{count === 1 ? 'e' : 'i'}</span>
                           : <span className="cell-muted">— nessuno —</span>}
                       </td>
                       <td className="cell-muted cell-mono">{formatDate(d.created_at)}</td>
@@ -525,7 +525,7 @@ export default function DietePage() {
               <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.6 }}>
                 Il piano e il suo PDF verranno rimossi definitivamente.
                 {(patientCountByDiet[deleteTarget.id] || 0) > 0 && (
-                  <> È attualmente assegnato a <strong>{patientCountByDiet[deleteTarget.id]}</strong> paziente{patientCountByDiet[deleteTarget.id] === 1 ? '' : 'i'}: resteranno senza dieta.</>
+                  <> È attualmente assegnato a <strong>{patientCountByDiet[deleteTarget.id]}</strong> pazient{patientCountByDiet[deleteTarget.id] === 1 ? 'e' : 'i'}: {patientCountByDiet[deleteTarget.id] === 1 ? 'resterà' : 'resteranno'} senza dieta.</>
                 )}
               </p>
             </div>
