@@ -25,7 +25,7 @@ function ChevronDown() {
   )
 }
 
-const ANAGRAFICA_KEYS = ['firstName', 'lastName', 'sex', 'dob', 'city']
+const ANAGRAFICA_KEYS = ['firstName', 'lastName', 'sex', 'dob', 'city', 'job', 'timeWake']
 const CLINICI_KEYS = ['weight', 'height', 'goal']
 
 export default function NuovoPaziente() {
@@ -38,7 +38,7 @@ export default function NuovoPaziente() {
   const [invalidFields, setInvalidFields] = useState({})
   const [createdName, setCreatedName] = useState('')
   const [form, setForm] = useState({
-    firstName: '', lastName: '', dob: '', city: '',
+    firstName: '', lastName: '', dob: '', city: '', job: '',
     weight: '', height: '', goal: '', allergies: '',
     timeWake: '', timeBreakfast: '', timeLunch: '', timeDinner: '',
     activityWhat: '', activityFreq: '', clinicalNotes: '',
@@ -66,6 +66,8 @@ export default function NuovoPaziente() {
     if (!sex) missing.sex = true
     if (!form.dob) missing.dob = true
     if (!form.city) missing.city = true
+    if (!form.job) missing.job = true
+    if (!form.timeWake) missing.timeWake = true
     if (!form.weight) missing.weight = true
     if (!form.height) missing.height = true
     if (!form.goal) missing.goal = true
@@ -98,13 +100,14 @@ export default function NuovoPaziente() {
         full_name: fullName,
         gender: sex === 'F' ? 'Femmina' : sex === 'M' ? 'Maschio' : 'Non specificato',
         age: ageFromDob(form.dob),
+        job: form.job.trim(),
         living_at: form.city,
         weight: parseFloat(form.weight),
         height: parseFloat(form.height),
         goal: form.goal,
         allergies: splitList(form.allergies),
         notes: form.clinicalNotes || null,
-        wakes_up_at: form.timeWake || null,
+        wakes_up_at: form.timeWake,
         breakfast_at: form.timeBreakfast || null,
         lunch_at: form.timeLunch || null,
         dinner_at: form.timeDinner || null,
@@ -138,7 +141,7 @@ export default function NuovoPaziente() {
               <span className="section__num">1</span>
               <div className="section__meta">
                 <div className="section__title">Dati anagrafici</div>
-                <div className="section__sub">Obbligatori · identità e residenza</div>
+                <div className="section__sub">Obbligatori · identità, residenza e routine di base</div>
               </div>
               <span className="section__chev"><ChevronDown /></span>
             </header>
@@ -172,7 +175,16 @@ export default function NuovoPaziente() {
                     <label htmlFor="city">Città<span className="req">*</span></label>
                     <input className={`input${invalidFields.city ? ' invalid' : ''}`} id="city" placeholder="es. Milano" value={form.city} onChange={e => setF('city', e.target.value)} />
                   </div>
+                  <div className="field">
+                    <label htmlFor="job">Lavoro<span className="req">*</span></label>
+                    <input className={`input${invalidFields.job ? ' invalid' : ''}`} id="job" placeholder="es. impiegata, studente, infermiere…" value={form.job} onChange={e => setF('job', e.target.value)} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="timeWake">Ora di sveglia abituale<span className="req">*</span></label>
+                    <input className={`input${invalidFields.timeWake ? ' invalid' : ''}`} id="timeWake" type="time" value={form.timeWake} onChange={e => setF('timeWake', e.target.value)} />
+                  </div>
                 </div>
+                <span className="field-help">Lavoro e ora di sveglia servono al bot per personalizzare i promemoria: compilandoli qui, non li chiederà in chat.</span>
               </div>
             )}
           </div>
@@ -239,17 +251,12 @@ export default function NuovoPaziente() {
             </header>
             {open.abitudini && (
               <div className="section__body">
-                <div className="section-subhead">Orari della giornata</div>
+                <div className="section-subhead">Orari dei pasti</div>
                 <div className="form-grid form-grid--3">
-                  <div className="field">
-                    <label htmlFor="timeWake">Sveglia</label>
-                    <input className="input" id="timeWake" type="time" value={form.timeWake} onChange={e => setF('timeWake', e.target.value)} />
-                  </div>
                   <div className="field">
                     <label htmlFor="timeBreakfast">Colazione</label>
                     <input className="input" id="timeBreakfast" type="time" value={form.timeBreakfast} onChange={e => setF('timeBreakfast', e.target.value)} />
                   </div>
-                  <div className="field" />
                   <div className="field">
                     <label htmlFor="timeLunch">Pranzo</label>
                     <input className="input" id="timeLunch" type="time" value={form.timeLunch} onChange={e => setF('timeLunch', e.target.value)} />
