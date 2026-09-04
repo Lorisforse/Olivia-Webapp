@@ -279,43 +279,56 @@ function ProfileTab({ patient, onSave }) {
   )
 }
 
+function copyText(value, onDone) {
+  const fallback = () => {
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = value
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+      onDone()
+    } catch { /* l'utente può comunque selezionare il testo a mano */ }
+  }
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(value).then(onDone, fallback)
+  } else {
+    fallback()
+  }
+}
+
 function OnboardingPanel({ patientId }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const showLoading = useMinDuration(loading)
   const [error, setError] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [copied, setCopied] = useState('')
 
-  useEffect(() => {
-    setLoading(true)
-    setError(false)
+  function load({ silent = false } = {}) {
+    if (silent) setRefreshing(true)
+    else { setLoading(true); setError(false) }
     getPatientOnboarding(patientId)
-      .then(setData)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
-  }, [patientId])
+      .then(res => {
+        // Collegamento appena avvenuto: ricarico l'intera scheda così anche
+        // header, stato ed elenco pazienti si aggiornano, non solo questo pannello.
+        if (silent && res.connected && data && !data.connected) {
+          window.location.reload()
+          return
+        }
+        setData(res)
+      })
+      .catch(() => { if (!silent) setError(true) })
+      .finally(() => { setLoading(false); setRefreshing(false) })
+  }
 
-  function copyLink() {
-    if (!data) return
-    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 1600) }
-    const fallback = () => {
-      try {
-        const ta = document.createElement('textarea')
-        ta.value = data.deep_link
-        ta.style.position = 'fixed'
-        ta.style.opacity = '0'
-        document.body.appendChild(ta)
-        ta.select()
-        document.execCommand('copy')
-        ta.remove()
-        done()
-      } catch { /* l'utente può comunque selezionare il link a mano */ }
-    }
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(data.deep_link).then(done, fallback)
-    } else {
-      fallback()
-    }
+  useEffect(() => { load() }, [patientId])
+
+  function copy(value, key) {
+    copyText(value, () => { setCopied(key); setTimeout(() => setCopied(''), 1600) })
   }
 
   if (showLoading) return <LoadingScreen label="Preparazione onboarding…" />
@@ -334,30 +347,67 @@ function OnboardingPanel({ patientId }) {
     )
   }
 
+  if (data.connected) {
+    return (
+      <div className="card">
+        <div className="card__header">
+          <h2 className="card__title">Collega il paziente al bot</h2>
+          <span className="pill pill--ok">Collegato</span>
+        </div>
+        <div className="card__body">
+          <p className="muted" style={{ fontSize: 13.5, margin: 0 }}>
+            Il paziente ha avviato <strong>@{data.bot_username}</strong> ed è collegato a questa scheda.
+            Da qui in poi il bot registra pasti, peso e umore in automatico.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="card">
       <div className="card__header">
         <h2 className="card__title">Collega il paziente al bot</h2>
-        <span className="pill pill--wait">Non connesso</span>
+        <span className="pill pill--wait">In attesa</span>
       </div>
       <div className="card__body">
         <div className="onboarding-grid">
           <img className="onboarding-qr" src={data.qr_svg} alt="QR code per collegare il paziente al bot Telegram" width={200} height={200} />
           <div>
             <ol className="onboarding-steps">
-              <li>Il paziente inquadra questo QR con la fotocamera del telefono (o apre il link qui sotto).</li>
-              <li>Si apre la chat con <strong>@{data.bot_username}</strong> su Telegram.</li>
-              <li>Preme <strong>Avvia</strong>: il bot collega il suo account a questa scheda e inizia la registrazione di pasti, peso e umore.</li>
+              <li>Il paziente inquadra il QR con la <strong>fotocamera del telefono</strong> (non con lo scanner interno di Telegram).</li>
+              <li>Si apre la chat con <strong>@{data.bot_username}</strong> e il messaggio <code>/start …</code> è già pronto: basta premere <strong>invio</strong>.</li>
+              <li>Se il messaggio non compare, o arriva senza il codice, usa il <strong>collegamento manuale</strong> qui sotto.</li>
             </ol>
-            <div className="onboarding-link">
-              <code>{data.deep_link}</code>
-              <button className="btn btn--secondary btn--sm" onClick={copyLink}>
-                {copied ? 'Copiato' : 'Copia link'}
-              </button>
+
+            <div className="onboarding-field">
+              <span className="onboarding-field__label">Collegamento manuale — messaggio da inviare a <strong>@{data.bot_username}</strong></span>
+              <div className="onboarding-link">
+                <code>{data.start_command}</code>
+                <button className="btn btn--secondary btn--sm" onClick={() => copy(data.start_command, 'cmd')}>
+                  {copied === 'cmd' ? 'Copiato' : 'Copia comando'}
+                </button>
+              </div>
             </div>
-            <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>
-              Il collegamento vale solo per questo paziente. Finché non lo avvia, la scheda resta “In attesa”.
-            </p>
+
+            <div className="onboarding-field">
+              <span className="onboarding-field__label">Oppure apri il link</span>
+              <div className="onboarding-link">
+                <code>{data.deep_link}</code>
+                <button className="btn btn--secondary btn--sm" onClick={() => copy(data.deep_link, 'link')}>
+                  {copied === 'link' ? 'Copiato' : 'Copia link'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
+              <button className="btn btn--secondary btn--sm" onClick={() => load({ silent: true })} disabled={refreshing}>
+                {refreshing ? 'Controllo…' : 'Verifica collegamento'}
+              </button>
+              <span className="muted" style={{ fontSize: 12 }}>
+                Il collegamento vale solo per questo paziente. Finché non lo avvia, la scheda resta “In attesa”.
+              </span>
+            </div>
           </div>
         </div>
       </div>

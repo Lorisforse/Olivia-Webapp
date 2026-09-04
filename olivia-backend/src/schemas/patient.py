@@ -141,10 +141,12 @@ class PatientUpdate(BaseModel):
 
 class OnboardingResponse(BaseModel):
     """Dati per collegare il paziente al bot Telegram: il paziente inquadra il QR
-    (o apre il deep link), avvia il bot, e il bot associa il suo chat_id a questo
-    documento cercandolo per `patient_id` (vedi olivia-chatbot/src/user.py)."""
+    (o apre il deep link), che precompila `/start <patient_id>` nella chat del bot;
+    all'invio il bot associa il suo chat_id a questo documento cercandolo per
+    `patient_id` (vedi olivia-chatbot/src/user.py)."""
     patient_id: str
     bot_username: str
-    deep_link: str
+    deep_link: str        # https://t.me/<bot>?text=/start%20<patient_id> — precompila il messaggio
+    start_command: str    # "/start <patient_id>" — da inviare a mano se il QR non precompila
     qr_svg: str          # data URI (image/svg+xml), pronto per <img src=...>
     connected: bool       # True se il paziente ha già avviato il bot (chat_id valorizzato)

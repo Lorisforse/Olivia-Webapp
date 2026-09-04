@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from urllib.parse import quote
 
 import segno
 from bson import DBRef, ObjectId
@@ -200,13 +201,20 @@ async def patient_onboarding(patient_id: str, db=Depends(get_database)):
         await db["users"].update_one({"_id": oid}, {"$set": {"patient_id": pid}})
 
     bot_username = settings.bot_username.lstrip("@")
-    deep_link = f"https://t.me/{bot_username}?start={pid}"
+
+    # `?start=<pid>` (deep link "ufficiale" dei bot) su alcuni client / passaggi
+    # browser->app perde il parametro e arriva un `/start` nudo. `?text=` invece
+    # precompila il messaggio nella chat in modo visibile e deterministico: il
+    # paziente vede `/start <pid>` gia' scritto e deve solo premere invio.
+    start_command = f"/start {pid}"
+    deep_link = f"https://t.me/{bot_username}?text={quote(start_command, safe='')}"
     qr_svg = segno.make(deep_link, error="m").svg_data_uri(scale=5, border=2, dark="#1f2419")
 
     return OnboardingResponse(
         patient_id=pid,
         bot_username=bot_username,
         deep_link=deep_link,
+        start_command=start_command,
         qr_svg=qr_svg,
         connected=doc.get("chat_id") is not None,
     )
