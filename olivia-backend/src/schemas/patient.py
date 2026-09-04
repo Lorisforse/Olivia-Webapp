@@ -146,7 +146,6 @@ class OnboardingResponse(BaseModel):
     `patient_id` (vedi olivia-chatbot/src/user.py)."""
     patient_id: str
     bot_username: str
-    deep_link: str        # https://t.me/<bot>?text=/start%20<patient_id> — precompila il messaggio
-    start_command: str    # "/start <patient_id>" — da inviare a mano se il QR non precompila
+    deep_link: str        # https://t.me/<bot>?text=/start%20<patient_id>: precompila il messaggio
     qr_svg: str          # data URI (image/svg+xml), pronto per <img src=...>
     connected: bool       # True se il paziente ha già avviato il bot (chat_id valorizzato)

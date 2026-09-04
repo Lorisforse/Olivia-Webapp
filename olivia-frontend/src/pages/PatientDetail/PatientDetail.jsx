@@ -356,8 +356,8 @@ function OnboardingPanel({ patientId }) {
         </div>
         <div className="card__body">
           <p className="muted" style={{ fontSize: 13.5, margin: 0 }}>
-            Il paziente ha avviato <strong>@{data.bot_username}</strong> ed è collegato a questa scheda.
-            Da qui in poi il bot registra pasti, peso e umore in automatico.
+            Il paziente ha avviato il bot ed è collegato a questa scheda. Da qui in poi
+            pasti, peso e umore vengono registrati in automatico.
           </p>
         </div>
       </div>
@@ -368,46 +368,31 @@ function OnboardingPanel({ patientId }) {
     <div className="card">
       <div className="card__header">
         <h2 className="card__title">Collega il paziente al bot</h2>
-        <span className="pill pill--wait">In attesa</span>
+        <div className="card__header-actions">
+          <button className="btn btn--secondary btn--sm" onClick={() => load({ silent: true })} disabled={refreshing}>
+            {refreshing ? 'Controllo…' : 'Ricontrolla'}
+          </button>
+          <span className="pill pill--wait">In attesa</span>
+        </div>
       </div>
       <div className="card__body">
         <div className="onboarding-grid">
           <img className="onboarding-qr" src={data.qr_svg} alt="QR code per collegare il paziente al bot Telegram" width={200} height={200} />
           <div>
-            <ol className="onboarding-steps">
-              <li>Il paziente inquadra il QR con la <strong>fotocamera del telefono</strong> (non con lo scanner interno di Telegram).</li>
-              <li>Si apre la chat con <strong>@{data.bot_username}</strong> e il messaggio <code>/start …</code> è già pronto: basta premere <strong>invio</strong>.</li>
-              <li>Se il messaggio non compare, o arriva senza il codice, usa il <strong>collegamento manuale</strong> qui sotto.</li>
-            </ol>
-
-            <div className="onboarding-field">
-              <span className="onboarding-field__label">Collegamento manuale — messaggio da inviare a <strong>@{data.bot_username}</strong></span>
-              <div className="onboarding-link">
-                <code>{data.start_command}</code>
-                <button className="btn btn--secondary btn--sm" onClick={() => copy(data.start_command, 'cmd')}>
-                  {copied === 'cmd' ? 'Copiato' : 'Copia comando'}
-                </button>
-              </div>
-            </div>
-
-            <div className="onboarding-field">
-              <span className="onboarding-field__label">Oppure apri il link</span>
-              <div className="onboarding-link">
-                <code>{data.deep_link}</code>
-                <button className="btn btn--secondary btn--sm" onClick={() => copy(data.deep_link, 'link')}>
-                  {copied === 'link' ? 'Copiato' : 'Copia link'}
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
-              <button className="btn btn--secondary btn--sm" onClick={() => load({ silent: true })} disabled={refreshing}>
-                {refreshing ? 'Controllo…' : 'Verifica collegamento'}
+            <p className="onboarding-hint">
+              Il paziente inquadra il QR con la fotocamera del telefono: il bot si apre con
+              il messaggio di collegamento già pronto, basta premere invio. In alternativa,
+              aprire il link qui sotto.
+            </p>
+            <div className="onboarding-link">
+              <code>{data.deep_link}</code>
+              <button className="btn btn--secondary btn--sm" onClick={() => copy(data.deep_link, 'link')}>
+                {copied === 'link' ? 'Copiato' : 'Copia link'}
               </button>
-              <span className="muted" style={{ fontSize: 12 }}>
-                Il collegamento vale solo per questo paziente. Finché non lo avvia, la scheda resta “In attesa”.
-              </span>
             </div>
+            <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>
+              Il collegamento vale solo per questo paziente. Finché non lo avvia, la scheda resta “In attesa”.
+            </p>
           </div>
         </div>
       </div>

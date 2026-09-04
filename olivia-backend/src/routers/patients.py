@@ -206,15 +206,13 @@ async def patient_onboarding(patient_id: str, db=Depends(get_database)):
     # browser->app perde il parametro e arriva un `/start` nudo. `?text=` invece
     # precompila il messaggio nella chat in modo visibile e deterministico: il
     # paziente vede `/start <pid>` gia' scritto e deve solo premere invio.
-    start_command = f"/start {pid}"
-    deep_link = f"https://t.me/{bot_username}?text={quote(start_command, safe='')}"
+    deep_link = f"https://t.me/{bot_username}?text={quote(f'/start {pid}', safe='')}"
     qr_svg = segno.make(deep_link, error="m").svg_data_uri(scale=5, border=2, dark="#1f2419")
 
     return OnboardingResponse(
         patient_id=pid,
         bot_username=bot_username,
         deep_link=deep_link,
-        start_command=start_command,
         qr_svg=qr_svg,
         connected=doc.get("chat_id") is not None,
     )
