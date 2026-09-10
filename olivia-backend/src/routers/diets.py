@@ -39,15 +39,19 @@ def _created_at(doc: dict) -> datetime | None:
 
 
 def _to_response(doc: dict, *, has_pdf: bool) -> DietResponse:
+    # created_at si ricava dall'_id vero, quindi va letto PRIMA di sanitizzare.
+    created_at = _created_at(doc)
+    # I piani scritti dal bot hanno ObjectId annidati un po' ovunque (rule_id
+    # nelle regole di sostituzione, ecc.): pydantic non li sa serializzare nei
+    # campi 'Any'. Ripuliamo l'intero documento in un colpo solo.
+    doc = sanitize_bson(doc)
     return DietResponse(
         id=str(doc["_id"]),
         name=doc.get("name", ""),
         tips=doc.get("tips", []),
         weekly_plan=doc.get("meal_plan", {}),
-        # le regole di sostituzione vere hanno ObjectId annidati (rule_id):
-        # vanno convertiti in stringa prima che pydantic provi a serializzarli
-        substitutions=sanitize_bson(doc.get("substitutions", "")),
-        created_at=_created_at(doc),
+        substitutions=doc.get("substitutions", ""),
+        created_at=created_at,
         has_pdf=has_pdf,
     )
 

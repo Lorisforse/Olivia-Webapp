@@ -3,6 +3,10 @@ pipeline {
 
     environment {
         COMPOSE_FILE = 'docker-compose.prod.yml'
+        // Nome progetto compose fisso: senza questo il progetto prende il nome
+        // della cartella (workspace di Jenkins vs /opt/olivia per un deploy
+        // manuale), e i container con container_name fisso vanno in conflitto.
+        COMPOSE_PROJECT_NAME = 'olivia'
     }
 
     options {
@@ -34,7 +38,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'olivia-env-prod', variable: 'ENV_FILE')]) {
                     sh '''
                         docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
-                        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
+                        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
                     '''
                 }
             }

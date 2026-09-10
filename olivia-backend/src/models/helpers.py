@@ -1,6 +1,7 @@
 from typing import Any
 
 from bson import ObjectId
+from bson.decimal128 import Decimal128
 
 
 def extract(field: Any) -> Any:
@@ -21,8 +22,13 @@ def sanitize_bson(value: Any) -> Any:
     """
     if isinstance(value, ObjectId):
         return str(value)
+    if isinstance(value, Decimal128):
+        return float(value.to_decimal())
     if isinstance(value, dict):
-        return {k: sanitize_bson(v) for k, v in value.items()}
-    if isinstance(value, list):
+        # anche le CHIAVI vanno convertite: le regole di sostituzione del bot
+        # possono essere indicizzate per rule_id (ObjectId), e Pydantic non
+        # sa serializzare un ObjectId usato come chiave.
+        return {sanitize_bson(k): sanitize_bson(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
         return [sanitize_bson(v) for v in value]
     return value
