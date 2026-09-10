@@ -38,6 +38,16 @@ pipeline {
                 withCredentials([file(credentialsId: 'olivia-env-prod', variable: 'ENV_FILE')]) {
                     sh '''
                         docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
+
+                        # Demolizione esplicita prima dell'up. `docker compose up` NON
+                        # rimuove un container che ha lo stesso container_name ma che
+                        # è stato creato da un'altra invocazione (es. deploy manuale da
+                        # /opt/olivia): darebbe "container name already in use". `down`
+                        # ferma in modo pulito quelli del progetto, il `rm -f` fa da
+                        # rete di sicurezza per eventuali residui con quei nomi fissi.
+                        docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" down --remove-orphans || true
+                        docker rm -f olivia-backend olivia-frontend 2>/dev/null || true
+
                         docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
                     '''
                 }
