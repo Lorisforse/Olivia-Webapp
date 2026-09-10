@@ -9,27 +9,35 @@
 # Fa le stesse identiche cose del Jenkinsfile, nello stesso ordine e con lo
 # stesso project name (-p olivia), cosi' i due metodi non si pestano i piedi.
 #
-# Prerequisiti sul VPS (una tantum):
-#   git clone https://github.com/Lorisforse/Olivia-Webapp.git /opt/olivia
-#   # + creare /opt/olivia/.env.prod con MONGODB_URL, MONGODB_DB, JWT_SECRET, VITE_API_URL
+# Prerequisito una tantum: il file $REPO_DIR/.env.prod con
+#   MONGODB_URL, MONGODB_DB, JWT_SECRET, VITE_API_URL
+# Il repo viene clonato da solo se $REPO_DIR non esiste ancora.
 #
-# Uso:
+# Uso (da una copia gia' presente):
 #   bash /opt/olivia/deploy/deploy-manual.sh
+# oppure senza nessuna copia, scaricando solo lo script:
+#   curl -sO https://raw.githubusercontent.com/Lorisforse/Olivia-Webapp/main/deploy/deploy-manual.sh
+#   bash deploy-manual.sh
 #
 set -euo pipefail
 
+REPO_URL="${REPO_URL:-https://github.com/Lorisforse/Olivia-Webapp.git}"
 REPO_DIR="${REPO_DIR:-/opt/olivia}"
 ENV_FILE="$REPO_DIR/.env.prod"
 COMPOSE_FILE="$REPO_DIR/docker-compose.prod.yml"
 COMPOSE="docker compose -p olivia --env-file $ENV_FILE -f $COMPOSE_FILE"
 
-[ -f "$ENV_FILE" ]     || { echo "ERRORE: manca $ENV_FILE"; exit 1; }
-[ -f "$COMPOSE_FILE" ] || { echo "ERRORE: manca $COMPOSE_FILE (repo clonato in $REPO_DIR?)"; exit 1; }
+echo "==> [1/4] Codice in $REPO_DIR"
+if [ -d "$REPO_DIR/.git" ]; then
+    git -C "$REPO_DIR" pull --ff-only
+else
+    echo "    $REPO_DIR non e' un checkout: clono da $REPO_URL"
+    git clone "$REPO_URL" "$REPO_DIR"
+fi
+
+[ -f "$ENV_FILE" ] || { echo "ERRORE: manca $ENV_FILE (crealo con MONGODB_URL, MONGODB_DB, JWT_SECRET, VITE_API_URL)"; exit 1; }
 
 cd "$REPO_DIR"
-
-echo "==> [1/4] Aggiorno il codice"
-git pull --ff-only
 
 echo "==> [2/4] Demolisco i container esistenti"
 # `docker compose up` non rimuove un container con lo stesso container_name
