@@ -161,18 +161,35 @@ async def create_patient(payload: PatientCreate, db=Depends(get_database)):
 
 @router.post("/{patient_id}/deactivate", response_model=PatientDetail)
 async def deactivate_patient(patient_id: str, db=Depends(get_database)):
-    """Sospende il paziente dalla webapp senza toccare i suoi dati: sparisce
-    dalle liste attive ma resta tutto (log, report, piano alimentare) ed è
-    riattivabile in qualsiasi momento. Non ha effetto sul bot, che il flag
-    `active` non lo conosce."""
+    """Disattiva il paziente: non tocca alcun dato (log, report, piano
+    alimentare restano tutti collegati via `_id`, mai modificato), ma lo rende
+    irraggiungibile dal bot. Il bot recupera l'utente ad ogni interazione con
+    `User.find_one(chat_id == ...)` (olivia-chatbot/src/database.py) e, se non
+    lo trova, risponde già di suo con un messaggio di cortesia — quindi basta
+    che quella query non trovi più corrispondenza. `chat_id` e `patient_id`
+    (quest'ultimo serve al link `/start <patient_id>` per un primo
+    collegamento) vengono spostati in `archived_chat_id`/`archived_patient_id`
+    come backup e rimossi dai campi originali; `reactivate_patient` li
+    ripristina identici."""
     oid = _oid(patient_id)
-    if not await db["users"].find_one({"_id": oid}, {"_id": 1}):
+    doc = await db["users"].find_one({"_id": oid})
+    if not doc:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    await db["users"].update_one(
-        {"_id": oid},
-        {"$set": {"active": False, "deactivated_at": datetime.now()}},
-    )
+    update_set = {"active": False, "deactivated_at": datetime.now()}
+    update_unset = {}
+    if doc.get("chat_id") is not None:
+        update_set["archived_chat_id"] = doc["chat_id"]
+        update_unset["chat_id"] = ""
+    if doc.get("patient_id") is not None:
+        update_set["archived_patient_id"] = doc["patient_id"]
+        update_unset["patient_id"] = ""
+
+    update = {"$set": update_set}
+    if update_unset:
+        update["$unset"] = update_unset
+    await db["users"].update_one({"_id": oid}, update)
+
     doc = await db["users"].find_one({"_id": oid})
     return _doc_to_detail(doc)
 
@@ -180,13 +197,20 @@ async def deactivate_patient(patient_id: str, db=Depends(get_database)):
 @router.post("/{patient_id}/reactivate", response_model=PatientDetail)
 async def reactivate_patient(patient_id: str, db=Depends(get_database)):
     oid = _oid(patient_id)
-    if not await db["users"].find_one({"_id": oid}, {"_id": 1}):
+    doc = await db["users"].find_one({"_id": oid})
+    if not doc:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    await db["users"].update_one(
-        {"_id": oid},
-        {"$set": {"active": True}, "$unset": {"deactivated_at": ""}},
-    )
+    update_set = {"active": True}
+    update_unset = {"deactivated_at": ""}
+    if "archived_chat_id" in doc:
+        update_set["chat_id"] = doc["archived_chat_id"]
+        update_unset["archived_chat_id"] = ""
+    if "archived_patient_id" in doc:
+        update_set["patient_id"] = doc["archived_patient_id"]
+        update_unset["archived_patient_id"] = ""
+
+    await db["users"].update_one({"_id": oid}, {"$set": update_set, "$unset": update_unset})
     doc = await db["users"].find_one({"_id": oid})
     return _doc_to_detail(doc)
 
@@ -206,6 +230,11 @@ async def patient_onboarding(patient_id: str, db=Depends(get_database)):
     doc = await db["users"].find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Patient not found")
+    if not doc.get("active", True):
+        # Paziente disattivato: niente QR. `patient_id` è stato rimosso apposta
+        # (vedi deactivate_patient) per bloccare anche un eventuale /start col
+        # vecchio link salvato in chat; non va rigenerato qui.
+        raise HTTPException(status_code=409, detail="Patient is deactivated")
 
     # Pazienti creati prima dell'introduzione di `patient_id` (o dal bot senza
     # averlo impostato): lo si riempie ora con l'_id, senza mai sovrascriverne

@@ -31,9 +31,10 @@ export default function DeactivatePatientModal({ patient, onCancel, onConfirm })
         <div className="modal__header">
           <h2 className="modal__title" id="deactivateTitle">Disattivare {name}?</h2>
           <p className="modal__sub">
-            Il paziente sparisce dalle liste attive della webapp. Scheda, log e piano
-            alimentare restano intatti e il bot continua a funzionare normalmente:
-            puoi riattivarlo quando vuoi da questa stessa pagina.
+            Il paziente sparisce dalle liste attive e il bot smette di rispondergli
+            (riceverà un messaggio che non trova più il profilo). Scheda, log e piano
+            alimentare restano intatti: puoi riattivarlo quando vuoi da questa stessa
+            pagina e tutto torna come prima, bot compreso.
           </p>
         </div>
         {error && (
