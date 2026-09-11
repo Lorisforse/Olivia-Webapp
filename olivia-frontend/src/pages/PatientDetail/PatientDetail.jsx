@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { getPatient, updatePatient, getPatientLogs, getPatientDiet, getPatientOnboarding } from '../../api/patients'
+import { getPatient, updatePatient, getPatientLogs, getPatientDiet, getPatientOnboarding, deactivatePatient, reactivatePatient } from '../../api/patients'
 import { downloadDietPdf } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
 import Breadcrumb from '../../components/Breadcrumb'
 import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
+import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import { splitList } from '../../utils/text'
 import { saveBlob } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 function deriveStatus(p) {
+  if (p.active === false) return 'inactive'
   if (!p.chat_id) return 'waiting'
   if (!p.active_diet_plan_id) return 'nodiet'
   return 'active'
@@ -50,9 +52,10 @@ function formatLastSeen(dt) {
 }
 
 const STATUS_CONFIG = {
-  active:  { label: 'Attivo',      pill: 'ok' },
-  nodiet:  { label: 'Senza dieta', pill: 'warn' },
-  waiting: { label: 'In attesa',   pill: 'wait' },
+  active:   { label: 'Attivo',      pill: 'ok' },
+  nodiet:   { label: 'Senza dieta', pill: 'warn' },
+  waiting:  { label: 'In attesa',   pill: 'wait' },
+  inactive: { label: 'Disattivato', pill: 'off' },
 }
 
 function MealIcon() {
@@ -69,6 +72,12 @@ function MoodIcon() {
 }
 function ChatIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+}
+function PauseIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+}
+function PlayIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg>
 }
 
 function ProfileTab({ patient, onSave }) {
@@ -647,6 +656,7 @@ export default function PatientDetail() {
   const showLoading = useMinDuration(loading)
   const [error, setError] = useState(null)
   const [toast, setToast] = useState('')
+  const [deactivateModal, setDeactivateModal] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -666,6 +676,28 @@ export default function PatientDetail() {
     setPatient(p => ({ ...p, ...form }))
     setToast('Scheda aggiornata')
     setTimeout(() => setToast(''), 2000)
+  }
+
+  function showToast(msg) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 2000)
+  }
+
+  async function handleConfirmDeactivate() {
+    await deactivatePatient(id)
+    setPatient(p => ({ ...p, active: false }))
+    setDeactivateModal(false)
+    showToast('Paziente disattivato')
+  }
+
+  async function handleReactivate() {
+    try {
+      await reactivatePatient(id)
+      setPatient(p => ({ ...p, active: true }))
+      showToast('Paziente riattivato')
+    } catch {
+      showToast('Errore durante la riattivazione')
+    }
   }
 
   if (showLoading) return <LoadingScreen label="Caricamento paziente…" />
@@ -706,6 +738,15 @@ export default function PatientDetail() {
               </svg>
               Contatta
             </button>
+            {status === 'inactive' ? (
+              <button className="btn btn--secondary btn--sm" onClick={handleReactivate}>
+                <PlayIcon /> Riattiva
+              </button>
+            ) : (
+              <button className="btn btn--secondary btn--sm" onClick={() => setDeactivateModal(true)}>
+                <PauseIcon /> Disattiva
+              </button>
+            )}
           </div>
         </div>
 
@@ -726,6 +767,12 @@ export default function PatientDetail() {
         {activeTab === 'diet' && <DietTab patientId={patient.id} />}
         {activeTab === 'bot' && <BotTab patientId={patient.id} status={status} />}
       </main>
+
+      <DeactivatePatientModal
+        patient={deactivateModal ? patient : null}
+        onCancel={() => setDeactivateModal(false)}
+        onConfirm={handleConfirmDeactivate}
+      />
 
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
     </>

@@ -1,21 +1,38 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getPatients, assignDiet, deletePatient } from '../../api/patients'
+import { getPatients, assignDiet, deactivatePatient, reactivatePatient } from '../../api/patients'
 import { getDiets } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
-import DeletePatientModal from '../../components/DeletePatientModal'
+import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 const STATUS_CONFIG = {
-  active:  { label: 'Attivo',      pill: 'ok',   action: 'Vedi attività' },
-  nodiet:  { label: 'Senza dieta', pill: 'warn', action: 'Assegna dieta' },
-  waiting: { label: 'In attesa',   pill: 'wait', action: 'Onboarding' },
+  active:   { label: 'Attivo',      pill: 'ok',   action: 'Vedi attività' },
+  nodiet:   { label: 'Senza dieta', pill: 'warn', action: 'Assegna dieta' },
+  waiting:  { label: 'In attesa',   pill: 'wait', action: 'Onboarding' },
+  inactive: { label: 'Disattivato', pill: 'off',  action: '' },
 }
 
 function deriveStatus(p) {
+  if (p.active === false) return 'inactive'
   if (!p.chat_id) return 'waiting'
   if (!p.active_diet_plan_id) return 'nodiet'
   return 'active'
+}
+
+function PauseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+    </svg>
+  )
+}
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="6 3 20 12 6 21 6 3" />
+    </svg>
+  )
 }
 
 function getInitials(name) {
@@ -65,7 +82,7 @@ export default function PazientiPage() {
   const [assignDietId, setAssignDietId] = useState('')
   const [assignDate, setAssignDate] = useState(new Date().toISOString().slice(0, 10))
   const [assigning, setAssigning] = useState(false)
-  const [deleteModal, setDeleteModal] = useState(null)
+  const [deactivateModal, setDeactivateModal] = useState(null)
 
   useEffect(() => {
     Promise.all([getPatients(), getDiets()])
@@ -100,7 +117,7 @@ export default function PazientiPage() {
         (p.email || '').toLowerCase().includes(q)
       )
     }
-    const order = { active: 0, nodiet: 1, waiting: 2 }
+    const order = { active: 0, nodiet: 1, waiting: 2, inactive: 3 }
     list.sort((a, b) => {
       if (order[a._status] !== order[b._status]) return order[a._status] - order[b._status]
       return (a.name || '').localeCompare(b.name || '')
@@ -113,6 +130,7 @@ export default function PazientiPage() {
     active: enriched.filter(p => p._status === 'active').length,
     nodiet: enriched.filter(p => p._status === 'nodiet').length,
     waiting: enriched.filter(p => p._status === 'waiting').length,
+    inactive: enriched.filter(p => p._status === 'inactive').length,
   }), [enriched])
 
   function showToast(msg) { setToast(msg) }
@@ -142,11 +160,21 @@ export default function PazientiPage() {
     }
   }, [assignModal, assignDietId])
 
-  const handleConfirmDelete = useCallback(async (patient) => {
-    await deletePatient(patient.id)
-    setPatients(prev => prev.filter(p => p.id !== patient.id))
-    setDeleteModal(null)
-    showToast('Paziente eliminato')
+  const handleConfirmDeactivate = useCallback(async (patient) => {
+    await deactivatePatient(patient.id)
+    setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, active: false } : p))
+    setDeactivateModal(null)
+    showToast('Paziente disattivato')
+  }, [])
+
+  const handleReactivate = useCallback(async (patient) => {
+    try {
+      await reactivatePatient(patient.id)
+      setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, active: true } : p))
+      showToast('Paziente riattivato')
+    } catch {
+      showToast('Errore durante la riattivazione')
+    }
   }, [])
 
   if (showLoading) return <LoadingScreen label="Caricamento pazienti…" />
@@ -160,6 +188,7 @@ export default function PazientiPage() {
             <h1 className="page-title">Pazienti</h1>
             <p className="page-subtitle">
               {counts.all} pazienti totali · {counts.active} attivi · {counts.nodiet} senza dieta · {counts.waiting} in attesa
+              {counts.inactive > 0 ? ` · ${counts.inactive} disattivati` : ''}
             </p>
           </div>
           <div className="page-actions">
@@ -187,10 +216,11 @@ export default function PazientiPage() {
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               {[
-                ['all',     'Tutti'],
-                ['active',  'Attivi'],
-                ['nodiet',  'Senza dieta'],
-                ['waiting', 'In attesa'],
+                ['all',      'Tutti'],
+                ['active',   'Attivi'],
+                ['nodiet',   'Senza dieta'],
+                ['waiting',  'In attesa'],
+                ['inactive', 'Disattivati'],
               ].map(([v, l]) => (
                 <button
                   key={v}
@@ -260,24 +290,25 @@ export default function PazientiPage() {
                     </td>
                     <td className="col-actions">
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                        {st !== 'inactive' && (
+                          <button
+                            className="btn btn--secondary btn--sm"
+                            onClick={e => handleRowAction(e, p)}
+                          >
+                            {cfg.action}
+                          </button>
+                        )}
                         <button
-                          className="btn btn--secondary btn--sm"
-                          onClick={e => handleRowAction(e, p)}
+                          className={`btn-icon ${st === 'inactive' ? 'btn-icon--ok' : 'btn-icon--warn'}`}
+                          onClick={e => {
+                            e.stopPropagation()
+                            if (st === 'inactive') handleReactivate(p)
+                            else setDeactivateModal(p)
+                          }}
+                          aria-label={st === 'inactive' ? `Riattiva ${p.name || 'paziente'}` : `Disattiva ${p.name || 'paziente'}`}
+                          title={st === 'inactive' ? 'Riattiva paziente' : 'Disattiva paziente'}
                         >
-                          {cfg.action}
-                        </button>
-                        <button
-                          className="btn-icon"
-                          onClick={e => { e.stopPropagation(); setDeleteModal(p) }}
-                          aria-label={`Elimina ${p.name || 'paziente'}`}
-                          title="Elimina paziente"
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6" /><path d="M14 11v6" />
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                          </svg>
+                          {st === 'inactive' ? <PlayIcon /> : <PauseIcon />}
                         </button>
                       </div>
                     </td>
@@ -338,10 +369,10 @@ export default function PazientiPage() {
         </div>
       )}
 
-      <DeletePatientModal
-        patient={deleteModal}
-        onCancel={() => setDeleteModal(null)}
-        onConfirm={handleConfirmDelete}
+      <DeactivatePatientModal
+        patient={deactivateModal}
+        onCancel={() => setDeactivateModal(null)}
+        onConfirm={handleConfirmDeactivate}
       />
 
       <Toast message={toast} onHide={() => setToast('')} />

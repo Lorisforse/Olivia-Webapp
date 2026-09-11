@@ -30,15 +30,6 @@ def _diet_id(diet_ref) -> str | None:
         return str(diet_ref["$id"])
     return None
 
-# Collection scritte dal bot che referenziano il paziente con un DBRef
-# `user` (Beanie `Link[User]`) — vanno ripulite quando il paziente viene
-# eliminato, altrimenti restano log/report orfani nel Mongo condiviso.
-_PATIENT_LOG_COLLECTIONS = [
-    "meal-logs", "hydration-logs", "weight-logs", "wellness-logs",
-    "daily-reports", "weekly-reports", "chat-logs", "training-logs",
-    "notification-logs",
-]
-
 _PROFILE_FIELDS = [
     "name", "gender", "age", "job", "living_at", "phone", "email",
     "weight", "height",
@@ -76,6 +67,7 @@ def _doc_to_list_item(doc: dict) -> PatientListItem:
         active_diet_plan_id=diet_id,
         created_at=doc.get("created_at"),
         last_interaction_at=doc.get("last_interaction_at"),
+        active=doc.get("active", True),
     )
 
 
@@ -124,6 +116,8 @@ def _doc_to_detail(doc: dict) -> PatientDetail:
         created_at=doc.get("created_at"),
         last_interaction_at=doc.get("last_interaction_at"),
         active_diet_plan_id=diet_id,
+        active=doc.get("active", True),
+        deactivated_at=doc.get("deactivated_at"),
     )
 
 
@@ -158,22 +152,43 @@ async def create_patient(payload: PatientCreate, db=Depends(get_database)):
         "notifications": [],
         "created_at": datetime.now(),
         "last_interaction_at": None,
+        "active": True,
     }
     await db["users"].insert_one(doc)
     created = await db["users"].find_one({"_id": oid})
     return _doc_to_detail(created)
 
 
-@router.delete("/{patient_id}", status_code=204)
-async def delete_patient(patient_id: str, db=Depends(get_database)):
+@router.post("/{patient_id}/deactivate", response_model=PatientDetail)
+async def deactivate_patient(patient_id: str, db=Depends(get_database)):
+    """Sospende il paziente dalla webapp senza toccare i suoi dati: sparisce
+    dalle liste attive ma resta tutto (log, report, piano alimentare) ed è
+    riattivabile in qualsiasi momento. Non ha effetto sul bot, che il flag
+    `active` non lo conosce."""
     oid = _oid(patient_id)
     if not await db["users"].find_one({"_id": oid}, {"_id": 1}):
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    for collection in _PATIENT_LOG_COLLECTIONS:
-        await db[collection].delete_many({"user.$id": oid})
+    await db["users"].update_one(
+        {"_id": oid},
+        {"$set": {"active": False, "deactivated_at": datetime.now()}},
+    )
+    doc = await db["users"].find_one({"_id": oid})
+    return _doc_to_detail(doc)
 
-    await db["users"].delete_one({"_id": oid})
+
+@router.post("/{patient_id}/reactivate", response_model=PatientDetail)
+async def reactivate_patient(patient_id: str, db=Depends(get_database)):
+    oid = _oid(patient_id)
+    if not await db["users"].find_one({"_id": oid}, {"_id": 1}):
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    await db["users"].update_one(
+        {"_id": oid},
+        {"$set": {"active": True}, "$unset": {"deactivated_at": ""}},
+    )
+    doc = await db["users"].find_one({"_id": oid})
+    return _doc_to_detail(doc)
 
 
 @router.get("/{patient_id}", response_model=PatientDetail)

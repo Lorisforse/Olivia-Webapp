@@ -40,9 +40,16 @@ export async function createPatient(payload) {
   }))
 }
 
-export async function deletePatient(id) {
-  return _json(await fetch(`${API_URL}/patients/${id}`, {
-    method: 'DELETE',
+export async function deactivatePatient(id) {
+  return _json(await fetch(`${API_URL}/patients/${id}/deactivate`, {
+    method: 'POST',
+    headers: authHeaders(),
+  }))
+}
+
+export async function reactivatePatient(id) {
+  return _json(await fetch(`${API_URL}/patients/${id}/reactivate`, {
+    method: 'POST',
     headers: authHeaders(),
   }))
 }
