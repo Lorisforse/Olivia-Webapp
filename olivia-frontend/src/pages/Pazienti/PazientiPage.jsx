@@ -403,6 +403,7 @@ export default function PazientiPage() {
         icon={statusOverlay?.icon}
         tone={statusOverlay?.tone}
         confetti={false}
+        duration={2200}
         title={statusOverlay?.title}
         message={statusOverlay?.message}
         onDone={() => setStatusOverlay(null)}
