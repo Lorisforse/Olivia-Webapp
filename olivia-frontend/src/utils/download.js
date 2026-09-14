@@ -27,6 +27,31 @@ export function saveDataUri(dataUri, filename) {
   a.remove()
 }
 
+/**
+ * Converte una data URI SVG (il QR di onboarding, vettoriale) in PNG via
+ * canvas — formato più "universale" da scaricare, apribile ovunque senza
+ * sorprese. Le data URI non "sporcano" il canvas (niente CORS, sono
+ * considerate stessa origine), quindi `toDataURL` funziona sempre. Sfondo
+ * bianco esplicito: l'SVG di segno non lo disegna da sé, solo i moduli scuri.
+ */
+export function svgToPngDataUri(svgDataUri, size = 640) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext('2d')
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, size, size)
+      ctx.drawImage(img, 0, 0, size, size)
+      resolve(canvas.toDataURL('image/png'))
+    }
+    img.onerror = () => reject(new Error('Impossibile convertire il QR in PNG'))
+    img.src = svgDataUri
+  })
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 }

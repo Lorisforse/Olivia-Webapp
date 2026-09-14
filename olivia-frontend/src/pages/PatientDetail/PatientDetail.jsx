@@ -9,7 +9,7 @@ import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import SuccessOverlay from '../../components/SuccessOverlay'
 import { splitList } from '../../utils/text'
-import { saveBlob, saveDataUri, printImage } from '../../utils/download'
+import { saveBlob, saveDataUri, svgToPngDataUri, printImage } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 function deriveStatus(p) {
@@ -352,6 +352,17 @@ function OnboardingPanel({ patientId, patientName }) {
     copyText(value, () => { setCopied(key); setTimeout(() => setCopied(''), 1600) })
   }
 
+  async function downloadQr() {
+    const filename = `qr-${slugify(patientName)}`
+    try {
+      const pngUri = await svgToPngDataUri(data.qr_svg)
+      saveDataUri(pngUri, `${filename}.png`)
+    } catch {
+      // conversione fallita: l'SVG originale resta un download valido
+      saveDataUri(data.qr_svg, `${filename}.svg`)
+    }
+  }
+
   if (showLoading) return <LoadingScreen label="Preparazione onboarding…" />
 
   if (error || !data) {
@@ -401,10 +412,7 @@ function OnboardingPanel({ patientId, patientName }) {
           <div className="onboarding-qr-col">
             <img className="onboarding-qr" src={data.qr_svg} alt="QR code per collegare il paziente al bot Telegram" width={200} height={200} />
             <div className="onboarding-qr-actions">
-              <button
-                className="btn btn--secondary btn--sm"
-                onClick={() => saveDataUri(data.qr_svg, `qr-${slugify(patientName)}.svg`)}
-              >
+              <button className="btn btn--secondary btn--sm" onClick={downloadQr}>
                 <DownloadIcon /> Scarica
               </button>
               <button
