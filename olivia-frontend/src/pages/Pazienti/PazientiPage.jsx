@@ -4,6 +4,7 @@ import { getPatients, assignDiet, deactivatePatient, reactivatePatient } from '.
 import { getDiets } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
 import DeactivatePatientModal from '../../components/DeactivatePatientModal'
+import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 const STATUS_CONFIG = {
@@ -83,6 +84,7 @@ export default function PazientiPage() {
   const [assignDate, setAssignDate] = useState(new Date().toISOString().slice(0, 10))
   const [assigning, setAssigning] = useState(false)
   const [deactivateModal, setDeactivateModal] = useState(null)
+  const [reactivateModal, setReactivateModal] = useState(null)
 
   useEffect(() => {
     Promise.all([getPatients(), getDiets()])
@@ -117,7 +119,9 @@ export default function PazientiPage() {
         (p.email || '').toLowerCase().includes(q)
       )
     }
-    const order = { active: 0, nodiet: 1, waiting: 2, inactive: 3 }
+    // "inactive" resta vicino agli attivi, non in coda del tutto: un disattivato
+    // non deve sparire in fondo alla vista "Tutti" solo perché non richiede azione.
+    const order = { active: 0, inactive: 1, nodiet: 2, waiting: 3 }
     list.sort((a, b) => {
       if (order[a._status] !== order[b._status]) return order[a._status] - order[b._status]
       return (a.name || '').localeCompare(b.name || '')
@@ -167,14 +171,11 @@ export default function PazientiPage() {
     showToast('Paziente disattivato')
   }, [])
 
-  const handleReactivate = useCallback(async (patient) => {
-    try {
-      await reactivatePatient(patient.id)
-      setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, active: true } : p))
-      showToast('Paziente riattivato')
-    } catch {
-      showToast('Errore durante la riattivazione')
-    }
+  const handleConfirmReactivate = useCallback(async (patient) => {
+    await reactivatePatient(patient.id)
+    setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, active: true } : p))
+    setReactivateModal(null)
+    showToast('Paziente riattivato')
   }, [])
 
   if (showLoading) return <LoadingScreen label="Caricamento pazienti…" />
@@ -261,7 +262,11 @@ export default function PazientiPage() {
                 const lastSeen = formatLastSeen(p.last_interaction_at)
 
                 return (
-                  <tr key={p.id} onClick={() => navigate(`/pazienti/${p.id}`)}>
+                  <tr
+                    key={p.id}
+                    className={st === 'inactive' ? 'is-inactive' : ''}
+                    onClick={() => navigate(`/pazienti/${p.id}`)}
+                  >
                     <td>
                       <div className="cell-name">
                         <span className="cell-name__avatar">{getInitials(p.name)}</span>
@@ -302,7 +307,7 @@ export default function PazientiPage() {
                           className={`btn-icon ${st === 'inactive' ? 'btn-icon--ok' : 'btn-icon--warn'}`}
                           onClick={e => {
                             e.stopPropagation()
-                            if (st === 'inactive') handleReactivate(p)
+                            if (st === 'inactive') setReactivateModal(p)
                             else setDeactivateModal(p)
                           }}
                           aria-label={st === 'inactive' ? `Riattiva ${p.name || 'paziente'}` : `Disattiva ${p.name || 'paziente'}`}
@@ -373,6 +378,12 @@ export default function PazientiPage() {
         patient={deactivateModal}
         onCancel={() => setDeactivateModal(null)}
         onConfirm={handleConfirmDeactivate}
+      />
+
+      <ReactivatePatientModal
+        patient={reactivateModal}
+        onCancel={() => setReactivateModal(null)}
+        onConfirm={handleConfirmReactivate}
       />
 
       <Toast message={toast} onHide={() => setToast('')} />

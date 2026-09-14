@@ -6,6 +6,7 @@ import LoadingScreen from '../../components/LoadingScreen'
 import Breadcrumb from '../../components/Breadcrumb'
 import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
 import DeactivatePatientModal from '../../components/DeactivatePatientModal'
+import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import { splitList } from '../../utils/text'
 import { saveBlob } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
@@ -657,6 +658,7 @@ export default function PatientDetail() {
   const [error, setError] = useState(null)
   const [toast, setToast] = useState('')
   const [deactivateModal, setDeactivateModal] = useState(false)
+  const [reactivateModal, setReactivateModal] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -690,14 +692,11 @@ export default function PatientDetail() {
     showToast('Paziente disattivato')
   }
 
-  async function handleReactivate() {
-    try {
-      await reactivatePatient(id)
-      setPatient(p => ({ ...p, active: true }))
-      showToast('Paziente riattivato')
-    } catch {
-      showToast('Errore durante la riattivazione')
-    }
+  async function handleConfirmReactivate() {
+    await reactivatePatient(id)
+    setPatient(p => ({ ...p, active: true }))
+    setReactivateModal(false)
+    showToast('Paziente riattivato')
   }
 
   if (showLoading) return <LoadingScreen label="Caricamento paziente…" />
@@ -717,7 +716,7 @@ export default function PatientDetail() {
     <>
       <Breadcrumb parent="Pazienti" parentTo="/pazienti" current={patient.name || 'Paziente'} />
       <main className="page">
-        <div className="patient-header">
+        <div className={`patient-header${status === 'inactive' ? ' is-inactive' : ''}`}>
           <span className="patient-header__avatar">{initials}</span>
           <div>
             <h1 className="patient-header__name">{patient.name || '—'}</h1>
@@ -739,7 +738,7 @@ export default function PatientDetail() {
               Contatta
             </button>
             {status === 'inactive' ? (
-              <button className="btn btn--secondary btn--sm" onClick={handleReactivate}>
+              <button className="btn btn--secondary btn--sm" onClick={() => setReactivateModal(true)}>
                 <PlayIcon /> Riattiva
               </button>
             ) : (
@@ -772,6 +771,12 @@ export default function PatientDetail() {
         patient={deactivateModal ? patient : null}
         onCancel={() => setDeactivateModal(false)}
         onConfirm={handleConfirmDeactivate}
+      />
+
+      <ReactivatePatientModal
+        patient={reactivateModal ? patient : null}
+        onCancel={() => setReactivateModal(false)}
+        onConfirm={handleConfirmReactivate}
       />
 
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>

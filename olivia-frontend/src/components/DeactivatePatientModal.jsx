@@ -1,14 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 /**
  * Conferma leggera per un'azione reversibile: un solo passaggio, nessuna
  * ridigitazione del nome (a differenza della vecchia eliminazione, che era
  * irreversibile). `onConfirm` deve essere una funzione async: se lancia, la
- * modale resta aperta con un errore.
+ * modale resta aperta con un errore. Lo stato locale si azzera ogni volta che
+ * si apre (vedi useEffect): il componente non si smonta mai tra un utilizzo e
+ * l'altro (torna solo a restituire `null`), quindi senza reset `saving`
+ * restava `true` dopo una disattivazione riuscita e bloccava il bottone sulla
+ * volta successiva.
  */
 export default function DeactivatePatientModal({ patient, onCancel, onConfirm }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (patient) {
+      setSaving(false)
+      setError('')
+    }
+  }, [patient])
 
   if (!patient) return null
 
@@ -31,10 +42,8 @@ export default function DeactivatePatientModal({ patient, onCancel, onConfirm })
         <div className="modal__header">
           <h2 className="modal__title" id="deactivateTitle">Disattivare {name}?</h2>
           <p className="modal__sub">
-            Il paziente sparisce dalle liste attive e il bot smette di rispondergli
-            (riceverà un messaggio che non trova più il profilo). Scheda, log e piano
-            alimentare restano intatti: puoi riattivarlo quando vuoi da questa stessa
-            pagina e tutto torna come prima, bot compreso.
+            Il bot smetterà di rispondere. Puoi comunque consultare le sue informazioni
+            e riattivarlo quando vuoi.
           </p>
         </div>
         {error && (

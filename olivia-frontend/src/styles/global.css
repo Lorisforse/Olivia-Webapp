@@ -439,10 +439,13 @@ table.data tbody td {
   border-bottom: 1px solid var(--line-soft);
   vertical-align: middle;
 }
-table.data tbody tr { cursor: pointer; transition: background .12s; }
+table.data tbody tr { cursor: pointer; transition: background .12s, opacity .12s; }
 table.data tbody tr:hover { background: var(--surface-2); }
 table.data tbody tr:last-child td { border-bottom: 0; }
 table.data .col-actions { text-align: right; white-space: nowrap; }
+table.data tbody tr.is-inactive { opacity: .5; }
+table.data tbody tr.is-inactive:hover { opacity: .8; }
+table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 
 .cell-name { display: flex; align-items: center; gap: 12px; }
 .cell-name__avatar {
@@ -692,6 +695,8 @@ table.data .col-actions { text-align: right; white-space: nowrap; }
   flex-shrink: 0;
 }
 .patient-header__name { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.patient-header.is-inactive .patient-header__avatar { filter: grayscale(1); opacity: .7; }
+.patient-header.is-inactive .patient-header__name { color: var(--ink-3); }
 .patient-header__meta {
   display: flex;
   align-items: center;
