@@ -9,7 +9,7 @@ import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import SuccessOverlay from '../../components/SuccessOverlay'
 import { splitList } from '../../utils/text'
-import { saveBlob } from '../../utils/download'
+import { saveBlob, saveDataUri, printImage } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 function deriveStatus(p) {
@@ -80,6 +80,16 @@ function PauseIcon() {
 }
 function PlayIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg>
+}
+function DownloadIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+}
+function PrinterIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>
+}
+
+function slugify(value) {
+  return (value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'paziente'
 }
 
 function ProfileTab({ patient, onSave }) {
@@ -311,7 +321,7 @@ function copyText(value, onDone) {
   }
 }
 
-function OnboardingPanel({ patientId }) {
+function OnboardingPanel({ patientId, patientName }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const showLoading = useMinDuration(loading)
@@ -388,8 +398,27 @@ function OnboardingPanel({ patientId }) {
       </div>
       <div className="card__body">
         <div className="onboarding-grid">
-          <img className="onboarding-qr" src={data.qr_svg} alt="QR code per collegare il paziente al bot Telegram" width={200} height={200} />
-          <div>
+          <div className="onboarding-qr-col">
+            <img className="onboarding-qr" src={data.qr_svg} alt="QR code per collegare il paziente al bot Telegram" width={200} height={200} />
+            <div className="onboarding-qr-actions">
+              <button
+                className="btn btn--secondary btn--sm"
+                onClick={() => saveDataUri(data.qr_svg, `qr-${slugify(patientName)}.svg`)}
+              >
+                <DownloadIcon /> Scarica
+              </button>
+              <button
+                className="btn btn--secondary btn--sm"
+                onClick={() => printImage(data.qr_svg, {
+                  title: patientName || 'Collegamento paziente',
+                  subtitle: 'Inquadra con la fotocamera del telefono per collegarti al bot Olivia',
+                })}
+              >
+                <PrinterIcon /> Stampa
+              </button>
+            </div>
+          </div>
+          <div className="onboarding-info">
             <p className="onboarding-hint">
               Il paziente inquadra il QR con la fotocamera del telefono: il bot si apre con
               il messaggio di collegamento già pronto, basta premere invio. In alternativa,
@@ -411,7 +440,7 @@ function OnboardingPanel({ patientId }) {
   )
 }
 
-function BotTab({ patientId, status }) {
+function BotTab({ patientId, status, patientName }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const showLoading = useMinDuration(loading)
@@ -427,7 +456,7 @@ function BotTab({ patientId, status }) {
   }, [patientId, status])
 
   if (status === 'waiting') {
-    return <OnboardingPanel patientId={patientId} />
+    return <OnboardingPanel patientId={patientId} patientName={patientName} />
   }
 
   if (showLoading) return <LoadingScreen label="Caricamento attività bot…" />
@@ -774,7 +803,7 @@ export default function PatientDetail() {
 
         {activeTab === 'profile' && <ProfileTab patient={patient} onSave={handleSave} />}
         {activeTab === 'diet' && <DietTab patientId={patient.id} />}
-        {activeTab === 'bot' && <BotTab patientId={patient.id} status={status} />}
+        {activeTab === 'bot' && <BotTab patientId={patient.id} status={status} patientName={patient.name} />}
       </main>
 
       <DeactivatePatientModal

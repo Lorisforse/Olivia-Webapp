@@ -490,11 +490,15 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   background: currentColor;
   flex-shrink: 0;
 }
-.pill--ok   { background: #D7DFB0; color: #2A3015; border-color: #B8C285; }
-.pill--warn { background: #F4D9A8; color: #6F4512; border-color: #D9B264; }
-.pill--wait { background: #DAD4BF; color: #45412C; border-color: #BCB496; }
+/* Quattro tinte scelte per differenziarsi soprattutto per TONALITÀ (non solo
+   per luce/saturazione): verde=ok, arancio=serve un'azione, blu=in attesa,
+   grigio=spento. Prima "in attesa" era un beige quasi indistinguibile
+   dall'arancio di "senza dieta" a un'occhiata veloce. */
+.pill--ok   { background: #CBE0A0; color: #24350D; border-color: #A0C167; }
+.pill--warn { background: #F5B65B; color: #5C3600; border-color: #DE9A2E; }
+.pill--wait { background: #BFD9E8; color: #1D3C4C; border-color: #8FB8CC; }
 .pill--info { background: var(--brand-100); color: var(--brand-700); border-color: var(--brand-300); }
-.pill--off  { background: var(--surface-2); color: var(--ink-4); border-color: var(--line-strong); }
+.pill--off  { background: #E3E4DA; color: #63665A; border-color: #C6C8B6; }
 .pill--off::before { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
 
 .tag {
@@ -1348,7 +1352,14 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   flex-wrap: wrap;
   align-items: flex-start;
 }
-.onboarding-grid > div { flex: 1; min-width: 260px; }
+.onboarding-grid > .onboarding-info { flex: 1; min-width: 260px; }
+.onboarding-qr-col {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
 .onboarding-qr {
   flex-shrink: 0;
   border: 1px solid var(--line);
@@ -1356,6 +1367,7 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   background: #fff;
   padding: 8px;
 }
+.onboarding-qr-actions { display: flex; gap: 8px; }
 .onboarding-link {
   display: flex;
   align-items: center;
