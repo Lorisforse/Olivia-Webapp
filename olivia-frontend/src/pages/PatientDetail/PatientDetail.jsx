@@ -7,6 +7,7 @@ import Breadcrumb from '../../components/Breadcrumb'
 import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
 import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
+import SuccessOverlay from '../../components/SuccessOverlay'
 import { splitList } from '../../utils/text'
 import { saveBlob } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
@@ -659,6 +660,7 @@ export default function PatientDetail() {
   const [toast, setToast] = useState('')
   const [deactivateModal, setDeactivateModal] = useState(false)
   const [reactivateModal, setReactivateModal] = useState(false)
+  const [statusOverlay, setStatusOverlay] = useState(null)
 
   useEffect(() => {
     setLoading(true)
@@ -689,14 +691,22 @@ export default function PatientDetail() {
     await deactivatePatient(id)
     setPatient(p => ({ ...p, active: false }))
     setDeactivateModal(false)
-    showToast('Paziente disattivato')
+    setStatusOverlay({
+      icon: 'pause', tone: 'warn',
+      title: 'Paziente disattivato',
+      message: `${patient.name || 'Il paziente'} non riceverà più risposte dal bot.`,
+    })
   }
 
   async function handleConfirmReactivate() {
     await reactivatePatient(id)
     setPatient(p => ({ ...p, active: true }))
     setReactivateModal(false)
-    showToast('Paziente riattivato')
+    setStatusOverlay({
+      icon: 'check', tone: 'brand',
+      title: 'Paziente riattivato',
+      message: `${patient.name || 'Il paziente'} torna a essere seguito dal bot.`,
+    })
   }
 
   if (showLoading) return <LoadingScreen label="Caricamento paziente…" />
@@ -777,6 +787,16 @@ export default function PatientDetail() {
         patient={reactivateModal ? patient : null}
         onCancel={() => setReactivateModal(false)}
         onConfirm={handleConfirmReactivate}
+      />
+
+      <SuccessOverlay
+        show={!!statusOverlay}
+        icon={statusOverlay?.icon}
+        tone={statusOverlay?.tone}
+        confetti={false}
+        title={statusOverlay?.title}
+        message={statusOverlay?.message}
+        onDone={() => setStatusOverlay(null)}
       />
 
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>

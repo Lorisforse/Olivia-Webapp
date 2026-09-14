@@ -5,6 +5,7 @@ import { getDiets } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
 import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
+import SuccessOverlay from '../../components/SuccessOverlay'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 const STATUS_CONFIG = {
@@ -85,6 +86,7 @@ export default function PazientiPage() {
   const [assigning, setAssigning] = useState(false)
   const [deactivateModal, setDeactivateModal] = useState(null)
   const [reactivateModal, setReactivateModal] = useState(null)
+  const [statusOverlay, setStatusOverlay] = useState(null)
 
   useEffect(() => {
     Promise.all([getPatients(), getDiets()])
@@ -168,14 +170,22 @@ export default function PazientiPage() {
     await deactivatePatient(patient.id)
     setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, active: false } : p))
     setDeactivateModal(null)
-    showToast('Paziente disattivato')
+    setStatusOverlay({
+      icon: 'pause', tone: 'warn',
+      title: 'Paziente disattivato',
+      message: `${patient.name || 'Il paziente'} non riceverà più risposte dal bot.`,
+    })
   }, [])
 
   const handleConfirmReactivate = useCallback(async (patient) => {
     await reactivatePatient(patient.id)
     setPatients(prev => prev.map(p => p.id === patient.id ? { ...p, active: true } : p))
     setReactivateModal(null)
-    showToast('Paziente riattivato')
+    setStatusOverlay({
+      icon: 'check', tone: 'brand',
+      title: 'Paziente riattivato',
+      message: `${patient.name || 'Il paziente'} torna a essere seguito dal bot.`,
+    })
   }, [])
 
   if (showLoading) return <LoadingScreen label="Caricamento pazienti…" />
@@ -387,6 +397,16 @@ export default function PazientiPage() {
       />
 
       <Toast message={toast} onHide={() => setToast('')} />
+
+      <SuccessOverlay
+        show={!!statusOverlay}
+        icon={statusOverlay?.icon}
+        tone={statusOverlay?.tone}
+        confetti={false}
+        title={statusOverlay?.title}
+        message={statusOverlay?.message}
+        onDone={() => setStatusOverlay(null)}
+      />
     </>
   )
 }
