@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { getPatient, updatePatient, getPatientLogs, getPatientDiet, getPatientOnboarding, deactivatePatient, reactivatePatient } from '../../api/patients'
+import { getPatient, updatePatient, getPatientLogs, getPatientDiet, getPatientOnboarding, getDailyReports, deactivatePatient, reactivatePatient } from '../../api/patients'
 import { downloadDietPdf } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
 import Breadcrumb from '../../components/Breadcrumb'
@@ -8,6 +8,7 @@ import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
 import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import SuccessOverlay from '../../components/SuccessOverlay'
+import { BarTrend, LineTrend, AdherenceStrip } from '../../components/charts'
 import { splitList } from '../../utils/text'
 import { saveBlob, saveDataUri, svgToPngDataUri, printImage } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
@@ -591,6 +592,140 @@ function BotTab({ patientId, status, patientName }) {
   )
 }
 
+const TREND_PERIODS = [[7, '7gg'], [30, '30gg'], [90, '90gg']]
+const MEAL_FIELDS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner']
+const ADHERENCE_SCORE = { completa: 1, parziale: 0.5, nulla: 0 }
+const HEATMAP_DAYS = 30
+
+function dayAdherencePct(dietCompliance) {
+  if (!dietCompliance) return null
+  const scores = MEAL_FIELDS
+    .map(f => dietCompliance[f])
+    .filter(v => v in ADHERENCE_SCORE)
+    .map(v => ADHERENCE_SCORE[v])
+  if (!scores.length) return null
+  return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100)
+}
+
+function dayMoodAvg(mood) {
+  if (!mood) return null
+  const vals = [mood.morning, mood.afternoon, mood.evening].filter(v => v != null)
+  if (!vals.length) return null
+  return +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)
+}
+
+function formatShortDate(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00')
+  return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })
+}
+
+function isoDaysAgo(n) {
+  return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10)
+}
+
+function TrendsTab({ patientId, status }) {
+  const [days, setDays] = useState(30)
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (status === 'waiting') { setLoading(false); return }
+    setLoading(true)
+    // La heatmap dell'aderenza mostra sempre gli ultimi 30gg indipendentemente
+    // dal periodo scelto: si scarica sempre almeno quella finestra, i grafici
+    // peso/idratazione/umore poi tagliano solo gli ultimi `days`.
+    const fetchDays = Math.max(days, HEATMAP_DAYS)
+    getDailyReports(patientId, { from: isoDaysAgo(fetchDays - 1), to: isoDaysAgo(0) })
+      .then(setReports)
+      .catch(() => setReports([]))
+      .finally(() => setLoading(false))
+  }, [patientId, days, status])
+
+  if (status === 'waiting') {
+    return (
+      <div className="card">
+        <div className="card__body">
+          <div className="empty-state">
+            <div className="empty-state__icon"><ChatIcon /></div>
+            <h3>Nessun dato ancora</h3>
+            <p>L&#39;andamento comparirà non appena il paziente sarà collegato al bot.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) return <LoadingScreen label="Caricamento andamento…" />
+
+  const byDate = {}
+  reports.forEach(r => { byDate[r.date] = r })
+
+  const weightData = [], hydrationData = [], moodData = []
+  for (let i = days - 1; i >= 0; i--) {
+    const dateStr = isoDaysAgo(i)
+    const r = byDate[dateStr]
+    const label = formatShortDate(dateStr)
+    weightData.push({ label, value: r?.indicators?.weight ?? null })
+    hydrationData.push({ label, value: r?.indicators?.hydration != null ? Math.round(r.indicators.hydration) : null })
+    moodData.push({ label, value: dayMoodAvg(r?.indicators?.mood) })
+  }
+
+  const strip = []
+  for (let i = HEATMAP_DAYS - 1; i >= 0; i--) {
+    const dateStr = isoDaysAgo(i)
+    const pct = dayAdherencePct(byDate[dateStr]?.indicators?.diet_compliance)
+    strip.push({
+      date: dateStr,
+      label: formatShortDate(dateStr),
+      tone: pct == null ? 'none' : pct >= 70 ? 'good' : 'warn',
+    })
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+        <h2 className="page-eyebrow" style={{ margin: 0 }}>Andamento</h2>
+        <div className="period-select" role="group" aria-label="Periodo">
+          {TREND_PERIODS.map(([v, l]) => (
+            <button key={v} className={days === v ? 'active' : ''} onClick={() => setDays(v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card__header"><h2 className="card__title">Peso</h2></div>
+        <div className="card__body">
+          <LineTrend data={weightData} unit=" kg" color="var(--brand)" emptyLabel="Nessun peso registrato nel periodo" />
+        </div>
+      </div>
+
+      <div className="card mt-16">
+        <div className="card__header"><h2 className="card__title">Aderenza pasti — ultimi 30 giorni</h2></div>
+        <div className="card__body">
+          <AdherenceStrip days={strip} />
+        </div>
+      </div>
+
+      <div className="card mt-16">
+        <div className="card__header"><h2 className="card__title">Idratazione</h2></div>
+        <div className="card__body">
+          <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={120} emptyLabel="Nessuna idratazione registrata nel periodo" />
+        </div>
+      </div>
+
+      <div className="card mt-16">
+        <div className="card__header"><h2 className="card__title">Umore</h2></div>
+        <div className="card__body">
+          <LineTrend data={moodData} color="#B98A3E" emptyLabel="Nessun umore registrato nel periodo" />
+          <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
+            Scala da -1 (negativo) a +1 (positivo), media delle rilevazioni della giornata.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function DietTab({ patientId }) {
   const [diet, setDiet] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -679,7 +814,7 @@ function DietTab({ patientId }) {
   )
 }
 
-const TABS = ['profile', 'diet', 'bot']
+const TABS = ['profile', 'diet', 'bot', 'trends']
 
 export default function PatientDetail() {
   const { id } = useParams()
@@ -797,7 +932,7 @@ export default function PatientDetail() {
         </div>
 
         <nav className="tabs" role="tablist">
-          {[['profile', 'Profilo'], ['diet', 'Piano alimentare'], ['bot', 'Attività bot']].map(([id, label]) => (
+          {[['profile', 'Profilo'], ['diet', 'Piano alimentare'], ['bot', 'Attività bot'], ['trends', 'Andamento']].map(([id, label]) => (
             <button
               key={id}
               className={`tab${activeTab === id ? ' active' : ''}`}
@@ -812,6 +947,7 @@ export default function PatientDetail() {
         {activeTab === 'profile' && <ProfileTab patient={patient} onSave={handleSave} />}
         {activeTab === 'diet' && <DietTab patientId={patient.id} />}
         {activeTab === 'bot' && <BotTab patientId={patient.id} status={status} patientName={patient.name} />}
+        {activeTab === 'trends' && <TrendsTab patientId={patient.id} status={status} />}
       </main>
 
       <DeactivatePatientModal

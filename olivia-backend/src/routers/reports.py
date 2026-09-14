@@ -1,11 +1,17 @@
-from datetime import date, datetime
+from collections import defaultdict
+from datetime import date, datetime, timedelta
 from typing import Optional
 
-from bson import ObjectId
+from bson import DBRef, ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.database import get_database
+from src.models.helpers import extract
 from src.schemas.reports import (
+    CohortAttentionPatient,
+    CohortDayPoint,
+    CohortMoodBreakdown,
+    CohortReportResponse,
     DailyIndicators,
     DailyReportResponse,
     WeeklyIndicators,
@@ -13,6 +19,25 @@ from src.schemas.reports import (
 )
 
 router = APIRouter()
+
+# "completa" vale 1 pasto pieno, "parziale" mezzo, "nulla" zero: la media sui
+# pasti loggati in un giorno diventa una % di aderenza 0-100 per quel giorno.
+_ADHERENCE_SCORE = {"completa": 1.0, "parziale": 0.5, "nulla": 0.0}
+_MEAL_FIELDS = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner"]
+
+
+def _day_adherence_pct(diet_compliance: dict) -> Optional[float]:
+    scores = [_ADHERENCE_SCORE[v] for f in _MEAL_FIELDS if (v := diet_compliance.get(f)) in _ADHERENCE_SCORE]
+    if not scores:
+        return None
+    return round(sum(scores) / len(scores) * 100, 1)
+
+
+def _mood_avg(mood: dict) -> Optional[float]:
+    vals = [v for v in (mood.get("morning"), mood.get("afternoon"), mood.get("evening")) if v is not None]
+    if not vals:
+        return None
+    return sum(vals) / len(vals)
 
 
 def _oid(patient_id: str) -> ObjectId:
@@ -96,3 +121,117 @@ async def get_weekly_reports(
             indicators=indicators,
         ))
     return result
+
+
+@router.get("/reports/cohort", response_model=CohortReportResponse)
+async def get_cohort_report(
+    days: int = Query(14, ge=1, le=90),
+    db=Depends(get_database),
+):
+    """Vista aggregata per la home page: solo pazienti collegati al bot
+    (chat_id valorizzato) e non disattivati. Percorso `/patients/reports/cohort`
+    (non `/patients/{patient_id}/...`): con soli 2 segmenti dopo il prefisso
+    non può mai essere scambiato per un patient_id dalle altre rotte."""
+    today = date.today()
+    start = today - timedelta(days=days - 1)
+    week_start = today - timedelta(days=6)
+
+    patients = await db["users"].find(
+        {"chat_id": {"$ne": None}, "active": {"$ne": False}},
+        {"_id": 1, "profile.name": 1},
+    ).to_list(length=None)
+    patient_ids = [p["_id"] for p in patients]
+    name_by_id = {p["_id"]: extract(p.get("profile", {}).get("name")) for p in patients}
+
+    if not patient_ids:
+        return CohortReportResponse(
+            days=days, active_patients=0, daily=[], attention=[], mood=CohortMoodBreakdown(),
+        )
+
+    docs = await db["daily-reports"].find({
+        "user.$id": {"$in": patient_ids},
+        **_date_filter(start, None),
+    }).to_list(length=None)
+
+    by_day_adherence: dict[str, list[float]] = defaultdict(list)
+    by_day_hydration: dict[str, list[float]] = defaultdict(list)
+    by_patient_week: dict[ObjectId, list[float]] = defaultdict(list)
+    mood_by_patient: dict[ObjectId, list[float]] = defaultdict(list)
+
+    for doc in docs:
+        raw_date = doc.get("date")
+        d = raw_date.date() if isinstance(raw_date, datetime) else raw_date
+        user_ref = doc.get("user")
+        pid = user_ref.id if isinstance(user_ref, DBRef) else None
+        if d is None or pid is None:
+            continue
+        date_str = d.isoformat()
+        indicators = doc.get("indicators") or {}
+
+        pct = _day_adherence_pct(indicators.get("diet_compliance") or {})
+        if pct is not None:
+            by_day_adherence[date_str].append(pct)
+            if d >= week_start:
+                by_patient_week[pid].append(pct)
+
+        hydration = indicators.get("hydration")
+        if hydration is not None:
+            by_day_hydration[date_str].append(hydration)
+
+        mood_avg = _mood_avg(indicators.get("mood") or {})
+        if mood_avg is not None:
+            mood_by_patient[pid].append(mood_avg)
+
+    daily_points = []
+    for i in range(days):
+        d = start + timedelta(days=i)
+        date_str = d.isoformat()
+        adherences = by_day_adherence.get(date_str, [])
+        hydrations = by_day_hydration.get(date_str, [])
+        daily_points.append(CohortDayPoint(
+            date=date_str,
+            adherence_pct=round(sum(adherences) / len(adherences), 1) if adherences else None,
+            hydration_ml=round(sum(hydrations) / len(hydrations), 0) if hydrations else None,
+        ))
+
+    all_adherence_vals = [p.adherence_pct for p in daily_points if p.adherence_pct is not None]
+    all_hydration_vals = [p.hydration_ml for p in daily_points if p.hydration_ml is not None]
+
+    # "Serve attenzione": aderenza media ultimi 7gg, solo chi ha almeno 2 giorni
+    # loggati (un solo giorno storto non basta a segnalare nessuno).
+    attention = []
+    for pid, vals in by_patient_week.items():
+        if len(vals) < 2:
+            continue
+        attention.append(CohortAttentionPatient(
+            patient_id=str(pid),
+            name=name_by_id.get(pid),
+            adherence_pct=round(sum(vals) / len(vals), 1),
+            days_logged=len(vals),
+        ))
+    attention.sort(key=lambda a: a.adherence_pct)
+    attention = attention[:5]
+
+    mood = CohortMoodBreakdown()
+    for pid in patient_ids:
+        vals = mood_by_patient.get(pid, [])
+        if not vals:
+            mood.senza_dati += 1
+            continue
+        avg = sum(vals) / len(vals)
+        if avg > 0.2:
+            mood.sereno += 1
+        elif avg < -0.2:
+            mood.in_difficolta += 1
+        else:
+            mood.neutro += 1
+
+    return CohortReportResponse(
+        days=days,
+        active_patients=len(patient_ids),
+        avg_adherence_pct=round(sum(all_adherence_vals) / len(all_adherence_vals), 1) if all_adherence_vals else None,
+        avg_hydration_ml=round(sum(all_hydration_vals) / len(all_hydration_vals), 0) if all_hydration_vals else None,
+        daily=daily_points,
+        attention=attention,
+        mood=mood,
+    )

@@ -74,3 +74,35 @@ class WeeklyReportResponse(BaseModel):
     id: str
     week: dict
     indicators: WeeklyIndicators
+
+
+class CohortDayPoint(BaseModel):
+    date: str
+    adherence_pct: Optional[float] = None  # media aderenza pasti della coorte quel giorno, 0-100
+    hydration_ml: Optional[float] = None   # media ml bevuti dalla coorte quel giorno
+
+
+class CohortAttentionPatient(BaseModel):
+    """Un paziente da tenere d'occhio: aderenza pasti bassa negli ultimi 7 giorni."""
+    patient_id: str
+    name: Optional[str] = None
+    adherence_pct: float
+    days_logged: int
+
+
+class CohortMoodBreakdown(BaseModel):
+    sereno: int = 0
+    neutro: int = 0
+    in_difficolta: int = 0
+    senza_dati: int = 0
+
+
+class CohortReportResponse(BaseModel):
+    """Vista aggregata sui pazienti collegati al bot e attivi, per la home page."""
+    days: int
+    active_patients: int
+    avg_adherence_pct: Optional[float] = None
+    avg_hydration_ml: Optional[float] = None
+    daily: list[CohortDayPoint]
+    attention: list[CohortAttentionPatient]
+    mood: CohortMoodBreakdown

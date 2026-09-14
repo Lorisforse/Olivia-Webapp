@@ -101,3 +101,8 @@ export async function getWeeklyReports(id, { from, to } = {}) {
   const qs = params.toString()
   return _json(await fetch(`${API_URL}/patients/${id}/reports/weekly${qs ? '?' + qs : ''}`, { headers: authHeaders() }))
 }
+
+/** Vista aggregata sui pazienti attivi collegati al bot, per la home page. */
+export async function getCohortReport({ days = 14 } = {}) {
+  return _json(await fetch(`${API_URL}/patients/reports/cohort?days=${days}`, { headers: authHeaders() }))
+}
