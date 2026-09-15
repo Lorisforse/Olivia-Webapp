@@ -23,7 +23,12 @@ export function BarTrend({ data, target, unit = '', height = 140, color = 'var(-
   const max = Math.max(target || 0, ...values, 1)
   const bw = w / data.length
   const y = v => pad.t + h - (v / max) * h
-  const showLabelEvery = Math.max(1, Math.ceil(data.length / 8))
+  // Etichette in base allo spazio reale, non a un numero fisso: con poche
+  // barre (7-14gg) ci stanno tutte, con tante (30-90gg) si saltano quelle
+  // che si sovrapporrebbero. ~36px è la larghezza stimata di una label tipo
+  // "02/09" in font mono a 9px.
+  const maxLabels = Math.max(1, Math.floor(w / 36))
+  const showLabelEvery = Math.max(1, Math.ceil(data.length / maxLabels))
 
   return (
     <svg viewBox={`0 0 ${VBOX_W} ${height}`} className="chart-svg" role="img" aria-label="Grafico a barre">
