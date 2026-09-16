@@ -1,12 +1,5 @@
 import { useEffect, useState } from 'react'
 
-/**
- * Conferma leggera, speculare a DeactivatePatientModal: un solo passaggio.
- * `onConfirm` deve essere una funzione async: se lancia, la modale resta
- * aperta con un errore. Lo stato locale si azzera ogni volta che si apre
- * (vedi useEffect) per non restare bloccato su "Riattivazione…" da una
- * conferma precedente.
- */
 export default function ReactivatePatientModal({ patient, onCancel, onConfirm }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')

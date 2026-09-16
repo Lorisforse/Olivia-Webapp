@@ -121,8 +121,6 @@ export default function PazientiPage() {
         (p.email || '').toLowerCase().includes(q)
       )
     }
-    // "inactive" resta vicino agli attivi, non in coda del tutto: un disattivato
-    // non deve sparire in fondo alla vista "Tutti" solo perché non richiede azione.
     const order = { active: 0, inactive: 1, nodiet: 2, waiting: 3 }
     list.sort((a, b) => {
       if (order[a._status] !== order[b._status]) return order[a._status] - order[b._status]
@@ -145,7 +143,6 @@ export default function PazientiPage() {
     e.stopPropagation()
     const st = patient._status
     if (st === 'nodiet') setAssignModal(patient)
-    // 'active' -> attività bot, 'waiting' -> QR di onboarding: entrambi nel tab bot
     else navigate(`/pazienti/${patient.id}?tab=bot`)
   }
 

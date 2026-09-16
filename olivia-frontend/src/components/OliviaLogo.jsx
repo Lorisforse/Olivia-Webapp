@@ -1,7 +1,3 @@
-/**
- * Logo Olivia: oliva + wordmark, nei colori chiari usati sui fondi scuri
- * (topbar e pannello di login). L'altezza guida la larghezza, il rapporto è 3:1.
- */
 export default function OliviaLogo({ height = 40 }) {
   return (
     <svg

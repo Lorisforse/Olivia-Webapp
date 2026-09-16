@@ -1,11 +1,5 @@
 import { Link } from 'react-router-dom'
 
-/**
- * Barra di percorso a tutta larghezza sotto la topbar: sostituisce il
- * vecchio back-link in pagina (testo grigio, poco visibile). Va messa
- * come primo elemento del frammento radice della pagina, prima di
- * <main>, così resta fuori da `.page` e si estende bordo a bordo.
- */
 export default function Breadcrumb({ parent, parentTo, current }) {
   return (
     <nav className="breadcrumb-bar" aria-label="Percorso">

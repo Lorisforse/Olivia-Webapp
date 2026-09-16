@@ -1,103 +1,77 @@
-/**
- * Grafici minimi, coerenti con la palette dei pill di stato (verde=ok,
- * ambra=serve attenzione, grigio=nessun dato). SVG responsivo via viewBox
- * (nessuna libreria): le coordinate lavorano su una griglia fissa larga
- * `VBOX_W`, poi lo svg si adatta al contenitore via CSS.
- */
+import {
+  ResponsiveContainer, BarChart, Bar, Cell, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
+} from 'recharts'
 
-const VBOX_W = 600
+const TICK_STYLE = { fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 9, fill: '#8B8E80' }
+const GRID_COLOR = '#E2DFD2'
+const TARGET_COLOR = '#8B8E80'
 
-/**
- * Barre con eventuale riga obiettivo tratteggiata. Pensato per percentuali
- * (aderenza) o quantità (idratazione) con un target chiaro. Le barre sotto
- * l'obiettivo sono più opache, stesso trucco già in uso nella vecchia bozza
- * di report. Tooltip nativo (`<title>`) su ogni barra al passaggio del mouse.
- */
+function ChartTooltip({ active, payload, unit }) {
+  if (!active || !payload?.length) return null
+  const { label, value } = payload[0].payload
+  if (value == null) return null
+  return <div className="chart-tooltip">{`${label}: ${value}${unit}`}</div>
+}
+
 export function BarTrend({ data, target, unit = '', height = 140, color = 'var(--brand)', emptyLabel = 'Nessun dato nel periodo' }) {
   const values = data.map(d => d.value).filter(v => v != null)
   if (!values.length) return <div className="chart-empty">{emptyLabel}</div>
 
-  const pad = { l: 4, r: 4, t: 10, b: 18 }
-  const w = VBOX_W - pad.l - pad.r
-  const h = height - pad.t - pad.b
-  const max = Math.max(target || 0, ...values, 1)
-  const bw = w / data.length
-  const y = v => pad.t + h - (v / max) * h
-  // Etichette in base allo spazio reale, non a un numero fisso: con poche
-  // barre (7-14gg) ci stanno tutte, con tante (30-90gg) si saltano quelle
-  // che si sovrapporrebbero. ~36px è la larghezza stimata di una label tipo
-  // "02/09" in font mono a 9px.
-  const maxLabels = Math.max(1, Math.floor(w / 36))
-  const showLabelEvery = Math.max(1, Math.ceil(data.length / maxLabels))
-
   return (
-    <svg viewBox={`0 0 ${VBOX_W} ${height}`} className="chart-svg" role="img" aria-label="Grafico a barre">
-      {target != null && (
-        <line x1={pad.l} y1={y(target)} x2={VBOX_W - pad.r} y2={y(target)} className="chart-target-line" />
-      )}
-      {data.map((d, i) => {
-        if (d.value == null) return null
-        const barH = pad.t + h - y(d.value)
-        const below = target != null && d.value < target
-        return (
-          <rect
-            key={i}
-            x={pad.l + i * bw + Math.max(1, bw * 0.12)}
-            y={y(d.value)}
-            width={Math.max(1, bw * 0.76)}
-            height={barH}
-            fill={color}
-            opacity={below ? 0.5 : 0.95}
-            rx="1.5"
-          >
-            <title>{`${d.label}: ${d.value}${unit}`}</title>
-          </rect>
-        )
-      })}
-      {data.map((d, i) => (i % showLabelEvery === 0) && (
-        <text key={i} x={pad.l + i * bw + bw / 2} y={height - 5} className="chart-axis-label" textAnchor="middle">
-          {d.axisLabel ?? d.label}
-        </text>
-      ))}
-    </svg>
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} margin={{ top: 10, right: 4, left: 4, bottom: 0 }}>
+        <XAxis dataKey="label" tick={TICK_STYLE} tickLine={false} axisLine={false} />
+        <YAxis hide domain={[0, dataMax => Math.max(dataMax, target ?? 0)]} />
+        {target != null && (
+          <ReferenceLine y={target} stroke={TARGET_COLOR} strokeDasharray="3 3" />
+        )}
+        <Tooltip content={<ChartTooltip unit={unit} />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
+        <Bar dataKey="value" radius={[2, 2, 0, 0]} maxBarSize={28}>
+          {data.map((d, i) => (
+            <Cell key={i} fill={color} opacity={target != null && d.value != null && d.value < target ? 0.5 : 0.95} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
   )
 }
 
-/**
- * Linea con punti sui giorni con dato reale (i buchi non vengono collegati
- * né interpolati). Pensata per l'andamento peso: nessun target, solo il
- * trend nel tempo.
- */
 export function LineTrend({ data, unit = '', height = 160, color = 'var(--brand)', emptyLabel = 'Nessun dato nel periodo' }) {
-  const points = data.map((d, i) => ({ ...d, i })).filter(d => d.value != null)
-  if (points.length < 2) return <div className="chart-empty">{emptyLabel}</div>
+  const values = data.map(d => d.value).filter(v => v != null)
+  if (values.length < 2) return <div className="chart-empty">{emptyLabel}</div>
 
-  const pad = { l: 34, r: 10, t: 12, b: 18 }
-  const w = VBOX_W - pad.l - pad.r
-  const h = height - pad.t - pad.b
-  const values = points.map(p => p.value)
   const min = Math.min(...values), max = Math.max(...values)
   const range = max - min || 1
   const yMin = min - range * 0.15, yMax = max + range * 0.15
-  const x = i => pad.l + (data.length === 1 ? 0 : (i / (data.length - 1)) * w)
-  const y = v => pad.t + h - ((v - yMin) / (yMax - yMin)) * h
-  const path = points.map((p, k) => `${k === 0 ? 'M' : 'L'}${x(p.i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ')
+  const yMid = (yMin + yMax) / 2
 
   return (
-    <svg viewBox={`0 0 ${VBOX_W} ${height}`} className="chart-svg" role="img" aria-label="Grafico a linea">
-      {[yMin, (yMin + yMax) / 2, yMax].map((t, i) => (
-        <g key={i}>
-          <line x1={pad.l} y1={y(t)} x2={VBOX_W - pad.r} y2={y(t)} className="chart-gridline" />
-          <text x={pad.l - 6} y={y(t) + 3} className="chart-axis-label" textAnchor="end">{t.toFixed(1)}</text>
-        </g>
-      ))}
-      <path d={path} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      {points.map((p, k) => (
-        <circle key={k} cx={x(p.i)} cy={y(p.value)} r="3" fill={color}>
-          <title>{`${p.label}: ${p.value}${unit}`}</title>
-        </circle>
-      ))}
-    </svg>
+    <ResponsiveContainer width="100%" height={height}>
+      <LineChart data={data} margin={{ top: 12, right: 10, left: 0, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke={GRID_COLOR} />
+        <YAxis
+          tick={TICK_STYLE}
+          tickLine={false}
+          axisLine={false}
+          width={34}
+          domain={[yMin, yMax]}
+          ticks={[yMin, yMid, yMax]}
+          tickFormatter={v => v.toFixed(1)}
+        />
+        <XAxis dataKey="label" tick={TICK_STYLE} tickLine={false} axisLine={false} />
+        <Tooltip content={<ChartTooltip unit={unit} />} />
+        <Line
+          type="linear"
+          dataKey="value"
+          stroke={color}
+          strokeWidth={2}
+          dot={{ r: 3, fill: color, strokeWidth: 0 }}
+          activeDot={{ r: 4 }}
+          connectNulls
+        />
+      </LineChart>
+    </ResponsiveContainer>
   )
 }
 
@@ -107,11 +81,6 @@ const STRIP_TONE = {
   none: { fill: '#E3E4DA', title: 'Nessun dato' },
 }
 
-/**
- * Striscia di quadratini, un giorno ciascuno: colpo d'occhio sulla continuità
- * (buchi = giorni non loggati), non sui numeri esatti. `days`:
- * [{ date, label, tone: 'good'|'warn'|'none' }], in ordine cronologico.
- */
 export function AdherenceStrip({ days }) {
   if (!days.length) return <div className="chart-empty">Nessun dato nel periodo</div>
   return (

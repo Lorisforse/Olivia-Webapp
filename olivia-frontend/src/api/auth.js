@@ -1,10 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const STORAGE_KEY = 'olivia.session'
 
-/**
- * Errore 401 del backend: credenziali non valide o sessione scaduta.
- * Va distinto dagli altri errori perché comporta un logout, non un errore generico.
- */
 export class UnauthorizedError extends Error {
   constructor(message = 'Non autorizzato') {
     super(message)
@@ -12,8 +8,6 @@ export class UnauthorizedError extends Error {
   }
 }
 
-// "Resta connesso" = localStorage, che sopravvive alla chiusura del browser.
-// Senza spunta si usa sessionStorage: la sessione muore con la scheda.
 function stores() {
   return [window.localStorage, window.sessionStorage]
 }
@@ -24,9 +18,7 @@ export function readSession() {
     try {
       const raw = store.getItem(STORAGE_KEY)
       if (raw) session = JSON.parse(raw)
-    } catch {
-      // storage non disponibile (private browsing) o JSON corrotto
-    }
+    } catch {}
     if (!session) continue
     if (session.expiresAt && new Date(session.expiresAt).getTime() <= Date.now()) {
       clearSession()
@@ -42,24 +34,20 @@ export function saveSession(session, remember) {
   const store = remember ? window.localStorage : window.sessionStorage
   try {
     store.setItem(STORAGE_KEY, JSON.stringify({ ...session, remember: !!remember }))
-  } catch {
-    // se lo storage è pieno o bloccato la sessione resta solo in memoria
-  }
+  } catch {}
 }
 
 export function clearSession() {
   for (const store of stores()) {
-    try { store.removeItem(STORAGE_KEY) } catch { /* storage non disponibile */ }
+    try { store.removeItem(STORAGE_KEY) } catch {}
   }
 }
 
-/** Header Authorization da aggiungere a ogni chiamata autenticata. */
 export function authHeaders() {
   const session = readSession()
   return session?.token ? { Authorization: `Bearer ${session.token}` } : {}
 }
 
-/** Il token non è più valido: si chiude la sessione e App.jsx riporta al login. */
 export function notifyUnauthorized() {
   clearSession()
   window.dispatchEvent(new CustomEvent('olivia:unauthorized'))
@@ -79,7 +67,6 @@ export async function login({ email, password, remember }) {
   return session.user
 }
 
-/** Validazione della sessione salvata nel browser all'avvio dell'app. */
 export async function fetchMe() {
   const res = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() })
   if (res.status === 401) {

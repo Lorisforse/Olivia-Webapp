@@ -335,8 +335,6 @@ function OnboardingPanel({ patientId, patientName }) {
     else { setLoading(true); setError(false) }
     getPatientOnboarding(patientId)
       .then(res => {
-        // Collegamento appena avvenuto: ricarico l'intera scheda così anche
-        // header, stato ed elenco pazienti si aggiornano, non solo questo pannello.
         if (silent && res.connected && data && !data.connected) {
           window.location.reload()
           return
@@ -359,7 +357,6 @@ function OnboardingPanel({ patientId, patientName }) {
       const pngUri = await svgToPngDataUri(data.qr_svg)
       saveDataUri(pngUri, `${filename}.png`)
     } catch {
-      // conversione fallita: l'SVG originale resta un download valido
       saveDataUri(data.qr_svg, `${filename}.svg`)
     }
   }
@@ -631,9 +628,6 @@ function TrendsTab({ patientId, status }) {
   useEffect(() => {
     if (status === 'waiting') { setLoading(false); return }
     setLoading(true)
-    // La heatmap dell'aderenza mostra sempre gli ultimi 30gg indipendentemente
-    // dal periodo scelto: si scarica sempre almeno quella finestra, i grafici
-    // peso/idratazione/umore poi tagliano solo gli ultimi `days`.
     const fetchDays = Math.max(days, HEATMAP_DAYS)
     getDailyReports(patientId, { from: isoDaysAgo(fetchDays - 1), to: isoDaysAgo(0) })
       .then(setReports)
@@ -821,7 +815,6 @@ export default function PatientDetail() {
   const navigate = useNavigate()
   const location = useLocation()
   const [patient, setPatient] = useState(null)
-  // Da PazientiPage si può arrivare puntando a un tab specifico via ?tab= (es. onboarding).
   const [activeTab, setActiveTab] = useState(() => {
     const t = new URLSearchParams(location.search).get('tab')
     return TABS.includes(t) ? t : 'profile'

@@ -1,7 +1,3 @@
-/**
- * Stato di caricamento condiviso: un'oliva che dondola sul ramo, stesse
- * forme/colori del marchio in OliviaLogo, invece del vecchio testo piatto.
- */
 export default function LoadingScreen({ label = 'Caricamento…' }) {
   return (
     <div className="loading-screen">

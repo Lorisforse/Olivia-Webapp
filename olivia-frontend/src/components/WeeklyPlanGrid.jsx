@@ -1,11 +1,5 @@
 import { DAYS, MEALS, mealLabel, shortDayLabel } from '../utils/plan'
 
-/**
- * Vista in sola lettura del piano alimentare settimanale: righe = pasti,
- * colonne = giorni. Usata nell'anteprima di un piano (pagina Diete) e nella
- * scheda paziente. `plan` è il `weekly_plan` così come arriva dal backend
- * (chiavi eventualmente mancanti).
- */
 export default function WeeklyPlanGrid({ plan }) {
   const empty = !plan || !DAYS.some((day) => MEALS.some((meal) => plan[day]?.[meal]))
 

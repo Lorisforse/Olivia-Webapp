@@ -1,8 +1,3 @@
-/**
- * Forza il salvataggio di un Blob come file, via <a download> temporaneo.
- * Serve quando la risorsa richiede l'header Authorization e non può quindi
- * essere aperta con un semplice link (es. il PDF di un piano dietetico).
- */
 export function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -14,10 +9,6 @@ export function saveBlob(blob, filename) {
   URL.revokeObjectURL(url)
 }
 
-/**
- * Scarica una data URI (es. l'SVG del QR di onboarding, già pronto in
- * memoria lato client) come file, senza bisogno di un fetch/Blob intermedio.
- */
 export function saveDataUri(dataUri, filename) {
   const a = document.createElement('a')
   a.href = dataUri
@@ -27,13 +18,6 @@ export function saveDataUri(dataUri, filename) {
   a.remove()
 }
 
-/**
- * Converte una data URI SVG (il QR di onboarding, vettoriale) in PNG via
- * canvas — formato più "universale" da scaricare, apribile ovunque senza
- * sorprese. Le data URI non "sporcano" il canvas (niente CORS, sono
- * considerate stessa origine), quindi `toDataURL` funziona sempre. Sfondo
- * bianco esplicito: l'SVG di segno non lo disegna da sé, solo i moduli scuri.
- */
 export function svgToPngDataUri(svgDataUri, size = 640) {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -56,11 +40,6 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 }
 
-/**
- * Apre una finestra minimale con una sola immagine e lancia la stampa non
- * appena è caricata (niente chrome della webapp nel foglio stampato). Pensata
- * per il QR di collegamento, ma generica per qualsiasi immagine/data URI.
- */
 export function printImage(dataUri, { title = '', subtitle = '' } = {}) {
   const win = window.open('', '_blank', 'width=420,height=560')
   if (!win) return

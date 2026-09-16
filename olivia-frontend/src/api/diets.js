@@ -10,8 +10,6 @@ async function _json(res) {
     throw new UnauthorizedError()
   }
   if (!res.ok) {
-    // Per un 422 FastAPI mette in `detail` il motivo (es. "PDF non leggibile: …"):
-    // lo alleghiamo all'errore così la pagina può mostrarlo.
     const detail = await res.json().catch(() => null)
     const err = new Error(`HTTP ${res.status}`)
     err.status = res.status
@@ -53,11 +51,6 @@ export async function deleteDiet(id) {
   }))
 }
 
-/**
- * Manda un PDF a `/diets/parse-pdf`: il backend ne estrae la griglia settimanale
- * e i consigli SENZA salvare nulla. Ritorna `{ weekly_plan, tips, warnings }`.
- * Con multipart non si imposta `Content-Type`: lo fa il browser col boundary.
- */
 export async function parseDietPdf(file) {
   const body = new FormData()
   body.append('file', file)
@@ -68,7 +61,6 @@ export async function parseDietPdf(file) {
   }))
 }
 
-/** Archivia (o sostituisce) il PDF originale del piano. Ritorna `DietPdfInfo`. */
 export async function uploadDietPdf(id, file) {
   const body = new FormData()
   body.append('file', file)
@@ -79,10 +71,6 @@ export async function uploadDietPdf(id, file) {
   }))
 }
 
-/**
- * Scarica il PDF del piano come blob (serve l'header Authorization, quindi non
- * si può usare un semplice link). Ritorna `{ blob, filename }`.
- */
 export async function downloadDietPdf(id) {
   const res = await fetch(`${API_URL}/diets/${id}/pdf`, { headers: authHeaders() })
   if (res.status === 401) {

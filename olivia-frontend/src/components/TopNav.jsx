@@ -3,7 +3,6 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import OliviaLogo from './OliviaLogo'
 import { useAuth } from '../context/AuthContext'
 
-// Titoli da ignorare nel calcolo delle iniziali: "Dr.ssa Elena Russo" -> "ER"
 const HONORIFICS = /^(dr|dr\.ssa|dott|dott\.ssa|prof|prof\.ssa|sig|sig\.ra)\.?$/i
 
 function initials(name) {

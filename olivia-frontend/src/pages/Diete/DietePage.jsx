@@ -37,8 +37,6 @@ function tipsToText(tips) {
 function textToTips(text) {
   return text.split('\n').map(s => s.trim()).filter(Boolean)
 }
-// I piani scritti dal bot hanno `substitutions` come dict di regole strutturate:
-// l'editor testuale non le tocca (si tiene la stringa solo per i piani webapp).
 function subsToText(subs) {
   return typeof subs === 'string' ? subs : ''
 }
@@ -275,8 +273,6 @@ export default function DietePage() {
 
   useEffect(() => { loadData().finally(() => setLoading(false)) }, [])
 
-  // L'editor è alto: aprendolo/chiudendolo si riporta la vista in cima, altrimenti
-  // si resta a metà pagina su un'area vuota.
   useEffect(() => { window.scrollTo({ top: 0 }) }, [editor])
 
   function showToast(msg) {

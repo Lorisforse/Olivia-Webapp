@@ -21,7 +21,6 @@ function formatDayLabel(dateStr) {
   return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })
 }
 
-// "Dr.ssa Elena Russo" -> "Elena": il saluto usa solo il nome proprio.
 const HONORIFICS = /^(dr|dr\.ssa|dott|dott\.ssa|prof|prof\.ssa)\.?$/i
 
 function firstName(name) {

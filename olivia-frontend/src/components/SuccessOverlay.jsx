@@ -33,14 +33,6 @@ const TONES = {
   warn: { fill: 'var(--warn-bg)', stroke: 'var(--warn)' },
 }
 
-/**
- * Overlay di conferma per azioni rilevanti (nuovo paziente, disattiva/riattiva…):
- * badge animato al centro schermo, si chiude da sé dopo `duration` ms.
- * `tone`: 'brand' (default, verde) oppure 'warn' (ambra). `icon`: 'check'
- * (default) o 'pause'. `confetti`: di default `true` solo per compatibilità
- * con la creazione paziente — per le altre azioni va passato esplicitamente
- * `false`, i coriandoli hanno senso solo per un esito che si festeggia.
- */
 export default function SuccessOverlay({ show, title, message, onDone, duration = 1500, icon = 'check', tone = 'brand', confetti = true }) {
   useEffect(() => {
     if (!show || !onDone) return

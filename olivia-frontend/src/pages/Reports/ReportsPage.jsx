@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { getPatients } from '../../api/patients'
-import { Icon, StatPill, Avatar, AdherenceMeter } from '../../components/ui'
-import { BarChart } from '../../components/ui'
+import { Icon, StatPill, Avatar } from '../../components/ui'
 
 function calcBmi(w, h) {
   if (!w || !h) return 0
@@ -38,14 +37,9 @@ export default function ReportsPage() {
     initials: getInitials(p.name),
     status: deriveStatus(p),
     bmi: calcBmi(p.weight, p.height),
-    adherence: 0,
-    weightTrend: [],
   })), [raw])
 
   const active = patients.filter(p => p.status === 'active')
-  const avgAdh = 0
-  const highAdh = 0
-  const lowAdh = 0
 
   const bmiDist = [
     { label: 'Sottopeso',  v: patients.filter(p => p.bmi > 0 && p.bmi < 18.5).length,              color: '#8A96A3' },
@@ -60,8 +54,6 @@ export default function ReportsPage() {
   const goalEntries = Object.entries(goalDist).sort((a, b) => b[1] - a[1])
   const maxGoal = Math.max(...goalEntries.map(x => x[1]), 1)
 
-  const agg14 = Array.from({ length: 14 }, () => 0)
-
   if (loading) return <div className="screen" style={{ padding: 48, textAlign: 'center', color: '#7B8A99' }}>Caricamento report…</div>
 
   return (
@@ -72,9 +64,6 @@ export default function ReportsPage() {
           <h1 className="page-title">Report clinici aggregati</h1>
           <div className="stat-pills">
             <StatPill label="coorte attiva" value={active.length} tone="green" />
-            <StatPill label="aderenza media" value={`${avgAdh}%`} tone="blue" />
-            <StatPill label="alta aderenza ≥80" value={highAdh} tone="green" />
-            <StatPill label="bassa aderenza &lt;50" value={lowAdh} tone="amber" />
             <StatPill label="periodo" value="apr 2026" tone="neutral" />
           </div>
         </div>
@@ -85,21 +74,6 @@ export default function ReportsPage() {
       </div>
 
       <div className="reports-grid">
-        <div className="card card--pad chart-card" style={{ gridColumn: 'span 2' }}>
-          <div className="chart-card__head">
-            <div>
-              <div className="mono eyebrow">ADERENZA COORTE · 14 GIORNI</div>
-              <div className="chart-card__val">
-                <span className="mono big">{avgAdh}%</span>
-                <span className="muted small">media giornaliera</span>
-              </div>
-            </div>
-            <span className="chart-card__target mono">target ≥ 80%</span>
-          </div>
-          <BarChart data={agg14} labels={Array.from({ length: 14 }, (_, i) => `${i + 1}`)} width={900} height={200} color="#1B4F8A" targetLine={80} />
-          <p className="muted small" style={{ marginTop: 8 }}>I dati di aderenza vengono popolati automaticamente dal bot Telegram.</p>
-        </div>
-
         <div className="card card--pad chart-card">
           <div className="chart-card__head">
             <div><div className="mono eyebrow">DISTRIBUZIONE BMI</div></div>
@@ -150,7 +124,6 @@ export default function ReportsPage() {
                 <th>Obiettivo</th>
                 <th>BMI</th>
                 <th>Stato</th>
-                <th>Aderenza</th>
               </tr>
             </thead>
             <tbody>
@@ -166,7 +139,6 @@ export default function ReportsPage() {
                   <td className="muted">{p.goal || '—'}</td>
                   <td className="mono">{p.bmi > 0 ? p.bmi : '—'}</td>
                   <td className="muted">{p.status}</td>
-                  <td><AdherenceMeter value={p.adherence} width={140} /></td>
                 </tr>
               ))}
             </tbody>

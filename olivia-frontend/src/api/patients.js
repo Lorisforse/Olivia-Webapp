@@ -10,10 +10,6 @@ async function _json(res) {
     throw new UnauthorizedError()
   }
   if (!res.ok) {
-    // Il body (se c'è) va comunque letto e allegato all'errore: per un 422
-    // FastAPI manda in `detail` l'elenco dei campi che hanno fallito la
-    // validazione — utile in console per capire cosa correggere, anche se
-    // in UI mostriamo sempre un messaggio generico.
     const detail = await res.json().catch(() => null)
     const err = new Error(`HTTP ${res.status}`)
     err.status = res.status
@@ -66,7 +62,6 @@ export async function getPatientDiet(id) {
   return _json(await fetch(`${API_URL}/patients/${id}/diet`, { headers: authHeaders() }))
 }
 
-/** QR + deep link per collegare il paziente al bot Telegram. */
 export async function getPatientOnboarding(id) {
   return _json(await fetch(`${API_URL}/patients/${id}/onboarding`, { headers: authHeaders() }))
 }
@@ -102,7 +97,6 @@ export async function getWeeklyReports(id, { from, to } = {}) {
   return _json(await fetch(`${API_URL}/patients/${id}/reports/weekly${qs ? '?' + qs : ''}`, { headers: authHeaders() }))
 }
 
-/** Vista aggregata sui pazienti attivi collegati al bot, per la home page. */
 export async function getCohortReport({ days = 14 } = {}) {
   return _json(await fetch(`${API_URL}/patients/reports/cohort?days=${days}`, { headers: authHeaders() }))
 }

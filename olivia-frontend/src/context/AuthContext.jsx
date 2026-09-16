@@ -4,12 +4,9 @@ import { clearSession, fetchMe, login as apiLogin, readSession } from '../api/au
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  // La sessione salvata nel browser ("resta connesso") viene mostrata subito,
-  // senza aspettare il backend: evita il lampeggio della schermata di login.
   const [user, setUser] = useState(() => readSession()?.user ?? null)
   const [checking, setChecking] = useState(() => !!readSession())
 
-  // ...però va validata: il token può essere scaduto o l'account disattivato.
   useEffect(() => {
     if (!readSession()) return
     let cancelled = false
@@ -24,7 +21,6 @@ export function AuthProvider({ children }) {
     return () => { cancelled = true }
   }, [])
 
-  // Emesso da src/api/*.js quando il backend risponde 401 a una chiamata.
   useEffect(() => {
     const handler = () => setUser(null)
     window.addEventListener('olivia:unauthorized', handler)
