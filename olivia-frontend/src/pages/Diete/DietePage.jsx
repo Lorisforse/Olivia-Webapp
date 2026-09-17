@@ -489,7 +489,9 @@ export default function DietePage() {
                 <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                   {typeof previewDiet.substitutions === 'string'
                     ? (previewDiet.substitutions || <span className="muted">Nessuna sostituzione indicata.</span>)
-                    : <span className="muted">Regole strutturate definite dal bot (dettaglio non ancora visualizzabile).</span>}
+                    : (previewDiet.substitutions && Object.keys(previewDiet.substitutions).length > 0
+                      ? <span className="muted">Regole strutturate definite dal bot (dettaglio non ancora visualizzabile).</span>
+                      : <span className="muted">Nessuna sostituzione indicata.</span>)}
                 </p>
               </div>
             </div>

@@ -1257,6 +1257,7 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: var(--surface);
+  flex-shrink: 0;
 }
 
 .plan-table,
