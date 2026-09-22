@@ -25,7 +25,7 @@ function ChevronDown() {
   )
 }
 
-const ANAGRAFICA_KEYS = ['firstName', 'lastName', 'sex', 'dob', 'city', 'job', 'timeWake']
+const ANAGRAFICA_KEYS = ['firstName', 'lastName', 'sex', 'dob', 'city', 'job']
 const CLINICI_KEYS = ['weight', 'height', 'goal']
 
 export default function NuovoPaziente() {
@@ -67,7 +67,6 @@ export default function NuovoPaziente() {
     if (!form.dob) missing.dob = true
     if (!form.city) missing.city = true
     if (!form.job) missing.job = true
-    if (!form.timeWake) missing.timeWake = true
     if (!form.weight) missing.weight = true
     if (!form.height) missing.height = true
     if (!form.goal) missing.goal = true
@@ -107,7 +106,7 @@ export default function NuovoPaziente() {
         goal: form.goal,
         allergies: splitList(form.allergies),
         notes: form.clinicalNotes || null,
-        wakes_up_at: form.timeWake,
+        wakes_up_at: form.timeWake || null,
         breakfast_at: form.timeBreakfast || null,
         lunch_at: form.timeLunch || null,
         dinner_at: form.timeDinner || null,
@@ -175,13 +174,9 @@ export default function NuovoPaziente() {
                     <label htmlFor="city">Città<span className="req">*</span></label>
                     <input className={`input${invalidFields.city ? ' invalid' : ''}`} id="city" placeholder="es. Milano" value={form.city} onChange={e => setF('city', e.target.value)} />
                   </div>
-                  <div className="field">
+                  <div className="field field--full">
                     <label htmlFor="job">Lavoro<span className="req">*</span></label>
                     <input className={`input${invalidFields.job ? ' invalid' : ''}`} id="job" placeholder="es. impiegata, studente, infermiere…" value={form.job} onChange={e => setF('job', e.target.value)} />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="timeWake">Ora di sveglia abituale<span className="req">*</span></label>
-                    <input className={`input${invalidFields.timeWake ? ' invalid' : ''}`} id="timeWake" type="time" value={form.timeWake} onChange={e => setF('timeWake', e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -249,8 +244,12 @@ export default function NuovoPaziente() {
             </header>
             {open.abitudini && (
               <div className="section__body">
-                <div className="section-subhead">Orari dei pasti</div>
+                <div className="section-subhead">Orari della giornata</div>
                 <div className="form-grid form-grid--3">
+                  <div className="field">
+                    <label htmlFor="timeWake">Sveglia</label>
+                    <input className="input" id="timeWake" type="time" value={form.timeWake} onChange={e => setF('timeWake', e.target.value)} />
+                  </div>
                   <div className="field">
                     <label htmlFor="timeBreakfast">Colazione</label>
                     <input className="input" id="timeBreakfast" type="time" value={form.timeBreakfast} onChange={e => setF('timeBreakfast', e.target.value)} />
