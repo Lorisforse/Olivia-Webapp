@@ -8,9 +8,9 @@ function suggestedDate(hhmm) {
 
 /**
  * Selettore orario (timepicker-ui): input testuale con placeholder + modale
- * a quadrante analogico (trascinabile) o inserimento da tastiera (icona di switch).
- * Il valore resta vuoto finché non si preme "OK" nel modale: il placeholder
- * mostra solo un orario suggerito, non un valore già confermato.
+ * a quadrante analogico trascinabile. Il valore resta vuoto finché non si
+ * preme "Conferma" nel modale: il placeholder mostra solo un orario
+ * suggerito, non un valore già confermato.
  */
 export default function TimePicker({ id, value, onChange, defaultTime = '00:00' }) {
   return (
@@ -23,7 +23,6 @@ export default function TimePicker({ id, value, onChange, defaultTime = '00:00' 
         if (hour == null || minutes == null) return
         onChange(`${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`)
       }}
-      onClear={() => onChange('')}
       options={{
         clock: {
           type: '24h',
@@ -31,23 +30,16 @@ export default function TimePicker({ id, value, onChange, defaultTime = '00:00' 
         },
         ui: {
           theme: 'basic',
-          editable: true,
-          enableSwitchIcon: true,
-          clearButton: true,
+          enableSwitchIcon: false,
+          clearButton: false,
         },
         labels: {
           ok: 'Conferma',
           cancel: 'Annulla',
-          clear: 'Cancella',
           time: 'Seleziona orario',
-          mobileTime: 'Inserisci orario',
-          mobileHour: 'Ora',
-          mobileMinute: 'Minuti',
           hourLabel: 'Ora',
           minuteLabel: 'Minuti',
           clockLabel: 'Quadrante orario',
-          switchToKeyboardLabel: 'Passa a tastiera',
-          switchToClockLabel: 'Passa a quadrante',
         },
       }}
     />

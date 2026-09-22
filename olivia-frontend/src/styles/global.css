@@ -649,10 +649,12 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
    TIME PICKER (timepicker-ui, vedi TimePicker.jsx)
    ============================================================ */
 :root {
-  --tp-primary: var(--brand);
-  --tp-primary-container: var(--brand-50);
-  --tp-on-primary: #fff;
-  --tp-on-primary-container: var(--brand-700);
+  --tp-primary: var(--brand) !important;
+  --tp-primary-container: var(--brand-50) !important;
+  --tp-on-primary: #fff !important;
+  --tp-on-primary-container: var(--brand-700) !important;
+  --tp-primary-rgb: 74, 85, 40 !important;
+  --tp-outline: var(--brand) !important;
 }
 .tp-ui-input.input { width: 100%; cursor: pointer; }
 .tp-ui-input.input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
