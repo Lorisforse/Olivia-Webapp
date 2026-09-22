@@ -7,3 +7,4 @@ pyjwt==2.10.1
 python-multipart==0.0.20
 pdfplumber==0.11.9
 segno==1.6.6
+tzdata==2025.2

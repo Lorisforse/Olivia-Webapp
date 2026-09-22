@@ -60,6 +60,9 @@ export default function TopNav() {
         <NavLink to="/diete" className={({ isActive }) => isActive ? 'active' : ''}>
           Diete
         </NavLink>
+        <NavLink to="/agenda" className={({ isActive }) => isActive ? 'active' : ''}>
+          Agenda
+        </NavLink>
       </nav>
 
       <button

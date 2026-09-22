@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth import get_current_user
-from src.routers import auth, diets, logs, patients, reports
+from src.routers import appointments, auth, diets, logs, patients, reports
 
 app = FastAPI(title='Olivia API', version='0.3.0')
 
@@ -22,6 +22,7 @@ app.include_router(patients.router, prefix='/patients', tags=['patients'], depen
 app.include_router(diets.router, prefix='/diets', tags=['diets'], dependencies=protected)
 app.include_router(logs.router, prefix='/patients', tags=['logs'], dependencies=protected)
 app.include_router(reports.router, prefix='/patients', tags=['reports'], dependencies=protected)
+app.include_router(appointments.router, prefix='/appointments', tags=['appointments'], dependencies=protected)
 
 
 @app.get('/')

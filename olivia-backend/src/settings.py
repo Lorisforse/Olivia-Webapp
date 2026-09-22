@@ -21,6 +21,14 @@ class Settings(BaseSettings):
     # nel .env; cambiarlo richiede solo un riavvio del container, non un rebuild.
     bot_username: str = 'olivia_loris_bot'
 
+    # Promemoria appuntamenti via bot: solo la versione del bot con il modulo
+    # appuntamenti (olivia-chatbot-calendario) li invia. Con il bot originale va
+    # lasciato a false: l'agenda funziona lo stesso ma il paziente non riceve
+    # nulla e la webapp lo segnala.
+    appointments_bot_enabled: bool = False
+    appointment_reminder_days: int = 3
+    appointment_reminder_hour: int = 10
+
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
 

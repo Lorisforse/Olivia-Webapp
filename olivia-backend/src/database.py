@@ -31,3 +31,6 @@ def get_weekly_reports_col(database): return database["weekly-reports"]
 # Referenzia il piano con `plan_id` -> "nutrition-plans": nessun campo aggiunto
 # alla collection del bot.
 def get_diet_pdfs_col(database): return database["webapp-diet-pdfs"]
+# Appuntamenti dell'agenda. Collection solo-webapp letta anche dal bot con il
+# modulo appuntamenti, che invia il promemoria e aggiorna `status` alla risposta.
+def get_appointments_col(database): return database["webapp-appointments"]
