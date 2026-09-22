@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import FullCalendar from '@fullcalendar/react'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import interactionPlugin from '@fullcalendar/interaction'
+import itLocale from '@fullcalendar/core/locales/it'
 import {
   createAppointment,
   deleteAppointment,
@@ -19,15 +23,16 @@ import {
   formatDayLabel,
   formatTime,
   sameDay,
-  startOfWeek,
   toDateInput,
 } from '../../utils/appointments'
 import './AgendaPage.css'
 
-const DAY_START = 8
-const DAY_END = 20
-const HOUR_H = 52
-const DAY_NAMES = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
+const STATUS_COLORS = {
+  confirmed:  { bg: '#CBE0A0', border: '#A0C167', text: '#24350D' },
+  reschedule: { bg: '#F5B65B', border: '#DE9A2E', text: '#5C3600' },
+  waiting:    { bg: '#BFD9E8', border: '#8FB8CC', text: '#1D3C4C' },
+  scheduled:  { bg: '#E4E7D5', border: '#8A9258', text: '#3B4420' },
+}
 
 function Toast({ message, onHide }) {
   useEffect(() => {
@@ -38,53 +43,31 @@ function Toast({ message, onHide }) {
   return <div className={`toast${message ? ' show' : ''}`}>{message}</div>
 }
 
-function weekLabel(start) {
-  const end = addDays(start, 6)
-  const opts = { day: 'numeric', month: 'short' }
-  const a = start.toLocaleDateString('it-IT', opts)
-  const b = end.toLocaleDateString('it-IT', { ...opts, year: 'numeric' })
-  return `${a} - ${b}`
-}
-
-function apptTop(a) {
-  const d = new Date(a.scheduled_at)
-  const minutes = (d.getHours() - DAY_START) * 60 + d.getMinutes()
-  return Math.max(0, Math.min(minutes, (DAY_END - DAY_START) * 60 - 20)) / 60 * HOUR_H
-}
-
-function apptHeight(a) {
-  return Math.max(22, (a.duration_minutes || 30) / 60 * HOUR_H - 2)
-}
-
 export default function AgendaPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [patients, setPatients] = useState([])
   const [config, setConfig] = useState(null)
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
-  const [weekAppts, setWeekAppts] = useState([])
+  const [viewAppts, setViewAppts] = useState([])
   const [upcoming, setUpcoming] = useState([])
   const [loading, setLoading] = useState(true)
-  const [weekLoading, setWeekLoading] = useState(false)
+  const [rangeLoading, setRangeLoading] = useState(false)
   const [error, setError] = useState('')
   const [modal, setModal] = useState(null)
   const [toast, setToast] = useState('')
   const showLoading = useMinDuration(loading)
-  const today = useMemo(() => new Date(), [])
-  const colRefs = useRef({})
+  const rangeRef = useRef(null)
 
-  const loadWeek = useCallback(async (start) => {
-    setWeekLoading(true)
+  const loadRange = useCallback(async (start, end) => {
+    rangeRef.current = { start, end }
+    setRangeLoading(true)
     try {
-      const list = await getAppointments({
-        from: start.toISOString(),
-        to: addDays(start, 7).toISOString(),
-      })
-      setWeekAppts(list)
+      const list = await getAppointments({ from: start.toISOString(), to: end.toISOString() })
+      setViewAppts(list)
     } catch {
-      setError('Impossibile caricare gli appuntamenti della settimana.')
+      setError('Impossibile caricare gli appuntamenti.')
     } finally {
-      setWeekLoading(false)
+      setRangeLoading(false)
     }
   }, [])
 
@@ -114,8 +97,6 @@ export default function AgendaPage() {
     return () => { cancelled = true }
   }, [loadUpcoming])
 
-  useEffect(() => { loadWeek(weekStart) }, [weekStart, loadWeek])
-
   useEffect(() => {
     const patientId = searchParams.get('paziente')
     if (!patientId || loading) return
@@ -124,8 +105,10 @@ export default function AgendaPage() {
   }, [searchParams, setSearchParams, loading])
 
   const refresh = useCallback(async () => {
-    await Promise.all([loadWeek(weekStart), loadUpcoming()])
-  }, [loadWeek, loadUpcoming, weekStart])
+    const tasks = [loadUpcoming()]
+    if (rangeRef.current) tasks.push(loadRange(rangeRef.current.start, rangeRef.current.end))
+    await Promise.all(tasks)
+  }, [loadRange, loadUpcoming])
 
   async function handleSave(payload, existing) {
     if (existing) {
@@ -153,27 +136,45 @@ export default function AgendaPage() {
     await refresh()
   }
 
-  function openNewAt(dayIndex, e) {
-    const col = colRefs.current[dayIndex]
-    if (!col) return
-    const rect = col.getBoundingClientRect()
-    const minutes = Math.floor(((e.clientY - rect.top) / HOUR_H) * 60 / 30) * 30
-    const date = addDays(weekStart, dayIndex)
-    const h = DAY_START + Math.floor(minutes / 60)
-    const m = minutes % 60
-    date.setHours(h, m, 0, 0)
-    setModal({ initial: { scheduled_at: date.toISOString() } })
+  async function handleEventDrop(info) {
+    try {
+      await updateAppointment(info.event.id, { scheduled_at: info.event.start.toISOString() })
+      setToast('Appuntamento spostato')
+      await refresh()
+    } catch {
+      setToast('Impossibile spostare l\'appuntamento')
+      info.revert()
+    }
   }
 
-  const byDay = useMemo(() => {
-    const map = {}
-    for (const a of weekAppts) {
-      const idx = Math.floor((new Date(a.scheduled_at) - weekStart) / 86400000)
-      if (idx < 0 || idx > 6) continue
-      ;(map[idx] = map[idx] || []).push(a)
+  async function handleEventResize(info) {
+    try {
+      const minutes = Math.round((info.event.end - info.event.start) / 60000)
+      await updateAppointment(info.event.id, { duration_minutes: minutes })
+      setToast('Durata aggiornata')
+      await refresh()
+    } catch {
+      setToast('Impossibile aggiornare la durata')
+      info.revert()
     }
-    return map
-  }, [weekAppts, weekStart])
+  }
+
+  const events = useMemo(() => viewAppts.map(a => {
+    const s = appointmentStatus(a)
+    const colors = STATUS_COLORS[s.key] || STATUS_COLORS.scheduled
+    const start = new Date(a.scheduled_at)
+    const end = new Date(start.getTime() + (a.duration_minutes || 30) * 60000)
+    return {
+      id: a.id,
+      title: a.patient_name || 'Paziente',
+      start,
+      end,
+      backgroundColor: colors.bg,
+      borderColor: colors.border,
+      textColor: colors.text,
+      extendedProps: { appointment: a },
+    }
+  }), [viewAppts])
 
   const upcomingByDay = useMemo(() => {
     const groups = []
@@ -187,7 +188,7 @@ export default function AgendaPage() {
   }, [upcoming])
 
   const counts = useMemo(() => {
-    const c = { week: weekAppts.length, waiting: 0, reschedule: 0, confirmed: 0 }
+    const c = { week: viewAppts.length, waiting: 0, reschedule: 0, confirmed: 0 }
     for (const a of upcoming) {
       const s = appointmentStatus(a).key
       if (s === 'waiting' || s === 'scheduled') c.waiting += 1
@@ -195,12 +196,9 @@ export default function AgendaPage() {
       if (s === 'confirmed') c.confirmed += 1
     }
     return c
-  }, [weekAppts, upcoming])
+  }, [viewAppts, upcoming])
 
   if (showLoading) return <LoadingScreen />
-
-  const hours = []
-  for (let h = DAY_START; h < DAY_END; h += 1) hours.push(h)
 
   return (
     <main className="page">
@@ -209,7 +207,7 @@ export default function AgendaPage() {
           <div className="page-eyebrow">Agenda</div>
           <h1 className="page-title">Appuntamenti</h1>
           <p className="page-subtitle">
-            {counts.week} questa settimana · {counts.waiting} da confermare · {counts.reschedule} da rischedulare
+            {counts.week} in vista · {counts.waiting} da confermare · {counts.reschedule} da rischedulare
           </p>
         </div>
         <div className="page-actions">
@@ -229,81 +227,40 @@ export default function AgendaPage() {
       )}
 
       <div className="agenda-layout">
-        <section className="card agenda-card">
-          <div className="card__header agenda-toolbar">
-            <div className="agenda-nav">
-              <button className="btn-icon" aria-label="Settimana precedente" onClick={() => setWeekStart(s => addDays(s, -7))}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-              </button>
-              <button className="btn-icon" aria-label="Settimana successiva" onClick={() => setWeekStart(s => addDays(s, 7))}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-              </button>
-              <span className="agenda-nav__label">{weekLabel(weekStart)}</span>
-              {weekLoading && <span className="muted agenda-nav__loading">aggiorno…</span>}
-            </div>
-            <button className="btn btn--ghost btn--sm" onClick={() => setWeekStart(startOfWeek(new Date()))}>Oggi</button>
-          </div>
-
-          <div className="agenda-scroll">
-            <div className="agenda-grid">
-              <div className="agenda-grid__corner" />
-              {DAY_NAMES.map((name, i) => {
-                const d = addDays(weekStart, i)
-                const isToday = sameDay(d, today)
-                return (
-                  <div key={name} className={`agenda-grid__head${isToday ? ' is-today' : ''}`}>
-                    <span className="agenda-grid__head-name">{name}</span>
-                    <span className="agenda-grid__head-date">{d.getDate()}</span>
-                  </div>
-                )
-              })}
-
-              <div className="agenda-grid__hours" style={{ height: hours.length * HOUR_H }}>
-                {hours.map(h => (
-                  <div key={h} className="agenda-grid__hour" style={{ height: HOUR_H }}>
-                    {String(h).padStart(2, '0')}:00
-                  </div>
-                ))}
-              </div>
-
-              {DAY_NAMES.map((name, i) => {
-                const d = addDays(weekStart, i)
-                const isToday = sameDay(d, today)
-                const items = byDay[i] || []
-                return (
-                  <div
-                    key={name}
-                    ref={el => { colRefs.current[i] = el }}
-                    className={`agenda-grid__col${isToday ? ' is-today' : ''}`}
-                    style={{ height: hours.length * HOUR_H, backgroundSize: `100% ${HOUR_H}px` }}
-                    onClick={e => openNewAt(i, e)}
-                  >
-                    {hours.map(h => (
-                      <div key={h} className="agenda-grid__cell" style={{ height: HOUR_H }} />
-                    ))}
-                    {items.map(a => {
-                      const s = appointmentStatus(a)
-                      const past = new Date(a.scheduled_at) < today
-                      const height = apptHeight(a)
-                      return (
-                        <button
-                          key={a.id}
-                          type="button"
-                          className={`agenda-appt agenda-appt--${s.key}${past ? ' is-past' : ''}${height < 40 ? ' agenda-appt--short' : ''}`}
-                          style={{ top: apptTop(a), height }}
-                          title={`${formatTime(a.scheduled_at)} · ${a.patient_name || 'Paziente'} · ${s.label}`}
-                          onClick={e => { e.stopPropagation(); setModal({ appointment: a }) }}
-                        >
-                          <span className="agenda-appt__time">{formatTime(a.scheduled_at)}</span>
-                          <span className="agenda-appt__name">{a.patient_name || 'Paziente'}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+        <section className="card agenda-card agenda-fc-card">
+          {rangeLoading && <span className="muted agenda-fc-card__loading">aggiorno…</span>}
+          <FullCalendar
+            plugins={[timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            locale={itLocale}
+            firstDay={1}
+            headerToolbar={{ left: 'prev,next today', center: 'title', right: '' }}
+            slotMinTime="08:00:00"
+            slotMaxTime="20:00:00"
+            allDaySlot={false}
+            nowIndicator
+            height="auto"
+            editable
+            eventResizableFromStart={false}
+            selectable
+            selectMirror
+            events={events}
+            datesSet={arg => loadRange(arg.start, arg.end)}
+            select={arg => setModal({ initial: { scheduled_at: arg.start.toISOString() } })}
+            eventClick={arg => setModal({ appointment: arg.event.extendedProps.appointment })}
+            eventDrop={handleEventDrop}
+            eventResize={handleEventResize}
+            eventContent={arg => {
+              const minutes = (arg.event.end - arg.event.start) / 60000
+              const short = minutes <= 45
+              return (
+                <div className={`fc-appt${short ? ' fc-appt--short' : ''}`}>
+                  <span className="fc-appt__time">{arg.timeText}</span>
+                  <span className="fc-appt__name">{arg.event.title}</span>
+                </div>
+              )
+            }}
+          />
         </section>
 
         <aside className="card agenda-side">

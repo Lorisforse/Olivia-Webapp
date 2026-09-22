@@ -6,7 +6,6 @@ import PatientDetail from './pages/PatientDetail'
 import NuovoPaziente from './pages/NuovoPaziente/NuovoPaziente'
 import DietePage from './pages/Diete/DietePage'
 import AgendaPage from './pages/Agenda/AgendaPage'
-import AgendaPageFullCalendar from './pages/Agenda/AgendaPageFullCalendar'
 import LoginPage from './pages/Login/LoginPage'
 import LoadingScreen from './components/LoadingScreen'
 import { useMinDuration } from './hooks/useMinDuration'
@@ -37,7 +36,7 @@ export default function App() {
         <Route path='/pazienti/:id' element={<RequireAuth><PatientDetail /></RequireAuth>} />
         <Route path='/nuovo-paziente' element={<RequireAuth><NuovoPaziente /></RequireAuth>} />
         <Route path='/diete' element={<RequireAuth><DietePage /></RequireAuth>} />
-        <Route path='/agenda' element={<RequireAuth><AgendaPageFullCalendar /></RequireAuth>} />
+        <Route path='/agenda' element={<RequireAuth><AgendaPage /></RequireAuth>} />
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
     </div>
