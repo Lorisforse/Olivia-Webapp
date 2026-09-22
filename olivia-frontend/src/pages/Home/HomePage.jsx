@@ -146,6 +146,12 @@ function CohortSection() {
                   ))}
                 </div>
               )}
+              {!loading && (
+                <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
+                  I 5 pazienti con l&#39;aderenza media più bassa negli ultimi 7 giorni (solo chi ha
+                  registrato almeno 2 giorni in quel periodo), indipendentemente dal periodo scelto sopra.
+                </p>
+              )}
             </div>
           </div>
 
@@ -200,7 +206,7 @@ function CohortSection() {
             </div>
           </div>
 
-          <div className="card" style={{ gridColumn: 'span 2' }}>
+          <div className="card">
             <div className="card__header">
               <h2 className="card__title">Gradimento pasti</h2>
               {cohort?.avg_satisfaction_pct != null && (

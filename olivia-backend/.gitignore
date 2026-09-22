@@ -4,3 +4,7 @@ __pycache__/
 .env
 .idea/
 .vscode/
+
+# script di seed con dati finti per testare i grafici, va copiato a mano sul
+# VPS quando serve — non deve finire nella consegna del progetto
+seed_reports_demo.py
