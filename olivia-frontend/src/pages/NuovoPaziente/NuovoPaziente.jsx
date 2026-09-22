@@ -41,7 +41,7 @@ export default function NuovoPaziente() {
   const [form, setForm] = useState({
     firstName: '', lastName: '', dob: '', city: '', job: '',
     weight: '', height: '', goal: '', allergies: '',
-    timeWake: '07:00', timeBreakfast: '08:00', timeLunch: '13:00', timeDinner: '20:00', timeSleep: '22:00',
+    timeWake: '', timeBreakfast: '', timeLunch: '', timeDinner: '', timeSleep: '',
     activityWhat: '', activityFreq: '', clinicalNotes: '',
   })
 
@@ -250,23 +250,23 @@ export default function NuovoPaziente() {
                 <div className="form-grid form-grid--3">
                   <div className="field">
                     <label htmlFor="timeWake">Orario sveglia</label>
-                    <TimePicker id="timeWake" value={form.timeWake} onChange={v => setF('timeWake', v)} />
+                    <TimePicker id="timeWake" value={form.timeWake} onChange={v => setF('timeWake', v)} defaultTime="07:00" />
                   </div>
                   <div className="field">
                     <label htmlFor="timeBreakfast">Colazione</label>
-                    <TimePicker id="timeBreakfast" value={form.timeBreakfast} onChange={v => setF('timeBreakfast', v)} />
+                    <TimePicker id="timeBreakfast" value={form.timeBreakfast} onChange={v => setF('timeBreakfast', v)} defaultTime="08:00" />
                   </div>
                   <div className="field">
                     <label htmlFor="timeLunch">Pranzo</label>
-                    <TimePicker id="timeLunch" value={form.timeLunch} onChange={v => setF('timeLunch', v)} />
+                    <TimePicker id="timeLunch" value={form.timeLunch} onChange={v => setF('timeLunch', v)} defaultTime="13:00" />
                   </div>
                   <div className="field">
                     <label htmlFor="timeDinner">Cena</label>
-                    <TimePicker id="timeDinner" value={form.timeDinner} onChange={v => setF('timeDinner', v)} />
+                    <TimePicker id="timeDinner" value={form.timeDinner} onChange={v => setF('timeDinner', v)} defaultTime="20:00" />
                   </div>
                   <div className="field">
                     <label htmlFor="timeSleep">Orario in cui va a dormire</label>
-                    <TimePicker id="timeSleep" value={form.timeSleep} onChange={v => setF('timeSleep', v)} />
+                    <TimePicker id="timeSleep" value={form.timeSleep} onChange={v => setF('timeSleep', v)} defaultTime="22:00" />
                   </div>
                 </div>
 

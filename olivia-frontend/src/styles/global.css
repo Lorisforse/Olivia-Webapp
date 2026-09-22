@@ -646,38 +646,17 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .form-footer-right { display: flex; gap: 10px; }
 
 /* ============================================================
-   TIME PICKER (react-time-picker + react-clock, vedi TimePicker.jsx)
+   TIME PICKER (timepicker-ui, vedi TimePicker.jsx)
    ============================================================ */
-.time-picker.react-time-picker { display: flex; width: 100%; }
-.time-picker .react-time-picker__wrapper {
-  width: 100%;
-  height: 38px;
-  padding: 0 10px;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-sm);
-  font-size: 13.5px;
-  color: var(--ink);
+:root {
+  --tp-primary: var(--brand);
+  --tp-primary-container: var(--brand-50);
+  --tp-on-primary: #fff;
+  --tp-on-primary-container: var(--brand-700);
 }
-.time-picker .react-time-picker__wrapper:focus-within {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-100);
-}
-.time-picker .react-time-picker__inputGroup__input:focus { outline: none; }
-.time-picker .react-time-picker__button { color: var(--ink-3); padding: 0 4px; }
-.time-picker .react-time-picker__button:enabled:hover .react-time-picker__button__icon,
-.time-picker .react-time-picker__button:enabled:focus .react-time-picker__button__icon {
-  stroke: var(--brand);
-}
-.time-picker .react-time-picker__clock {
-  z-index: 300;
-  border-radius: var(--r-lg);
-  border-color: var(--line);
-  box-shadow: var(--shadow-lg);
-}
-.time-picker .react-clock__hand__body { background-color: var(--brand); }
-.time-picker .react-clock__mark__body { background-color: var(--line-strong); }
-.time-picker .react-clock__face { border-color: var(--line); }
+.tp-ui-input.input { width: 100%; cursor: pointer; }
+.tp-ui-input.input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
+.tp-ui-input.input::placeholder { color: var(--ink-4); }
 
 /* ============================================================
    TABS

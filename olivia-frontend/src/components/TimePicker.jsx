@@ -1,34 +1,55 @@
-import RTP from 'react-time-picker'
-import 'react-time-picker/dist/TimePicker.css'
-import 'react-clock/dist/Clock.css'
+import { Timepicker } from 'timepicker-ui-react'
+import 'timepicker-ui/main.css'
 
-function ClockIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <polyline points="12 7 12 12 15 14" />
-    </svg>
-  )
+function suggestedDate(hhmm) {
+  const [h, m] = (hhmm || '00:00').split(':').map(Number)
+  return new Date(2000, 0, 1, h || 0, m || 0)
 }
 
 /**
- * Selettore orario: input testuale (ore/minuti editabili da tastiera) più
- * quadrante analogico a comparsa (react-time-picker + react-clock).
+ * Selettore orario (timepicker-ui): input testuale con placeholder + modale
+ * a quadrante analogico (trascinabile) o inserimento da tastiera (icona di switch).
+ * Il valore resta vuoto finché non si preme "OK" nel modale: il placeholder
+ * mostra solo un orario suggerito, non un valore già confermato.
  */
-export default function TimePicker({ id, value, onChange }) {
+export default function TimePicker({ id, value, onChange, defaultTime = '00:00' }) {
   return (
-    <RTP
-      className="time-picker"
+    <Timepicker
       id={id}
-      value={value || null}
-      onChange={v => onChange(v || '')}
-      format="HH:mm"
-      locale="it-IT"
-      disableClock={false}
-      clearIcon={null}
-      clockIcon={<ClockIcon />}
-      hourPlaceholder="--"
-      minutePlaceholder="--"
+      className="input"
+      value={value || ''}
+      placeholder={defaultTime}
+      onConfirm={({ hour, minutes }) => {
+        if (hour == null || minutes == null) return
+        onChange(`${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`)
+      }}
+      onClear={() => onChange('')}
+      options={{
+        clock: {
+          type: '24h',
+          currentTime: { time: suggestedDate(defaultTime), updateInput: false },
+        },
+        ui: {
+          theme: 'basic',
+          editable: true,
+          enableSwitchIcon: true,
+          clearButton: true,
+        },
+        labels: {
+          ok: 'Conferma',
+          cancel: 'Annulla',
+          clear: 'Cancella',
+          time: 'Seleziona orario',
+          mobileTime: 'Inserisci orario',
+          mobileHour: 'Ora',
+          mobileMinute: 'Minuti',
+          hourLabel: 'Ora',
+          minuteLabel: 'Minuti',
+          clockLabel: 'Quadrante orario',
+          switchToKeyboardLabel: 'Passa a tastiera',
+          switchToClockLabel: 'Passa a quadrante',
+        },
+      }}
     />
   )
 }
