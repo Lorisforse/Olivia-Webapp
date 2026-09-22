@@ -12,6 +12,7 @@ import { BarTrend, LineTrend, AdherenceStrip } from '../../components/charts'
 import { splitList } from '../../utils/text'
 import { saveBlob, saveDataUri, svgToPngDataUri, printImage } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
+import TimePicker from '../../components/TimePicker'
 
 function deriveStatus(p) {
   if (p.active === false) return 'inactive'
@@ -108,6 +109,11 @@ function ProfileTab({ patient, onSave }) {
       ? patient.allergies.join(', ')
       : (patient.allergies || ''),
     notes: patient.notes || '',
+    wakes_up_at: patient.wakes_up_at || '',
+    goes_to_sleep_at: patient.goes_to_sleep_at || '',
+    breakfast_at: patient.breakfast_at || '',
+    lunch_at: patient.lunch_at || '',
+    dinner_at: patient.dinner_at || '',
   })
 
   const bmi = calcBmi(form.weight, form.height)
@@ -175,6 +181,26 @@ function ProfileTab({ patient, onSave }) {
                   <input className="input input--with-suffix" id="eHeight" type="number" step="1" value={form.height} onChange={e => setForm(f => ({...f, height: e.target.value}))} />
                   <span className="suffix">cm</span>
                 </div>
+              </div>
+              <div className="field">
+                <label htmlFor="eWake">Orario sveglia</label>
+                <TimePicker id="eWake" value={form.wakes_up_at} onChange={v => setForm(f => ({...f, wakes_up_at: v}))} defaultTime="07:00" />
+              </div>
+              <div className="field">
+                <label htmlFor="eBreakfast">Colazione</label>
+                <TimePicker id="eBreakfast" value={form.breakfast_at} onChange={v => setForm(f => ({...f, breakfast_at: v}))} defaultTime="08:00" />
+              </div>
+              <div className="field">
+                <label htmlFor="eLunch">Pranzo</label>
+                <TimePicker id="eLunch" value={form.lunch_at} onChange={v => setForm(f => ({...f, lunch_at: v}))} defaultTime="13:00" />
+              </div>
+              <div className="field">
+                <label htmlFor="eDinner">Cena</label>
+                <TimePicker id="eDinner" value={form.dinner_at} onChange={v => setForm(f => ({...f, dinner_at: v}))} defaultTime="20:00" />
+              </div>
+              <div className="field">
+                <label htmlFor="eSleep">Orario in cui va a dormire</label>
+                <TimePicker id="eSleep" value={form.goes_to_sleep_at} onChange={v => setForm(f => ({...f, goes_to_sleep_at: v}))} defaultTime="22:00" />
               </div>
               <div className="field field--full">
                 <label htmlFor="eAllergies">Allergie / intolleranze</label>
@@ -279,6 +305,21 @@ function ProfileTab({ patient, onSave }) {
               ? (Array.isArray(patient.allergies) ? patient.allergies.join(', ') : patient.allergies)
               : <span className="muted">Nessuna nota</span>
             }</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div className="card mt-16">
+        <div className="card__header">
+          <h2 className="card__title">Abitudini</h2>
+        </div>
+        <div className="card__body" style={{ padding: '4px 24px 22px' }}>
+          <dl className="kv">
+            <dt>Orario sveglia</dt>            <dd>{patient.wakes_up_at || '—'}</dd>
+            <dt>Colazione</dt>                 <dd>{patient.breakfast_at || '—'}</dd>
+            <dt>Pranzo</dt>                    <dd>{patient.lunch_at || '—'}</dd>
+            <dt>Cena</dt>                      <dd>{patient.dinner_at || '—'}</dd>
+            <dt>Orario in cui va a dormire</dt><dd>{patient.goes_to_sleep_at || '—'}</dd>
           </dl>
         </div>
       </div>
@@ -841,6 +882,11 @@ export default function PatientDetail() {
       weight: form.weight ? parseFloat(form.weight) : undefined,
       height: form.height ? parseFloat(form.height) : undefined,
       allergies: splitList(form.allergies),
+      wakes_up_at: form.wakes_up_at || null,
+      goes_to_sleep_at: form.goes_to_sleep_at || null,
+      breakfast_at: form.breakfast_at || null,
+      lunch_at: form.lunch_at || null,
+      dinner_at: form.dinner_at || null,
     })
     setPatient(p => ({ ...p, ...form }))
     setToast('Scheda aggiornata')
