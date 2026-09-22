@@ -235,6 +235,12 @@ async def patient_onboarding(patient_id: str, db=Depends(get_database)):
         # (vedi deactivate_patient) per bloccare anche un eventuale /start col
         # vecchio link salvato in chat; non va rigenerato qui.
         raise HTTPException(status_code=409, detail="Patient is deactivated")
+    if not doc.get("active_nutrition_plan"):
+        # Richiesta della dottoressa: il paziente non deve potersi collegare al
+        # bot prima di avere una dieta assegnata (finché non c'è dieta, niente
+        # QR/deep link, quindi niente chat_id, quindi il bot non gli risponde
+        # mai — stesso principio del blocco per disattivazione qui sopra).
+        raise HTTPException(status_code=409, detail="Patient has no diet assigned")
 
     # Pazienti creati prima dell'introduzione di `patient_id` (o dal bot senza
     # averlo impostato): lo si riempie ora con l'_id, senza mai sovrascriverne

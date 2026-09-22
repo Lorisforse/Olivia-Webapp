@@ -16,8 +16,8 @@ import TimePicker from '../../components/TimePicker'
 
 function deriveStatus(p) {
   if (p.active === false) return 'inactive'
-  if (!p.chat_id) return 'waiting'
   if (!p.active_diet_plan_id) return 'nodiet'
+  if (!p.chat_id) return 'waiting'
   return 'active'
 }
 
