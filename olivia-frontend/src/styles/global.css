@@ -1523,5 +1523,5 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 
 .mood-breakdown { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
 .mood-tile { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; }
-.mood-tile__val { font-family: 'Fraunces', Georgia, serif; font-size: 24px; font-weight: 500; }
-.mood-tile__label { font-size: 12px; color: var(--ink-4); }
+.mood-tile__val { font-family: 'Fraunces', Georgia, serif; font-size: 34px; font-weight: 500; }
+.mood-tile__label { font-size: 13.5px; color: var(--ink-4); }

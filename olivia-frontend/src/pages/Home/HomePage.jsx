@@ -173,6 +173,24 @@ function CohortSection() {
             </div>
           </div>
 
+          <div className="card" style={{ gridColumn: 'span 2' }}>
+            <div className="card__header">
+              <h2 className="card__title">Gradimento pasti</h2>
+              {cohort?.avg_satisfaction_pct != null && (
+                <span className="pill pill--ok">{cohort.avg_satisfaction_pct}% media</span>
+              )}
+            </div>
+            <div className="card__body">
+              {loading
+                ? <div className="chart-empty">Caricamento…</div>
+                : <BarTrend data={satisfactionData} unit="%" color="#C08552" />
+              }
+              <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
+                Media giornaliera di quanto i pazienti hanno gradito i pasti registrati.
+              </p>
+            </div>
+          </div>
+
           <div className="card">
             <div className="card__header">
               <h2 className="card__title">Umore</h2>
@@ -208,24 +226,6 @@ function CohortSection() {
 
           <div className="card">
             <div className="card__header">
-              <h2 className="card__title">Gradimento pasti</h2>
-              {cohort?.avg_satisfaction_pct != null && (
-                <span className="pill pill--ok">{cohort.avg_satisfaction_pct}% media</span>
-              )}
-            </div>
-            <div className="card__body">
-              {loading
-                ? <div className="chart-empty">Caricamento…</div>
-                : <BarTrend data={satisfactionData} unit="%" color="#C08552" />
-              }
-              <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
-                Media giornaliera di quanto i pazienti hanno gradito i pasti registrati.
-              </p>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card__header">
               <h2 className="card__title">Qualità del sonno</h2>
             </div>
             <div className="card__body">
@@ -244,6 +244,22 @@ function CohortSection() {
               <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
                 Numero di pazienti per qualità del sonno più riferita al bot nel periodo.
               </p>
+            </div>
+          </div>
+
+          <div className="card" style={{ gridColumn: 'span 2' }}>
+            <div className="card__header">
+              <h2 className="card__title">Messaggi scambiati col bot</h2>
+            </div>
+            <div className="card__body">
+              <div className="trend-head">
+                <span className="trend-head__val">{cohort?.avg_messages ?? '—'}</span>
+                <span className="trend-head__sub">messaggi medi al giorno</span>
+              </div>
+              {loading
+                ? <div className="chart-empty">Caricamento…</div>
+                : <BarTrend data={messagesData} color="#7A9E8E" height={110} />
+              }
             </div>
           </div>
 
@@ -267,22 +283,6 @@ function CohortSection() {
               <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
                 Numero di pazienti per livello di fame più riferito al bot nel periodo.
               </p>
-            </div>
-          </div>
-
-          <div className="card" style={{ gridColumn: 'span 2' }}>
-            <div className="card__header">
-              <h2 className="card__title">Messaggi scambiati col bot</h2>
-            </div>
-            <div className="card__body">
-              <div className="trend-head">
-                <span className="trend-head__val">{cohort?.avg_messages ?? '—'}</span>
-                <span className="trend-head__sub">messaggi medi al giorno</span>
-              </div>
-              {loading
-                ? <div className="chart-empty">Caricamento…</div>
-                : <BarTrend data={messagesData} color="#7A9E8E" height={110} />
-              }
             </div>
           </div>
         </div>
