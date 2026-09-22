@@ -468,19 +468,30 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .cell-muted { color: var(--ink-4); }
 .cell-mono { font-variant-numeric: tabular-nums; }
 
-/* pallino "paziente silenzioso": ricorda da quanto non scrive al bot */
+/* pallino "paziente silenzioso": ricorda da quanto non scrive al bot.
+   Colori dedicati (non i toni smorzati del resto della UI): qui deve
+   saltare all'occhio come un LED, non restare un dettaglio discreto. */
 .activity-dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   margin-right: 7px;
   vertical-align: middle;
   flex-shrink: 0;
 }
-.activity-dot--good { background: var(--ok); }
-.activity-dot--warn { background: var(--warn); }
-.activity-dot--bad { background: var(--danger); }
+.activity-dot--good {
+  background: #3ecf5f;
+  box-shadow: 0 0 0 1px rgba(62, 207, 95, .35), 0 0 6px 1px rgba(62, 207, 95, .65);
+}
+.activity-dot--warn {
+  background: #ffb020;
+  box-shadow: 0 0 0 1px rgba(255, 176, 32, .35), 0 0 6px 1px rgba(255, 176, 32, .65);
+}
+.activity-dot--bad {
+  background: #ff453a;
+  box-shadow: 0 0 0 1px rgba(255, 69, 58, .35), 0 0 6px 1px rgba(255, 69, 58, .65);
+}
 
 /* ============================================================
    STATUS PILL
