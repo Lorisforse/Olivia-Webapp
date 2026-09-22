@@ -7,6 +7,7 @@ from fastapi.responses import Response
 from starlette.concurrency import run_in_threadpool
 
 from src.database import get_database
+from src.fixed_substitutions import FIXED_SUBSTITUTIONS
 from src.models.helpers import sanitize_bson
 from src.nutrition_plan_pdf import MAX_PDF_BYTES, PdfParsingError, parse_nutrition_plan_pdf
 from src.schemas.diet import DietCreate, DietPdfInfo, DietResponse, DietUpdate, ParsedPlanResponse
@@ -45,12 +46,16 @@ def _to_response(doc: dict, *, has_pdf: bool) -> DietResponse:
     # nelle regole di sostituzione, ecc.): pydantic non li sa serializzare nei
     # campi 'Any'. Ripuliamo l'intero documento in un colpo solo.
     doc = sanitize_bson(doc)
+    substitutions = doc.get("substitutions")
     return DietResponse(
         id=str(doc["_id"]),
         name=doc.get("name", ""),
         tips=doc.get("tips", []),
         weekly_plan=doc.get("meal_plan", {}),
-        substitutions=doc.get("substitutions", ""),
+        # Diete non ancora "sanate" (salvate almeno una volta dopo questo fix)
+        # possono avere ancora la vecchia stringa libera: tollerata qui, non
+        # tutti i piani sono passati per un update_diet.
+        substitutions=substitutions if isinstance(substitutions, dict) else {},
         created_at=created_at,
         has_pdf=has_pdf,
     )
@@ -61,7 +66,7 @@ def _to_mongo_doc(payload: DietCreate) -> dict:
         "name": payload.name,
         "tips": payload.tips,
         "meal_plan": payload.weekly_plan,
-        "substitutions": payload.substitutions,
+        "substitutions": FIXED_SUBSTITUTIONS,
     }
 
 
@@ -129,8 +134,10 @@ async def update_diet(diet_id: str, payload: DietUpdate, db=Depends(get_database
     updates = payload.model_dump(exclude_none=True)
     if "weekly_plan" in updates:
         updates["meal_plan"] = updates.pop("weekly_plan")
-    if updates:
-        await db[_PLANS].update_one({"_id": oid}, {"$set": updates})
+    # Ogni salvataggio "sana" le diete con sostituzioni vecchie/rotte
+    # (stringa, vuote): riscrive sempre lo stesso blocco fisso.
+    updates["substitutions"] = FIXED_SUBSTITUTIONS
+    await db[_PLANS].update_one({"_id": oid}, {"$set": updates})
 
     doc = await db[_PLANS].find_one({"_id": oid})
     return _to_response(doc, has_pdf=await _plan_has_pdf(db, oid))

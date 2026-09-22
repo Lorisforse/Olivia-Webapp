@@ -962,14 +962,12 @@ function DietTab({ patientId }) {
         </div>
       )}
 
-      {typeof diet.substitutions === 'string' && diet.substitutions.trim() && (
-        <div className="card mt-16">
-          <div className="card__header"><h2 className="card__title">Sostituzioni</h2></div>
-          <div className="card__body" style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
-            {diet.substitutions}
-          </div>
+      <div className="card mt-16">
+        <div className="card__header"><h2 className="card__title">Sostituzioni</h2></div>
+        <div className="card__body" style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.65 }}>
+          Il bot applica in automatico le sostituzioni alimentari standard (stesse regole per tutti i pazienti).
         </div>
-      )}
+      </div>
 
       {assignModalEl}
       <div className={`toast${msg ? ' show' : ''}`}>{msg}</div>

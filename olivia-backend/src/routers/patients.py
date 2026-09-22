@@ -302,12 +302,13 @@ async def get_patient_diet(patient_id: str, db=Depends(get_database)):
         raise HTTPException(status_code=404, detail="Diet plan not found")
 
     has_pdf = await db["webapp-diet-pdfs"].find_one({"plan_id": diet_object_id}, {"_id": 1}) is not None
+    substitutions = diet_doc.get("substitutions")
     return DietResponse(
         id=str(diet_doc["_id"]),
         name=diet_doc.get("name", ""),
         tips=diet_doc.get("tips", []),
         weekly_plan=diet_doc.get("meal_plan", {}),
-        substitutions=sanitize_bson(diet_doc.get("substitutions", "")),
+        substitutions=sanitize_bson(substitutions) if isinstance(substitutions, dict) else {},
         created_at=diet_object_id.generation_time,
         has_pdf=has_pdf,
     )

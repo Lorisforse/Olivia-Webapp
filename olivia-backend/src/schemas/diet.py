@@ -8,16 +8,15 @@ class DietCreate(BaseModel):
     name: str
     tips: list[str] = []
     weekly_plan: dict[str, dict[str, str]] = {}
-    # Piani creati dalla webapp restano testo libero: l'editor di regole
-    # strutturate (come quelle scritte dal bot, vedi DietResponse) non esiste ancora.
-    substitutions: str = ""
+    # Le regole di sostituzione non si creano da qui: sono lo stesso blocco fisso
+    # per tutti i pazienti, scritto automaticamente dal backend (vedi
+    # src/fixed_substitutions.py e src/routers/diets.py::_to_mongo_doc).
 
 
 class DietUpdate(BaseModel):
     name: Optional[str] = None
     tips: Optional[list[str]] = None
     weekly_plan: Optional[dict[str, dict[str, str]]] = None
-    substitutions: Optional[str] = None
 
 
 class DietResponse(BaseModel):
@@ -25,10 +24,9 @@ class DietResponse(BaseModel):
     name: str
     tips: list[str] = []
     weekly_plan: dict[str, dict[str, str]] = {}
-    # Il bot salva le sostituzioni come regole strutturate (dict), non più come
-    # semplice stringa: i piani creati dal bot restituiscono un dict qui.
-    # I piani creati dalla webapp restano stringa finché non esiste un editor dedicato.
-    substitutions: str | dict[str, Any] = ""
+    # Sempre il blocco di regole strutturate (vedi src/fixed_substitutions.py):
+    # nessun piano ha più "substitutions" come stringa libera.
+    substitutions: dict[str, Any] = {}
     # Derivato dall'ObjectId (_id.generation_time): il bot non scrive un campo
     # data sui piani, quindi lo ricaviamo qui senza toccare la sua collection.
     created_at: Optional[datetime] = None

@@ -1,0 +1,1091 @@
+{
+  "carbohydrates": {
+    "rules": [
+      {
+        "rule_id": "6ab2f03e18e88c519ba6758d",
+        "conditions": [
+          {
+            "type": "meal_type",
+            "value": "colazione"
+          }
+        ],
+        "items": [
+          "Pane integrale",
+          "Pane bianco",
+          "Fette biscottate integrali",
+          "Fiocchi d’avena",
+          "Farro soffiato",
+          "Riso soffiato",
+          "Muesli",
+          "Cornflakes",
+          "Biscotti secchi integrali"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba6758e",
+        "conditions": [
+          {
+            "type": "meal_type",
+            "value": "pranzo"
+          }
+        ],
+        "items": [
+          "Pasta integrale",
+          "Pasta fresca",
+          "Gnocchi di patate",
+          "Riso venere",
+          "Riso basmati",
+          "Riso integrale",
+          "Riso rosso",
+          "Riso nero",
+          "Panino all’olio",
+          "Pane integrale",
+          "Pane bianco",
+          "Farro",
+          "Orzo",
+          "Cous Cous",
+          "Quinoa",
+          "Patate",
+          "Mais"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba6758f",
+        "conditions": [
+          {
+            "type": "meal_type",
+            "value": "cena"
+          }
+        ],
+        "items": [
+          "Pane integrale",
+          "Pane bianco",
+          "Panino all’olio",
+          "Patate",
+          "Cous Cous",
+          "Quinoa",
+          "Farro",
+          "Orzo",
+          "Riso venere",
+          "Riso basmati",
+          "Riso integrale",
+          "Riso rosso",
+          "Riso nero",
+          "Gnocchi di patate",
+          "Mais"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba67590",
+        "conditions": [
+          {
+            "type": "associated_protein_category",
+            "value": "legumes"
+          }
+        ],
+        "items": [
+          "Farro",
+          "Orzo",
+          "Riso venere",
+          "Riso basmati",
+          "Riso integrale",
+          "Riso rosso",
+          "Riso nero",
+          "Pane integrale",
+          "Pane bianco",
+          "Pasta integrale"
+        ],
+        "priority": 1,
+        "fallback_group": null
+      }
+    ],
+    "notes": [
+      "Se la sostituzione per pranzo o cena prevede carboidrati in associazione a legumi, l'utente può mangiare anche solo i legumi, eliminando la quota di carboidrati."
+    ]
+  },
+  "fats": {
+    "rules": [
+      {
+        "rule_id": "6ab2f03e18e88c519ba67591",
+        "conditions": [
+          {
+            "type": "meal_type",
+            "value": "colazione"
+          }
+        ],
+        "items": [
+          "Mandorle",
+          "Noci Comuni",
+          "Noci Pecan",
+          "Noci Macadamia",
+          "Pistacchi (non salati)",
+          "Anacardi",
+          "Pinoli",
+          "Burro d'Arachidi (100% arachidi)",
+          "Burro di Mandorle (100% mandorle)",
+          "Burro di Nocciole (100% frutta secca)",
+          "Cocco disidratato",
+          "Cocco rapé",
+          "Cioccolato Fondente (Minimo 75% cacao)",
+          "Semi di Chia"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba67592",
+        "conditions": [
+          {
+            "type": "meal_type",
+            "value": "spuntino mattutino"
+          }
+        ],
+        "items": [
+          "Mandorle",
+          "Noci Comuni",
+          "Noci Pecan",
+          "Noci Macadamia",
+          "Pistacchi (non salati)",
+          "Anacardi",
+          "Pinoli",
+          "Burro d'Arachidi (100% arachidi)",
+          "Burro di Mandorle (100% mandorle)",
+          "Burro di Nocciole (100% frutta secca)",
+          "Cocco disidratato",
+          "Cocco rapé",
+          "Cioccolato Fondente (Minimo 75% cacao)",
+          "Semi di Chia",
+          "Olive"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba67593",
+        "conditions": [
+          {
+            "type": "meal_type",
+            "value": "spuntino pomeridiano"
+          }
+        ],
+        "items": [
+          "Mandorle",
+          "Noci Comuni",
+          "Noci Pecan",
+          "Noci Macadamia",
+          "Pistacchi (non salati)",
+          "Anacardi",
+          "Pinoli",
+          "Burro d'Arachidi (100% arachidi)",
+          "Burro di Mandorle (100% mandorle)",
+          "Burro di Nocciole (100% frutta secca)",
+          "Cocco disidratato",
+          "Cocco rapé",
+          "Cioccolato Fondente (Minimo 75% cacao)",
+          "Semi di Chia",
+          "Olive"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba67594",
+        "conditions": [
+          {
+            "type": "meal_type",
+            "value": "pranzo"
+          }
+        ],
+        "items": [
+          "Olio Extravergine d'Oliva (EVO)",
+          "Semi di Lino",
+          "Semi di Zucca",
+          "Semi di Girasole",
+          "Semi di Sesamo",
+          "Avocado (Fresco)",
+          "Pesto alla Genovese",
+          "Olive"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba67595",
+        "conditions": [
+          {
+            "type": "meal_type",
+            "value": "cena"
+          }
+        ],
+        "items": [
+          "Olio Extravergine d'Oliva (EVO)",
+          "Semi di Lino",
+          "Semi di Zucca",
+          "Semi di Girasole",
+          "Semi di Sesamo",
+          "Avocado (Fresco)",
+          "Pesto alla Genovese",
+          "Olive"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      }
+    ],
+    "notes": []
+  },
+  "proteins": {
+    "rules": [
+      {
+        "rule_id": "6ab2f03e18e88c519ba67596",
+        "conditions": [
+          {
+            "type": "protein_category",
+            "value": "dairy"
+          },
+          {
+            "type": "meal_type",
+            "value": "colazione"
+          }
+        ],
+        "items": [
+          "Latte parzialmente scremato di vacca",
+          "Latte vegetale (mandorle)",
+          "Latte vegetale (avena)",
+          "Latte vegetale (soia)",
+          "Yogurt bianco magro 0,1% di grassi",
+          "Ricotta",
+          "Albume"
+        ],
+        "priority": 7,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba67597",
+        "conditions": [
+          {
+            "type": "protein_category",
+            "value": "legumes"
+          }
+        ],
+        "items": [
+          "Fagioli (tutte le varietà)",
+          "Ceci",
+          "Lenticchie",
+          "Piselli",
+          "Fave",
+          "Cicerchie"
+        ],
+        "priority": 6,
+        "fallback_group": "generic-proteins"
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba67598",
+        "conditions": [
+          {
+            "type": "protein_category",
+            "value": "fish"
+          }
+        ],
+        "items": [
+          "Merluzzo",
+          "Nasello",
+          "Spigola",
+          "Platessa",
+          "Sardine",
+          "Sogliola",
+          "Polpo",
+          "Calamari",
+          "Seppie",
+          "Vongole",
+          "Gamberoni",
+          "Gamberi",
+          "Tonno in scatola",
+          "Tonno fresco",
+          "Orata",
+          "Salmone fresco",
+          "Salmone affumicato",
+          "Sgombro"
+        ],
+        "priority": 5,
+        "fallback_group": "generic-proteins"
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba67599",
+        "conditions": [
+          {
+            "type": "protein_category",
+            "value": "white_meat"
+          }
+        ],
+        "items": [
+          "Petto di pollo",
+          "Sovracoscia di pollo",
+          "Sovracoscia di tacchino",
+          "Petto di tacchino",
+          "Coniglio"
+        ],
+        "priority": 4,
+        "fallback_group": "generic-proteins"
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba6759a",
+        "conditions": [
+          {
+            "type": "protein_category",
+            "value": "dairy"
+          }
+        ],
+        "items": [
+          "Ricotta di pecora",
+          "Ricotta di vacca",
+          "Formaggio spalmabile magro",
+          "Mozzarella di vacca",
+          "Mozzarella di bufala",
+          "Fiocchi di latte magro",
+          "Cacioricotta di capra",
+          "Parmigiano reggiano"
+        ],
+        "priority": 3,
+        "fallback_group": "generic-proteins"
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba6759b",
+        "conditions": [
+          {
+            "type": "protein_category",
+            "value": "red_meat"
+          }
+        ],
+        "items": [
+          "Lonza di maiale",
+          "Agnello",
+          "Manzo",
+          "Vitello"
+        ],
+        "priority": 2,
+        "fallback_group": "generic-proteins"
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba6759c",
+        "conditions": [
+          {
+            "type": "protein_category",
+            "value": "cold_cuts"
+          }
+        ],
+        "items": [
+          "Bresaola",
+          "Fesa di tacchino",
+          "Arrosto di tacchino",
+          "Prosciutto crudo",
+          "Prosciutto cotto"
+        ],
+        "priority": 1,
+        "fallback_group": "generic-proteins"
+      }
+    ],
+    "notes": []
+  },
+  "vegetables": {
+    "rules": [
+      {
+        "rule_id": "6ab2f03e18e88c519ba6759d",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "january"
+          }
+        ],
+        "items": [
+          "Bietole",
+          "Cavolfiore",
+          "Broccoli",
+          "Cavolo cappuccio",
+          "Cavolini di Bruxelles",
+          "Lattuga",
+          "Carciofi",
+          "Verza",
+          "Zucca",
+          "Porri",
+          "Spinaci",
+          "Cicoria",
+          "Radicchio",
+          "Finocchio",
+          "Topinambur"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba6759e",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "february"
+          }
+        ],
+        "items": [
+          "Bietole",
+          "Cavolfiore",
+          "Broccoli",
+          "Cavolo cappuccio",
+          "Cavolini di Bruxelles",
+          "Cicoria",
+          "Carciofi",
+          "Verza",
+          "Valeriana",
+          "Zucca",
+          "Spinaci",
+          "Indivia",
+          "Radicchio",
+          "Finocchio",
+          "Porri",
+          "Topinambur"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba6759f",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "march"
+          }
+        ],
+        "items": [
+          "Bietole",
+          "Cavolfiore",
+          "Broccoli",
+          "Cavolo cappuccio",
+          "Agretti",
+          "Asparagi",
+          "Carciofi",
+          "Cavolo rosso",
+          "Cime di rapa",
+          "Porri",
+          "Spinaci",
+          "Cicoria",
+          "Radicchio",
+          "Finocchio",
+          "Indivia",
+          "Carote"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a0",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "april"
+          }
+        ],
+        "items": [
+          "Bietole",
+          "Cicoria",
+          "Broccoli",
+          "Cavoletti di Bruxelles",
+          "Agretti",
+          "Asparagi",
+          "Carciofi",
+          "Rucola",
+          "Cime di rapa",
+          "Radicchio",
+          "Ravanello",
+          "Spinaci",
+          "Crescione",
+          "Finocchio",
+          "Indivia",
+          "Cipollotto"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a1",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "may"
+          }
+        ],
+        "items": [
+          "Barbabietole",
+          "Cicoria",
+          "Cavolo cappuccio",
+          "Carote",
+          "Agretti",
+          "Asparagi",
+          "Carciofi",
+          "Rucola",
+          "Cime di rapa",
+          "Ravanello",
+          "Spinaci",
+          "Cipolle",
+          "Porri",
+          "Finocchio",
+          "Indivia",
+          "Valeriana",
+          "Radicchio",
+          "Sedano",
+          "Bietola da costa",
+          "Insalata"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a2",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "june"
+          }
+        ],
+        "items": [
+          "Pomodorini",
+          "Zucchine",
+          "Melanzane",
+          "Fagiolini",
+          "Cetrioli",
+          "Barbabietole",
+          "Bietola",
+          "Carote",
+          "Rucola",
+          "Sedano",
+          "Peperoni",
+          "Pomodori",
+          "Cavolo cappuccio",
+          "Cavolo rapa",
+          "Aglio",
+          "Agretti",
+          "Carosello",
+          "Cipolla",
+          "Finocchio",
+          "Fiori di zucca",
+          "Porri",
+          "Radicchio rosso",
+          "Ravanello",
+          "Scalogno"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a3",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "july"
+          }
+        ],
+        "items": [
+          "Pomodori",
+          "Melanzane",
+          "Peperoni",
+          "Zucchine",
+          "Fiori di zucca",
+          "Fagiolini",
+          "Barbabietole",
+          "Carote",
+          "Cicorie",
+          "Cipolle",
+          "Sedano",
+          "Lattuga",
+          "Cetrioli",
+          "Bietole da costa lunga",
+          "Cipolla rossa di tropea"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a4",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "august"
+          }
+        ],
+        "items": [
+          "Pomodori",
+          "Melanzane",
+          "Zucchine",
+          "Peperoni",
+          "Fagiolini",
+          "Cetrioli",
+          "Bietole",
+          "Carote",
+          "Lattuga",
+          "Ravanelli",
+          "Rucola",
+          "Fiori di zucca",
+          "Cicoria",
+          "Cipolle"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a5",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "september"
+          }
+        ],
+        "items": [
+          "Bietola",
+          "Carote",
+          "Cavolo cappuccio",
+          "Cetrioli",
+          "Cicoria",
+          "Cipolla",
+          "Fagiolini",
+          "Lattuga romana",
+          "Melanzane",
+          "Peperoni",
+          "Pomodori",
+          "Porri",
+          "Rape",
+          "Radicchio rosso",
+          "Ravanelli",
+          "Rucola",
+          "Sedano",
+          "Spinaci",
+          "Taccole",
+          "Zucchine"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a6",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "october"
+          }
+        ],
+        "items": [
+          "Broccoli",
+          "Bietola",
+          "Cavolini di Bruxelles",
+          "Cavolfiore",
+          "Cavolo verza",
+          "Finocchi",
+          "Indivia",
+          "Rucola",
+          "Rape",
+          "Ravanello",
+          "Zucca",
+          "Sedano",
+          "Topinambur",
+          "Cime di rapa",
+          "Porri",
+          "Spinaci"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a7",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "november"
+          }
+        ],
+        "items": [
+          "Cavolo romanesco",
+          "Cavolfiore",
+          "Broccoli",
+          "Cavoletti di bruxelles",
+          "Zucca",
+          "Cime di rapa",
+          "Rucola",
+          "Verza",
+          "Indivia",
+          "Finocchio",
+          "Bietola",
+          "Cavolo cappuccio"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a8",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "december"
+          }
+        ],
+        "items": [
+          "Barbabietole",
+          "Cavolfiore",
+          "Broccoli",
+          "Cavolo cappuccio",
+          "Cavolini di Bruxelles",
+          "Cipolle",
+          "Carciofi",
+          "Verza",
+          "Cavolo nero",
+          "Porri",
+          "Spinaci",
+          "Cardi",
+          "Radicchio",
+          "Finocchio",
+          "Sedano rapa",
+          "Topinambur"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      }
+    ],
+    "notes": []
+  },
+  "fruits": {
+    "rules": [
+      {
+        "rule_id": "6ab2f03e18e88c519ba675a9",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "january"
+          }
+        ],
+        "items": [
+          "Cedri",
+          "Limoni",
+          "Kiwi",
+          "Mandarini",
+          "Arance",
+          "Clementine",
+          "Pompelmi",
+          "Mele",
+          "Pere",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675aa",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "february"
+          }
+        ],
+        "items": [
+          "Cedro",
+          "Limoni",
+          "Pere",
+          "Mele",
+          "Kiwi",
+          "Mandarini",
+          "Arance",
+          "Clementine",
+          "Pompelmo",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675ab",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "march"
+          }
+        ],
+        "items": [
+          "Arance",
+          "Clementine",
+          "Kiwi",
+          "Limoni",
+          "Mandarini",
+          "Bergamotto",
+          "Pere",
+          "Pompelmi",
+          "Mele",
+          "Pera",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675ac",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "april"
+          }
+        ],
+        "items": [
+          "Arance",
+          "Cedro",
+          "Kiwi",
+          "Limoni",
+          "Nespole",
+          "Fragole",
+          "Pere",
+          "Pompelmi",
+          "Mela",
+          "Pera",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675ad",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "may"
+          }
+        ],
+        "items": [
+          "Albicocche",
+          "Nespole",
+          "Mirtilli",
+          "Limoni",
+          "Fragole",
+          "Ciliegie",
+          "Pesche",
+          "More",
+          "Lamponi",
+          "Kiwi",
+          "Mela",
+          "Pera",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675ae",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "june"
+          }
+        ],
+        "items": [
+          "Mirtilli",
+          "Lamponi",
+          "More",
+          "Albicocche",
+          "Ciliegie",
+          "Melone",
+          "Pesca",
+          "Susine",
+          "Amarene",
+          "Nespole",
+          "Ribes",
+          "Anguria",
+          "Banane",
+          "Pesche noci",
+          "Mela",
+          "Pera",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675af",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "july"
+          }
+        ],
+        "items": [
+          "Anguria",
+          "Melone",
+          "Pesche",
+          "Albicocche",
+          "Prugne",
+          "Susine",
+          "Mirtilli",
+          "Ribes",
+          "Ciliegie",
+          "Amarene",
+          "Fichi",
+          "Uva",
+          "More",
+          "Mela",
+          "Pera",
+          "Pesche noci",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675b0",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "august"
+          }
+        ],
+        "items": [
+          "Anguria",
+          "Melone",
+          "Fichi",
+          "Pesche",
+          "Albicocche",
+          "Susine",
+          "More",
+          "Mirtilli",
+          "Ribes",
+          "Fichi d’India",
+          "Uva",
+          "Lamponi",
+          "Prugne",
+          "Pere",
+          "Mela",
+          "Mango",
+          "Passion fruit",
+          "Papaya",
+          "Ciliegie",
+          "Gelso",
+          "Datteri",
+          "Pesche noci",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675b1",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "september"
+          }
+        ],
+        "items": [
+          "Datteri",
+          "Fichi",
+          "Fichi d’india",
+          "Giuggiole",
+          "Gelso",
+          "Limoni",
+          "Lamponi",
+          "Mirtilli",
+          "Mela",
+          "Pere",
+          "Pesche",
+          "Prugne",
+          "Susine",
+          "Uva",
+          "Pesche noci",
+          "Melagrana",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675b2",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "october"
+          }
+        ],
+        "items": [
+          "Fichi d’India",
+          "Castagne",
+          "Cachi",
+          "Mele",
+          "Pere",
+          "Prugne",
+          "Pompelmi",
+          "Uva",
+          "Melagrana",
+          "Kiwi",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675b3",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "november"
+          }
+        ],
+        "items": [
+          "Melagrana",
+          "Castagne",
+          "Arance",
+          "Fichi d’India",
+          "Pompelmo",
+          "Cachi",
+          "Mandarini",
+          "Mele",
+          "Pere",
+          "Kiwi",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      },
+      {
+        "rule_id": "6ab2f03e18e88c519ba675b4",
+        "conditions": [
+          {
+            "type": "month",
+            "value": "december"
+          }
+        ],
+        "items": [
+          "Melagrana",
+          "Castagne",
+          "Limoni",
+          "Kiwi",
+          "Mandarini",
+          "Arance",
+          "Clementine",
+          "Cachi",
+          "Pompelmi",
+          "Mele",
+          "Pere",
+          "Banane",
+          "Ananas"
+        ],
+        "priority": 0,
+        "fallback_group": null
+      }
+    ],
+    "notes": []
+  }
+}

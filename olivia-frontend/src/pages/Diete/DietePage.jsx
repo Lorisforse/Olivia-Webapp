@@ -37,10 +37,6 @@ function tipsToText(tips) {
 function textToTips(text) {
   return text.split('\n').map(s => s.trim()).filter(Boolean)
 }
-function subsToText(subs) {
-  return typeof subs === 'string' ? subs : ''
-}
-
 async function triggerPdfDownload(id) {
   const { blob, filename } = await downloadDietPdf(id)
   saveBlob(blob, filename)
@@ -53,8 +49,6 @@ function DietEditor({ mode, diet, onCancel, onSaved, onToast }) {
   const [name, setName] = useState(diet?.name || '')
   const [plan, setPlan] = useState(() => (diet ? planFromApi(diet.weekly_plan) : emptyPlan()))
   const [tipsText, setTipsText] = useState(tipsToText(diet?.tips))
-  const [subsText, setSubsText] = useState(subsToText(diet?.substitutions))
-  const subsIsStructured = diet != null && typeof diet.substitutions === 'object' && diet.substitutions !== null
 
   const [pdfFile, setPdfFile] = useState(null)
   const [warnings, setWarnings] = useState([])
@@ -95,7 +89,6 @@ function DietEditor({ mode, diet, onCancel, onSaved, onToast }) {
     setSaving(true)
     try {
       const payload = { name: name.trim(), weekly_plan: planToApi(plan), tips: textToTips(tipsText) }
-      if (!subsIsStructured) payload.substitutions = subsText.trim()
 
       const saved = mode === 'create'
         ? await createDiet(payload)
@@ -219,21 +212,10 @@ function DietEditor({ mode, diet, onCancel, onSaved, onToast }) {
         </div>
 
         <div className="field">
-          <label htmlFor="planSubs">Sostituzioni</label>
-          {subsIsStructured ? (
-            <p className="muted" style={{ fontSize: 12.5 }}>
-              Questo piano usa le regole di sostituzione strutturate del bot: non sono modificabili da qui e restano invariate.
-            </p>
-          ) : (
-            <textarea
-              className="textarea"
-              id="planSubs"
-              rows={4}
-              value={subsText}
-              onChange={e => setSubsText(e.target.value)}
-              placeholder="Testo libero: es. la pasta può essere sostituita con riso o farro a parità di grammatura…"
-            />
-          )}
+          <label>Sostituzioni</label>
+          <p className="muted" style={{ fontSize: 12.5 }}>
+            Il bot applica in automatico le sostituzioni alimentari standard (stesse regole per tutti i pazienti).
+          </p>
         </div>
       </div>
 
@@ -490,12 +472,8 @@ export default function DietePage() {
 
               <div>
                 <div className="section-subhead">Sostituzioni</div>
-                <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                  {typeof previewDiet.substitutions === 'string'
-                    ? (previewDiet.substitutions || <span className="muted">Nessuna sostituzione indicata.</span>)
-                    : (previewDiet.substitutions && Object.keys(previewDiet.substitutions).length > 0
-                      ? <span className="muted">Regole strutturate definite dal bot (dettaglio non ancora visualizzabile).</span>
-                      : <span className="muted">Nessuna sostituzione indicata.</span>)}
+                <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
+                  <span className="muted">Il bot applica in automatico le sostituzioni alimentari standard.</span>
                 </p>
               </div>
             </div>
