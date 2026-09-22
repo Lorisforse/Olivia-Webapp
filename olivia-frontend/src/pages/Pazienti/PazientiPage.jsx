@@ -54,6 +54,22 @@ function formatLastSeen(dt) {
   return new Date(dt).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })
 }
 
+// Paziente silenzioso: pallino verde/giallo/rosso in base a quanto tempo è
+// passato dall'ultimo messaggio al bot, null per chi non si è mai collegato
+// (nessun allarme, non ha ancora iniziato).
+function activityDotTone(dt) {
+  if (!dt) return null
+  const days = (Date.now() - new Date(dt)) / 86400000
+  if (days < 2) return 'good'
+  if (days < 7) return 'warn'
+  return 'bad'
+}
+const ACTIVITY_DOT_TITLE = {
+  good: 'Attivo di recente',
+  warn: 'Non scrive al bot da qualche giorno',
+  bad: 'Non scrive al bot da almeno una settimana',
+}
+
 function formatDate(dt) {
   if (!dt) return '—'
   return new Date(dt).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -267,6 +283,7 @@ export default function PazientiPage() {
                 const cfg = STATUS_CONFIG[st]
                 const dietName = p.active_diet_plan_id ? dietMap[p.active_diet_plan_id] : null
                 const lastSeen = formatLastSeen(p.last_interaction_at)
+                const activityTone = activityDotTone(p.last_interaction_at)
 
                 return (
                   <tr
@@ -295,10 +312,14 @@ export default function PazientiPage() {
                       }
                     </td>
                     <td>
-                      {lastSeen
-                        ? <span>{lastSeen}</span>
-                        : <span className="cell-muted">mai</span>
-                      }
+                      {lastSeen ? (
+                        <span>
+                          <span className={`activity-dot activity-dot--${activityTone}`} title={ACTIVITY_DOT_TITLE[activityTone]} />
+                          {lastSeen}
+                        </span>
+                      ) : (
+                        <span className="cell-muted">mai</span>
+                      )}
                     </td>
                     <td className="col-actions">
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>

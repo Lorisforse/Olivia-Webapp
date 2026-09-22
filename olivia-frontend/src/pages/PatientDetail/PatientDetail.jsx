@@ -55,6 +55,21 @@ function formatLastSeen(dt) {
   return `${Math.floor(diffH / 24)}g fa`
 }
 
+// Paziente silenzioso: pallino verde/giallo/rosso in base a quanto tempo è
+// passato dall'ultimo messaggio al bot, null per chi non si è mai collegato.
+function activityDotTone(dt) {
+  if (!dt) return null
+  const days = (Date.now() - new Date(dt)) / 86400000
+  if (days < 2) return 'good'
+  if (days < 7) return 'warn'
+  return 'bad'
+}
+const ACTIVITY_DOT_TITLE = {
+  good: 'Attivo di recente',
+  warn: 'Non scrive al bot da qualche giorno',
+  bad: 'Non scrive al bot da almeno una settimana',
+}
+
 const STATUS_CONFIG = {
   active:   { label: 'Attivo',      pill: 'ok' },
   nodiet:   { label: 'Senza dieta', pill: 'warn' },
@@ -253,9 +268,15 @@ function ProfileTab({ patient, onSave }) {
               </span>
             </div>
             <div className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
-              {patient.last_interaction_at
-                ? 'Ultima interazione: ' + formatLastSeen(patient.last_interaction_at)
-                : 'Il paziente non ha ancora attivato il bot'}
+              {patient.last_interaction_at ? (
+                <>
+                  <span
+                    className={`activity-dot activity-dot--${activityDotTone(patient.last_interaction_at)}`}
+                    title={ACTIVITY_DOT_TITLE[activityDotTone(patient.last_interaction_at)]}
+                  />
+                  Ultima interazione: {formatLastSeen(patient.last_interaction_at)}
+                </>
+              ) : 'Il paziente non ha ancora attivato il bot'}
             </div>
             {patient.chat_id && (
               <>
