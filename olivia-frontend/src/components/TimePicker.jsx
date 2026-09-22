@@ -17,7 +17,8 @@ export default function TimePicker({ id, value, onChange, defaultTime = '00:00' 
     <Timepicker
       id={id}
       className="input"
-      value={value || ''}
+      readOnly
+      defaultValue={value || undefined}
       placeholder={defaultTime}
       onConfirm={({ hour, minutes }) => {
         if (hour == null || minutes == null) return
