@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { getPatient, updatePatient, getPatientLogs, getPatientDiet, getPatientOnboarding, getDailyReports, deactivatePatient, reactivatePatient } from '../../api/patients'
-import { downloadDietPdf } from '../../api/diets'
+import { getPatient, updatePatient, getPatientLogs, getPatientDiet, getPatientOnboarding, getDailyReports, deactivatePatient, reactivatePatient, assignDiet } from '../../api/patients'
+import { getDiets, downloadDietPdf } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
 import Breadcrumb from '../../components/Breadcrumb'
 import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
@@ -821,14 +821,46 @@ function DietTab({ patientId }) {
   const showLoading = useMinDuration(loading)
   const [downloading, setDownloading] = useState(false)
   const [msg, setMsg] = useState('')
+  const [diets, setDiets] = useState([])
+  const [assignModal, setAssignModal] = useState(false)
+  const [assignDietId, setAssignDietId] = useState('')
+  const [assigning, setAssigning] = useState(false)
 
-  useEffect(() => {
+  function loadDiet() {
     setLoading(true)
     getPatientDiet(patientId)
       .then(setDiet)
       .catch(err => { if (err.status !== 404) setMsg('Errore nel caricamento del piano'); setDiet(null) })
       .finally(() => setLoading(false))
-  }, [patientId])
+  }
+
+  useEffect(() => { loadDiet() }, [patientId])
+
+  function showToast(text) {
+    setMsg(text)
+    setTimeout(() => setMsg(''), 2400)
+  }
+
+  function openAssignModal() {
+    setAssignDietId('')
+    setAssignModal(true)
+    if (!diets.length) getDiets().then(setDiets).catch(() => {})
+  }
+
+  async function handleAssignConfirm() {
+    if (!assignDietId) return
+    setAssigning(true)
+    try {
+      const result = await assignDiet(patientId, assignDietId)
+      setAssignModal(false)
+      loadDiet()
+      showToast(result?.notified ? 'Piano assegnato, il paziente è stato avvisato via bot' : 'Piano assegnato')
+    } catch {
+      showToast('Errore durante l\'assegnazione')
+    } finally {
+      setAssigning(false)
+    }
+  }
 
   async function handleDownload() {
     setDownloading(true)
@@ -836,12 +868,47 @@ function DietTab({ patientId }) {
       const { blob, filename } = await downloadDietPdf(diet.id)
       saveBlob(blob, filename)
     } catch {
-      setMsg('Impossibile scaricare il PDF')
-      setTimeout(() => setMsg(''), 2400)
+      showToast('Impossibile scaricare il PDF')
     } finally {
       setDownloading(false)
     }
   }
+
+  const assignModalEl = assignModal && (
+    <div className="modal-backdrop" onClick={() => setAssignModal(false)}>
+      <div className="modal" role="dialog" aria-labelledby="patientAssignTitle" onClick={e => e.stopPropagation()}>
+        <div className="modal__header">
+          <h2 className="modal__title" id="patientAssignTitle">{diet ? 'Cambia dieta' : 'Assegna dieta'}</h2>
+        </div>
+        <div className="modal__body">
+          <div className="field">
+            <label htmlFor="patientAssignSelect">Piano dietetico</label>
+            <select
+              className="select"
+              id="patientAssignSelect"
+              value={assignDietId}
+              onChange={e => setAssignDietId(e.target.value)}
+            >
+              <option value="">Seleziona un piano…</option>
+              {diets.map(d => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="modal__footer">
+          <button className="btn btn--ghost" onClick={() => setAssignModal(false)}>Annulla</button>
+          <button
+            className="btn btn--primary"
+            onClick={handleAssignConfirm}
+            disabled={assigning || !assignDietId}
+          >
+            {assigning ? 'Assegnazione…' : 'Assegna piano'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 
   if (showLoading) return <LoadingScreen label="Caricamento piano alimentare…" />
 
@@ -852,9 +919,12 @@ function DietTab({ patientId }) {
           <div className="empty-state">
             <div className="empty-state__icon"><MealIcon /></div>
             <h3>Nessun piano assegnato</h3>
-            <p>Assegna un piano dietetico a questo paziente dalla sezione <strong>Diete</strong>.</p>
+            <p>Assegna un piano dietetico a questo paziente.</p>
+            <button className="btn btn--primary mt-16" onClick={openAssignModal}>Assegna dieta</button>
           </div>
         </div>
+        {assignModalEl}
+        <div className={`toast${msg ? ' show' : ''}`}>{msg}</div>
       </div>
     )
   }
@@ -864,14 +934,17 @@ function DietTab({ patientId }) {
       <div className="card">
         <div className="card__header">
           <h2 className="card__title">{diet.name}</h2>
-          {diet.has_pdf && (
-            <button className="btn btn--secondary btn--sm" onClick={handleDownload} disabled={downloading}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              {downloading ? 'Scaricamento…' : 'Scarica PDF'}
-            </button>
-          )}
+          <div className="card__header-actions">
+            <button className="btn btn--secondary btn--sm" onClick={openAssignModal}>Cambia dieta</button>
+            {diet.has_pdf && (
+              <button className="btn btn--secondary btn--sm" onClick={handleDownload} disabled={downloading}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {downloading ? 'Scaricamento…' : 'Scarica PDF'}
+              </button>
+            )}
+          </div>
         </div>
         <div className="card__body">
           <WeeklyPlanGrid plan={diet.weekly_plan} />
@@ -898,6 +971,7 @@ function DietTab({ patientId }) {
         </div>
       )}
 
+      {assignModalEl}
       <div className={`toast${msg ? ' show' : ''}`}>{msg}</div>
     </div>
   )
