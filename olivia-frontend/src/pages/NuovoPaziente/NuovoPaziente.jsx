@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { createPatient } from '../../api/patients'
 import SuccessOverlay from '../../components/SuccessOverlay'
 import Breadcrumb from '../../components/Breadcrumb'
+import TimePicker from '../../components/TimePicker'
 import { splitList } from '../../utils/text'
 
 function ageFromDob(dob) {
@@ -40,7 +41,7 @@ export default function NuovoPaziente() {
   const [form, setForm] = useState({
     firstName: '', lastName: '', dob: '', city: '', job: '',
     weight: '', height: '', goal: '', allergies: '',
-    timeWake: '', timeBreakfast: '', timeLunch: '', timeDinner: '',
+    timeWake: '07:00', timeBreakfast: '08:00', timeLunch: '13:00', timeDinner: '20:00', timeSleep: '22:00',
     activityWhat: '', activityFreq: '', clinicalNotes: '',
   })
 
@@ -107,6 +108,7 @@ export default function NuovoPaziente() {
         allergies: splitList(form.allergies),
         notes: form.clinicalNotes || null,
         wakes_up_at: form.timeWake || null,
+        goes_to_sleep_at: form.timeSleep || null,
         breakfast_at: form.timeBreakfast || null,
         lunch_at: form.timeLunch || null,
         dinner_at: form.timeDinner || null,
@@ -247,20 +249,24 @@ export default function NuovoPaziente() {
                 <div className="section-subhead">Orari della giornata</div>
                 <div className="form-grid form-grid--3">
                   <div className="field">
-                    <label htmlFor="timeWake">Sveglia</label>
-                    <input className="input" id="timeWake" type="time" value={form.timeWake} onChange={e => setF('timeWake', e.target.value)} />
+                    <label htmlFor="timeWake">Orario sveglia</label>
+                    <TimePicker id="timeWake" value={form.timeWake} onChange={v => setF('timeWake', v)} />
                   </div>
                   <div className="field">
                     <label htmlFor="timeBreakfast">Colazione</label>
-                    <input className="input" id="timeBreakfast" type="time" value={form.timeBreakfast} onChange={e => setF('timeBreakfast', e.target.value)} />
+                    <TimePicker id="timeBreakfast" value={form.timeBreakfast} onChange={v => setF('timeBreakfast', v)} />
                   </div>
                   <div className="field">
                     <label htmlFor="timeLunch">Pranzo</label>
-                    <input className="input" id="timeLunch" type="time" value={form.timeLunch} onChange={e => setF('timeLunch', e.target.value)} />
+                    <TimePicker id="timeLunch" value={form.timeLunch} onChange={v => setF('timeLunch', v)} />
                   </div>
                   <div className="field">
                     <label htmlFor="timeDinner">Cena</label>
-                    <input className="input" id="timeDinner" type="time" value={form.timeDinner} onChange={e => setF('timeDinner', e.target.value)} />
+                    <TimePicker id="timeDinner" value={form.timeDinner} onChange={v => setF('timeDinner', v)} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="timeSleep">Orario in cui va a dormire</label>
+                    <TimePicker id="timeSleep" value={form.timeSleep} onChange={v => setF('timeSleep', v)} />
                   </div>
                 </div>
 

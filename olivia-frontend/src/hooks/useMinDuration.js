@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-export function useMinDuration(active, minMs = 1900) {
+export function useMinDuration(active, minMs = 400) {
   const [shown, setShown] = useState(active)
   const startedAt = useRef(active ? Date.now() : null)
 

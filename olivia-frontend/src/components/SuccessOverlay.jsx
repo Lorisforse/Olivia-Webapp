@@ -33,7 +33,7 @@ const TONES = {
   warn: { fill: 'var(--warn-bg)', stroke: 'var(--warn)' },
 }
 
-export default function SuccessOverlay({ show, title, message, onDone, duration = 1500, icon = 'check', tone = 'brand', confetti = true }) {
+export default function SuccessOverlay({ show, title, message, onDone, duration = 900, icon = 'check', tone = 'brand', confetti = true }) {
   useEffect(() => {
     if (!show || !onDone) return
     const t = setTimeout(onDone, duration)
