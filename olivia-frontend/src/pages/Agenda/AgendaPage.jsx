@@ -278,6 +278,9 @@ export default function AgendaPage() {
                     style={{ height: hours.length * HOUR_H, backgroundSize: `100% ${HOUR_H}px` }}
                     onClick={e => openNewAt(i, e)}
                   >
+                    {hours.map(h => (
+                      <div key={h} className="agenda-grid__cell" style={{ height: HOUR_H }} />
+                    ))}
                     {items.map(a => {
                       const s = appointmentStatus(a)
                       const past = new Date(a.scheduled_at) < today

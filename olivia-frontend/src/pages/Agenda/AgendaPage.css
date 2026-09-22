@@ -60,8 +60,9 @@
 }
 .agenda-grid__col:last-child { border-right: 0; }
 .agenda-grid__col.is-today { background-color: var(--brand-50); }
-.agenda-grid__col:hover { background-color: var(--surface-2); }
-.agenda-grid__col.is-today:hover { background-color: var(--brand-50); }
+
+.agenda-grid__cell:hover { background-color: var(--surface-2); }
+.agenda-grid__col.is-today .agenda-grid__cell:hover { background-color: var(--brand-100); }
 
 .agenda-appt {
   position: absolute;
