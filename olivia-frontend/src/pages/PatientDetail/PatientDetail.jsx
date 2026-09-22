@@ -8,7 +8,7 @@ import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
 import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import SuccessOverlay from '../../components/SuccessOverlay'
-import { BarTrend, LineTrend, AdherenceStrip } from '../../components/charts'
+import { BarTrend, LineTrend, AdherenceStrip, CategoryStrip, SLEEP_TONE, HUNGER_TONE } from '../../components/charts'
 import { splitList } from '../../utils/text'
 import { saveBlob, saveDataUri, svgToPngDataUri, printImage } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
@@ -633,16 +633,25 @@ function BotTab({ patientId, status, patientName }) {
 const TREND_PERIODS = [[7, '7gg'], [30, '30gg'], [90, '90gg']]
 const MEAL_FIELDS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner']
 const ADHERENCE_SCORE = { completa: 1, parziale: 0.5, nulla: 0 }
+const SATISFACTION_SCORE = { soddisfatto: 1, neutro: 0.5, insoddisfatto: 0 }
 const HEATMAP_DAYS = 30
 
-function dayAdherencePct(dietCompliance) {
-  if (!dietCompliance) return null
+function dayMealPct(mealIndicators, scoreMap) {
+  if (!mealIndicators) return null
   const scores = MEAL_FIELDS
-    .map(f => dietCompliance[f])
-    .filter(v => v in ADHERENCE_SCORE)
-    .map(v => ADHERENCE_SCORE[v])
+    .map(f => mealIndicators[f])
+    .filter(v => v in scoreMap)
+    .map(v => scoreMap[v])
   if (!scores.length) return null
   return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100)
+}
+
+function dayAdherencePct(dietCompliance) {
+  return dayMealPct(dietCompliance, ADHERENCE_SCORE)
+}
+
+function daySatisfactionPct(mealSatisfaction) {
+  return dayMealPct(mealSatisfaction, SATISFACTION_SCORE)
 }
 
 function dayMoodAvg(mood) {
@@ -695,7 +704,7 @@ function TrendsTab({ patientId, status }) {
   const byDate = {}
   reports.forEach(r => { byDate[r.date] = r })
 
-  const weightData = [], hydrationData = [], moodData = []
+  const weightData = [], hydrationData = [], moodData = [], satisfactionData = [], messagesData = []
   for (let i = days - 1; i >= 0; i--) {
     const dateStr = isoDaysAgo(i)
     const r = byDate[dateStr]
@@ -703,17 +712,19 @@ function TrendsTab({ patientId, status }) {
     weightData.push({ label, value: r?.indicators?.weight ?? null })
     hydrationData.push({ label, value: r?.indicators?.hydration != null ? Math.round(r.indicators.hydration) : null })
     moodData.push({ label, value: dayMoodAvg(r?.indicators?.mood) })
+    satisfactionData.push({ label, value: daySatisfactionPct(r?.indicators?.meal_satisfaction) })
+    messagesData.push({ label, value: r?.indicators?.engagement?.messages_sent ?? null })
   }
 
-  const strip = []
+  const strip = [], sleepStrip = [], hungerStrip = []
   for (let i = HEATMAP_DAYS - 1; i >= 0; i--) {
     const dateStr = isoDaysAgo(i)
-    const pct = dayAdherencePct(byDate[dateStr]?.indicators?.diet_compliance)
-    strip.push({
-      date: dateStr,
-      label: formatShortDate(dateStr),
-      tone: pct == null ? 'none' : pct >= 70 ? 'good' : 'warn',
-    })
+    const dayReport = byDate[dateStr]
+    const label = formatShortDate(dateStr)
+    const pct = dayAdherencePct(dayReport?.indicators?.diet_compliance)
+    strip.push({ date: dateStr, label, tone: pct == null ? 'none' : pct >= 70 ? 'good' : 'warn' })
+    sleepStrip.push({ date: dateStr, label, tone: dayReport?.indicators?.sleep_quality || 'none' })
+    hungerStrip.push({ date: dateStr, label, tone: dayReport?.indicators?.hunger || 'none' })
   }
 
   return (
@@ -742,9 +753,37 @@ function TrendsTab({ patientId, status }) {
       </div>
 
       <div className="card mt-16">
+        <div className="card__header"><h2 className="card__title">Gradimento pasti</h2></div>
+        <div className="card__body">
+          <BarTrend data={satisfactionData} unit="%" color="#C08552" emptyLabel="Nessun gradimento registrato nel periodo" />
+        </div>
+      </div>
+
+      <div className="card mt-16">
+        <div className="card__header"><h2 className="card__title">Qualità del sonno — ultimi 30 giorni</h2></div>
+        <div className="card__body">
+          <CategoryStrip days={sleepStrip} legend={SLEEP_TONE} />
+        </div>
+      </div>
+
+      <div className="card mt-16">
+        <div className="card__header"><h2 className="card__title">Livello di fame — ultimi 30 giorni</h2></div>
+        <div className="card__body">
+          <CategoryStrip days={hungerStrip} legend={HUNGER_TONE} />
+        </div>
+      </div>
+
+      <div className="card mt-16">
         <div className="card__header"><h2 className="card__title">Idratazione</h2></div>
         <div className="card__body">
           <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={120} emptyLabel="Nessuna idratazione registrata nel periodo" />
+        </div>
+      </div>
+
+      <div className="card mt-16">
+        <div className="card__header"><h2 className="card__title">Messaggi scambiati col bot</h2></div>
+        <div className="card__body">
+          <BarTrend data={messagesData} emptyLabel="Nessun messaggio registrato nel periodo" color="#7A9E8E" height={120} />
         </div>
       </div>
 

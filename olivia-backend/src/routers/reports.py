@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta
 from typing import Optional
 
@@ -10,8 +10,10 @@ from src.models.helpers import extract
 from src.schemas.reports import (
     CohortAttentionPatient,
     CohortDayPoint,
+    CohortHungerBreakdown,
     CohortMoodBreakdown,
     CohortReportResponse,
+    CohortSleepBreakdown,
     DailyIndicators,
     DailyReportResponse,
     WeeklyIndicators,
@@ -23,14 +25,20 @@ router = APIRouter()
 # "completa" vale 1 pasto pieno, "parziale" mezzo, "nulla" zero: la media sui
 # pasti loggati in un giorno diventa una % di aderenza 0-100 per quel giorno.
 _ADHERENCE_SCORE = {"completa": 1.0, "parziale": 0.5, "nulla": 0.0}
+# stessa logica per il gradimento: "soddisfatto" pieno, "neutro" mezzo, "insoddisfatto" zero.
+_SATISFACTION_SCORE = {"soddisfatto": 1.0, "neutro": 0.5, "insoddisfatto": 0.0}
 _MEAL_FIELDS = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner"]
 
 
-def _day_adherence_pct(diet_compliance: dict) -> Optional[float]:
-    scores = [_ADHERENCE_SCORE[v] for f in _MEAL_FIELDS if (v := diet_compliance.get(f)) in _ADHERENCE_SCORE]
+def _day_meal_pct(meal_indicators: dict, score_map: dict) -> Optional[float]:
+    scores = [score_map[v] for f in _MEAL_FIELDS if (v := meal_indicators.get(f)) in score_map]
     if not scores:
         return None
     return round(sum(scores) / len(scores) * 100, 1)
+
+
+def _day_adherence_pct(diet_compliance: dict) -> Optional[float]:
+    return _day_meal_pct(diet_compliance, _ADHERENCE_SCORE)
 
 
 def _mood_avg(mood: dict) -> Optional[float]:
@@ -155,8 +163,12 @@ async def get_cohort_report(
 
     by_day_adherence: dict[str, list[float]] = defaultdict(list)
     by_day_hydration: dict[str, list[float]] = defaultdict(list)
+    by_day_satisfaction: dict[str, list[float]] = defaultdict(list)
+    by_day_messages: dict[str, list[float]] = defaultdict(list)
     by_patient_week: dict[ObjectId, list[float]] = defaultdict(list)
     mood_by_patient: dict[ObjectId, list[float]] = defaultdict(list)
+    sleep_by_patient: dict[ObjectId, list[str]] = defaultdict(list)
+    hunger_by_patient: dict[ObjectId, list[str]] = defaultdict(list)
 
     for doc in docs:
         raw_date = doc.get("date")
@@ -178,9 +190,25 @@ async def get_cohort_report(
         if hydration is not None:
             by_day_hydration[date_str].append(hydration)
 
+        satisfaction_pct = _day_meal_pct(indicators.get("meal_satisfaction") or {}, _SATISFACTION_SCORE)
+        if satisfaction_pct is not None:
+            by_day_satisfaction[date_str].append(satisfaction_pct)
+
+        messages_sent = (indicators.get("engagement") or {}).get("messages_sent")
+        if messages_sent is not None:
+            by_day_messages[date_str].append(messages_sent)
+
         mood_avg = _mood_avg(indicators.get("mood") or {})
         if mood_avg is not None:
             mood_by_patient[pid].append(mood_avg)
+
+        sleep_quality = indicators.get("sleep_quality")
+        if sleep_quality:
+            sleep_by_patient[pid].append(sleep_quality)
+
+        hunger = indicators.get("hunger")
+        if hunger:
+            hunger_by_patient[pid].append(hunger)
 
     daily_points = []
     for i in range(days):
@@ -188,14 +216,20 @@ async def get_cohort_report(
         date_str = d.isoformat()
         adherences = by_day_adherence.get(date_str, [])
         hydrations = by_day_hydration.get(date_str, [])
+        satisfactions = by_day_satisfaction.get(date_str, [])
+        messages = by_day_messages.get(date_str, [])
         daily_points.append(CohortDayPoint(
             date=date_str,
             adherence_pct=round(sum(adherences) / len(adherences), 1) if adherences else None,
             hydration_ml=round(sum(hydrations) / len(hydrations), 0) if hydrations else None,
+            satisfaction_pct=round(sum(satisfactions) / len(satisfactions), 1) if satisfactions else None,
+            messages_avg=round(sum(messages) / len(messages), 1) if messages else None,
         ))
 
     all_adherence_vals = [p.adherence_pct for p in daily_points if p.adherence_pct is not None]
     all_hydration_vals = [p.hydration_ml for p in daily_points if p.hydration_ml is not None]
+    all_satisfaction_vals = [p.satisfaction_pct for p in daily_points if p.satisfaction_pct is not None]
+    all_messages_vals = [p.messages_avg for p in daily_points if p.messages_avg is not None]
 
     # "Serve attenzione": aderenza media ultimi 7gg, solo chi ha almeno 2 giorni
     # loggati (un solo giorno storto non basta a segnalare nessuno).
@@ -226,12 +260,50 @@ async def get_cohort_report(
         else:
             mood.neutro += 1
 
+    # Sonno/fame sono categorici (non numerici come l'umore): per ogni paziente si
+    # prende il valore più frequente registrato nel periodo (moda), non una media.
+    sleep = CohortSleepBreakdown()
+    for pid in patient_ids:
+        vals = sleep_by_patient.get(pid, [])
+        if not vals:
+            sleep.senza_dati += 1
+            continue
+        mode = Counter(vals).most_common(1)[0][0]
+        if mode == "buona":
+            sleep.buona += 1
+        elif mode == "discreta":
+            sleep.discreta += 1
+        elif mode == "scarsa":
+            sleep.scarsa += 1
+        else:
+            sleep.senza_dati += 1
+
+    hunger = CohortHungerBreakdown()
+    for pid in patient_ids:
+        vals = hunger_by_patient.get(pid, [])
+        if not vals:
+            hunger.senza_dati += 1
+            continue
+        mode = Counter(vals).most_common(1)[0][0]
+        if mode == "bassa":
+            hunger.bassa += 1
+        elif mode == "moderata":
+            hunger.moderata += 1
+        elif mode == "alta":
+            hunger.alta += 1
+        else:
+            hunger.senza_dati += 1
+
     return CohortReportResponse(
         days=days,
         active_patients=len(patient_ids),
         avg_adherence_pct=round(sum(all_adherence_vals) / len(all_adherence_vals), 1) if all_adherence_vals else None,
         avg_hydration_ml=round(sum(all_hydration_vals) / len(all_hydration_vals), 0) if all_hydration_vals else None,
+        avg_satisfaction_pct=round(sum(all_satisfaction_vals) / len(all_satisfaction_vals), 1) if all_satisfaction_vals else None,
+        avg_messages=round(sum(all_messages_vals) / len(all_messages_vals), 1) if all_messages_vals else None,
         daily=daily_points,
         attention=attention,
         mood=mood,
+        sleep=sleep,
+        hunger=hunger,
     )

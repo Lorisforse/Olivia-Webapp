@@ -5,6 +5,19 @@ import { getDiets } from '../../api/diets'
 import { useAuth } from '../../context/AuthContext'
 import { BarTrend } from '../../components/charts'
 
+const SLEEP_TILES = [
+  ['buona', 'Buono', 'var(--ok)'],
+  ['discreta', 'Discreto', 'var(--warn)'],
+  ['scarsa', 'Scarso', 'var(--danger)'],
+  ['senza_dati', 'Senza dati', 'var(--ink-5)'],
+]
+const HUNGER_TILES = [
+  ['bassa', 'Bassa', 'var(--ok)'],
+  ['moderata', 'Moderata', 'var(--warn)'],
+  ['alta', 'Alta', 'var(--danger)'],
+  ['senza_dati', 'Senza dati', 'var(--ink-5)'],
+]
+
 function deriveStatus(p) {
   if (!p.active_diet_plan_id) return 'nodiet'
   if (!p.chat_id) return 'waiting'
@@ -61,6 +74,14 @@ function CohortSection() {
   const hydrationData = (cohort?.daily || []).map(d => ({
     label: formatDayLabel(d.date),
     value: d.hydration_ml != null ? Math.round(d.hydration_ml) : null,
+  }))
+  const satisfactionData = (cohort?.daily || []).map(d => ({
+    label: formatDayLabel(d.date),
+    value: d.satisfaction_pct,
+  }))
+  const messagesData = (cohort?.daily || []).map(d => ({
+    label: formatDayLabel(d.date),
+    value: d.messages_avg,
   }))
 
   return (
@@ -176,6 +197,86 @@ function CohortSection() {
               <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
                 Numero di pazienti per fascia, in base all&#39;umore medio riferito al bot nel periodo.
               </p>
+            </div>
+          </div>
+
+          <div className="card" style={{ gridColumn: 'span 2' }}>
+            <div className="card__header">
+              <h2 className="card__title">Gradimento pasti</h2>
+              {cohort?.avg_satisfaction_pct != null && (
+                <span className="pill pill--ok">{cohort.avg_satisfaction_pct}% media</span>
+              )}
+            </div>
+            <div className="card__body">
+              {loading
+                ? <div className="chart-empty">Caricamento…</div>
+                : <BarTrend data={satisfactionData} unit="%" color="#C08552" />
+              }
+              <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
+                Media giornaliera di quanto i pazienti hanno gradito i pasti registrati.
+              </p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card__header">
+              <h2 className="card__title">Qualità del sonno</h2>
+            </div>
+            <div className="card__body">
+              {loading ? (
+                <div className="chart-empty">Caricamento…</div>
+              ) : (
+                <div className="mood-breakdown">
+                  {SLEEP_TILES.map(([key, label, color]) => (
+                    <div key={key} className="mood-tile">
+                      <span className="mood-tile__val" style={{ color }}>{cohort?.sleep?.[key] ?? 0}</span>
+                      <span className="mood-tile__label">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
+                Numero di pazienti per qualità del sonno più riferita al bot nel periodo.
+              </p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card__header">
+              <h2 className="card__title">Livello di fame</h2>
+            </div>
+            <div className="card__body">
+              {loading ? (
+                <div className="chart-empty">Caricamento…</div>
+              ) : (
+                <div className="mood-breakdown">
+                  {HUNGER_TILES.map(([key, label, color]) => (
+                    <div key={key} className="mood-tile">
+                      <span className="mood-tile__val" style={{ color }}>{cohort?.hunger?.[key] ?? 0}</span>
+                      <span className="mood-tile__label">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
+                Numero di pazienti per livello di fame più riferito al bot nel periodo.
+              </p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card__header">
+              <h2 className="card__title">Messaggi scambiati col bot</h2>
+            </div>
+            <div className="card__body">
+              <div className="trend-head">
+                <span className="trend-head__val">{cohort?.avg_messages ?? '—'}</span>
+                <span className="trend-head__sub">messaggi medi al giorno</span>
+              </div>
+              {loading
+                ? <div className="chart-empty">Caricamento…</div>
+                : <BarTrend data={messagesData} color="#7A9E8E" height={110} />
+              }
             </div>
           </div>
         </div>

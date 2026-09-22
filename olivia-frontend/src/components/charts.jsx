@@ -75,13 +75,27 @@ export function LineTrend({ data, unit = '', height = 160, color = 'var(--brand)
   )
 }
 
-const STRIP_TONE = {
+const ADHERENCE_TONE = {
   good: { fill: '#CBE0A0', title: 'Buona aderenza' },
   warn: { fill: '#F5B65B', title: 'Aderenza parziale' },
   none: { fill: '#E3E4DA', title: 'Nessun dato' },
 }
 
-export function AdherenceStrip({ days }) {
+export const SLEEP_TONE = {
+  buona: { fill: '#CBE0A0', title: 'Sonno buono' },
+  discreta: { fill: '#F5B65B', title: 'Sonno discreto' },
+  scarsa: { fill: 'var(--danger-bg)', title: 'Sonno scarso' },
+  none: { fill: '#E3E4DA', title: 'Nessun dato' },
+}
+
+export const HUNGER_TONE = {
+  bassa: { fill: '#CBE0A0', title: 'Fame bassa' },
+  moderata: { fill: '#F5B65B', title: 'Fame moderata' },
+  alta: { fill: 'var(--danger-bg)', title: 'Fame alta' },
+  none: { fill: '#E3E4DA', title: 'Nessun dato' },
+}
+
+export function CategoryStrip({ days, legend }) {
   if (!days.length) return <div className="chart-empty">Nessun dato nel periodo</div>
   return (
     <div>
@@ -90,13 +104,13 @@ export function AdherenceStrip({ days }) {
           <span
             key={i}
             className="adherence-strip__cell"
-            style={{ background: STRIP_TONE[d.tone].fill }}
-            title={`${d.label} — ${STRIP_TONE[d.tone].title}`}
+            style={{ background: legend[d.tone]?.fill ?? legend.none.fill }}
+            title={`${d.label} — ${legend[d.tone]?.title ?? legend.none.title}`}
           />
         ))}
       </div>
       <div className="chart-legend">
-        {Object.entries(STRIP_TONE).map(([k, v]) => (
+        {Object.entries(legend).map(([k, v]) => (
           <span key={k} className="chart-legend__item">
             <span className="chart-legend__swatch" style={{ background: v.fill }} />
             {v.title}
@@ -105,4 +119,8 @@ export function AdherenceStrip({ days }) {
       </div>
     </div>
   )
+}
+
+export function AdherenceStrip({ days }) {
+  return <CategoryStrip days={days} legend={ADHERENCE_TONE} />
 }

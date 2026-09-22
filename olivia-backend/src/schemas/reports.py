@@ -78,8 +78,10 @@ class WeeklyReportResponse(BaseModel):
 
 class CohortDayPoint(BaseModel):
     date: str
-    adherence_pct: Optional[float] = None  # media aderenza pasti della coorte quel giorno, 0-100
-    hydration_ml: Optional[float] = None   # media ml bevuti dalla coorte quel giorno
+    adherence_pct: Optional[float] = None    # media aderenza pasti della coorte quel giorno, 0-100
+    hydration_ml: Optional[float] = None     # media ml bevuti dalla coorte quel giorno
+    satisfaction_pct: Optional[float] = None  # media gradimento pasti della coorte quel giorno, 0-100
+    messages_avg: Optional[float] = None      # media messaggi scambiati col bot dalla coorte quel giorno
 
 
 class CohortAttentionPatient(BaseModel):
@@ -97,12 +99,32 @@ class CohortMoodBreakdown(BaseModel):
     senza_dati: int = 0
 
 
+class CohortSleepBreakdown(BaseModel):
+    """Conteggio pazienti per qualità del sonno più frequente nel periodo."""
+    buona: int = 0
+    discreta: int = 0
+    scarsa: int = 0
+    senza_dati: int = 0
+
+
+class CohortHungerBreakdown(BaseModel):
+    """Conteggio pazienti per livello di fame più frequente nel periodo."""
+    bassa: int = 0
+    moderata: int = 0
+    alta: int = 0
+    senza_dati: int = 0
+
+
 class CohortReportResponse(BaseModel):
     """Vista aggregata sui pazienti collegati al bot e attivi, per la home page."""
     days: int
     active_patients: int
     avg_adherence_pct: Optional[float] = None
     avg_hydration_ml: Optional[float] = None
+    avg_satisfaction_pct: Optional[float] = None
+    avg_messages: Optional[float] = None
     daily: list[CohortDayPoint]
     attention: list[CohortAttentionPatient]
     mood: CohortMoodBreakdown
+    sleep: CohortSleepBreakdown = Field(default_factory=CohortSleepBreakdown)
+    hunger: CohortHungerBreakdown = Field(default_factory=CohortHungerBreakdown)
