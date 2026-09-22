@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from urllib.parse import quote
 
@@ -6,7 +6,7 @@ import segno
 from bson import DBRef, ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.database import get_database
+from src.database import get_database, get_diet_notifications_col
 from src.models.helpers import extract, sanitize_bson
 from src.schemas.diet import DietResponse
 from src.schemas.patient import (
@@ -316,7 +316,8 @@ async def get_patient_diet(patient_id: str, db=Depends(get_database)):
 @router.post("/{patient_id}/diet/{diet_id}")
 async def assign_diet(patient_id: str, diet_id: str, db=Depends(get_database)):
     oid = _oid(patient_id)
-    if not await db["users"].find_one({"_id": oid}, {"_id": 1}):
+    patient = await db["users"].find_one({"_id": oid}, {"chat_id": 1, "active_nutrition_plan": 1})
+    if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
     try:
@@ -331,4 +332,19 @@ async def assign_diet(patient_id: str, diet_id: str, db=Depends(get_database)):
         {"_id": oid},
         {"$set": {"active_nutrition_plan": {"$ref": "nutrition-plans", "$id": diet_oid}}},
     )
-    return {"ok": True}
+
+    # Notifica via bot solo se il paziente e' gia' connesso e la dieta cambia
+    # davvero rispetto a quella che aveva (non la prima assegnazione: a quel
+    # punto non e' ancora connesso, vedi guard sul punto 9).
+    previous_diet_id = _diet_id(patient.get("active_nutrition_plan"))
+    notified = False
+    if patient.get("chat_id") and previous_diet_id and previous_diet_id != str(diet_oid):
+        await get_diet_notifications_col(db).insert_one({
+            "user_id": oid,
+            "diet_id": diet_oid,
+            "created_at": datetime.now(timezone.utc).replace(tzinfo=None),
+            "sent_at": None,
+        })
+        notified = True
+
+    return {"ok": True, "notified": notified}

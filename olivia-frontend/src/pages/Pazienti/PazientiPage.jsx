@@ -166,12 +166,12 @@ export default function PazientiPage() {
     if (!assignModal || !assignDietId) return
     setAssigning(true)
     try {
-      await assignDiet(assignModal.id, assignDietId)
+      const result = await assignDiet(assignModal.id, assignDietId)
       setPatients(prev => prev.map(p =>
         p.id === assignModal.id ? { ...p, active_diet_plan_id: assignDietId } : p
       ))
       setAssignModal(null)
-      showToast('Piano dietetico assegnato')
+      showToast(result?.notified ? 'Piano dietetico assegnato, il paziente è stato avvisato via bot' : 'Piano dietetico assegnato')
     } catch {
       showToast('Errore durante l\'assegnazione')
     } finally {

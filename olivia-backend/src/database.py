@@ -38,3 +38,9 @@ def get_appointments_col(database): return database["webapp-appointments"]
 # Collection solo-webapp: parte vuota, la nutrizionista la popola aggiungendo
 # voci al volo (vedi src/routers/goal_options.py).
 def get_goal_options_col(database): return database["webapp-goal-options"]
+# Coda di notifiche "dieta cambiata": scritta qui quando si assegna una nuova
+# dieta a un paziente già connesso che ne aveva già una diversa, letta dal bot
+# modificato (olivia-chatbot-calendario) che invia il messaggio e segna
+# sent_at. Con il bot originale in esecuzione nessuno la legge: resta lì
+# innocua, stesso principio già usato per "webapp-appointments".
+def get_diet_notifications_col(database): return database["webapp-diet-notifications"]

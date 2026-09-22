@@ -326,12 +326,16 @@ export default function DietePage() {
     if (!selected.size) { showToast('Seleziona almeno un paziente'); return }
     setAssigning(true)
     try {
-      await Promise.all([...selected].map(pid => assignDietToPatient(pid, assignTarget.id)))
+      const results = await Promise.all([...selected].map(pid => assignDietToPatient(pid, assignTarget.id)))
       setPatients(prev => prev.map(p => (selected.has(p.id) ? { ...p, active_diet_plan_id: assignTarget.id } : p)))
       const count = selected.size
+      const notifiedCount = results.filter(r => r?.notified).length
       setSelected(new Set())
       setAssignTarget(null)
-      showToast(`Piano assegnato a ${count} pazient${count === 1 ? 'e' : 'i'}`)
+      showToast(
+        `Piano assegnato a ${count} pazient${count === 1 ? 'e' : 'i'}`
+        + (notifiedCount ? ` (${notifiedCount} avvisat${notifiedCount === 1 ? 'o' : 'i'} via bot)` : '')
+      )
     } catch {
       showToast('Errore durante l\'assegnazione')
     } finally {
