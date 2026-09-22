@@ -104,6 +104,56 @@ export default function AgendaPage() {
     setSearchParams({}, { replace: true })
   }, [searchParams, setSearchParams, loading])
 
+  const fcHoverCleanupRef = useRef(null)
+
+  // FullCalendar non ha celle per (giorno, ora) nel DOM — le righe orarie e le
+  // colonne-giorno sono renderizzate separatamente, quindi l'hover puro CSS
+  // illuminerebbe tutta la riga o tutta la colonna. Un unico overlay spostato
+  // via mousemove ricrea l'evidenziazione della cella precisa. Callback ref
+  // invece di useEffect: il nodo compare solo dopo il caricamento iniziale
+  // (LoadingScreen prima), un useEffect a mount fisso lo perderebbe.
+  const setFcWrap = useCallback(node => {
+    if (fcHoverCleanupRef.current) { fcHoverCleanupRef.current(); fcHoverCleanupRef.current = null }
+    if (!node) return
+
+    const hoverEl = document.createElement('div')
+    hoverEl.className = 'fc-hover-cell'
+    hoverEl.style.display = 'none'
+
+    function onMove(e) {
+      // Le colonne-giorno stanno sotto la tabella delle righe orarie nello
+      // stacking (e.target sarebbe sempre .fc-timegrid-slot-lane): si cerca la
+      // colonna per posizione invece che con closest().
+      let col = null
+      for (const c of node.querySelectorAll('.fc-timegrid-col[data-date]')) {
+        const r = c.getBoundingClientRect()
+        if (e.clientX >= r.left && e.clientX < r.right && e.clientY >= r.top && e.clientY < r.bottom) {
+          col = c
+          break
+        }
+      }
+      const bg = col?.querySelector('.fc-timegrid-col-bg')
+      if (!col || !bg) { hoverEl.style.display = 'none'; return }
+      if (hoverEl.parentElement !== bg) bg.appendChild(hoverEl)
+      const rect = col.getBoundingClientRect()
+      const slotEl = node.querySelector('.fc-timegrid-slot-lane')
+      const slotH = slotEl ? slotEl.getBoundingClientRect().height : rect.height / 24
+      const idx = Math.floor((e.clientY - rect.top) / slotH)
+      hoverEl.style.display = 'block'
+      hoverEl.style.top = `${idx * slotH}px`
+      hoverEl.style.height = `${slotH}px`
+    }
+    function onLeave() { hoverEl.style.display = 'none' }
+
+    node.addEventListener('mousemove', onMove)
+    node.addEventListener('mouseleave', onLeave)
+    fcHoverCleanupRef.current = () => {
+      node.removeEventListener('mousemove', onMove)
+      node.removeEventListener('mouseleave', onLeave)
+      hoverEl.remove()
+    }
+  }, [])
+
   const refresh = useCallback(async () => {
     const tasks = [loadUpcoming()]
     if (rangeRef.current) tasks.push(loadRange(rangeRef.current.start, rangeRef.current.end))
@@ -227,7 +277,7 @@ export default function AgendaPage() {
       )}
 
       <div className="agenda-layout">
-        <section className="card agenda-card agenda-fc-card">
+        <section className="card agenda-card agenda-fc-card" ref={setFcWrap}>
           {rangeLoading && <span className="muted agenda-fc-card__loading">aggiorno…</span>}
           <FullCalendar
             plugins={[timeGridPlugin, interactionPlugin]}
@@ -239,7 +289,9 @@ export default function AgendaPage() {
             slotMaxTime="20:00:00"
             allDaySlot={false}
             nowIndicator
-            height="auto"
+            height={800}
+            expandRows
+            displayEventEnd={false}
             editable
             eventResizableFromStart={false}
             selectable

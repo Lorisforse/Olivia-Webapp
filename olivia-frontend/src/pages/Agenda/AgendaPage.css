@@ -122,6 +122,20 @@
   text-decoration: none;
 }
 .agenda-fc-card .fc .fc-day-today .fc-col-header-cell-cushion { color: var(--brand); font-weight: 600; }
+.agenda-fc-card .fc .fc-timegrid-col-bg { cursor: cell; }
+
+/* pallino/cella evidenziata al passaggio del mouse: overlay posizionato via JS
+   (vedi useEffect in AgendaPage.jsx), non esistono celle (giorno, ora) nel DOM
+   di FullCalendar su cui applicare un semplice :hover. */
+.fc-hover-cell {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--surface-2);
+  pointer-events: none;
+  z-index: 1;
+}
+.agenda-fc-card .fc .fc-timegrid-col.fc-day-today .fc-hover-cell { background: var(--brand-100); }
 
 .agenda-fc-card .fc-event { border-radius: 6px; padding: 1px 4px; cursor: grab; overflow: hidden; }
 .fc-appt { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; overflow: hidden; min-width: 0; }
