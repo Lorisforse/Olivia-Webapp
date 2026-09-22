@@ -34,3 +34,7 @@ def get_diet_pdfs_col(database): return database["webapp-diet-pdfs"]
 # Appuntamenti dell'agenda. Collection solo-webapp letta anche dal bot con il
 # modulo appuntamenti, che invia il promemoria e aggiorna `status` alla risposta.
 def get_appointments_col(database): return database["webapp-appointments"]
+# Voci disponibili nella tendina "Obiettivo" in creazione/modifica paziente.
+# Collection solo-webapp: parte vuota, la nutrizionista la popola aggiungendo
+# voci al volo (vedi src/routers/goal_options.py).
+def get_goal_options_col(database): return database["webapp-goal-options"]

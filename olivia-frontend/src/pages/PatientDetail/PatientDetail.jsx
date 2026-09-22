@@ -13,6 +13,7 @@ import { splitList } from '../../utils/text'
 import { saveBlob, saveDataUri, svgToPngDataUri, printImage } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
 import TimePicker from '../../components/TimePicker'
+import GoalSelect from '../../components/GoalSelect'
 
 function deriveStatus(p) {
   if (p.active === false) return 'inactive'
@@ -174,14 +175,7 @@ function ProfileTab({ patient, onSave }) {
               </div>
               <div className="field">
                 <label htmlFor="eGoal">Obiettivo</label>
-                <select className="select" id="eGoal" value={form.goal} onChange={e => setForm(f => ({...f, goal: e.target.value}))}>
-                  <option value="">—</option>
-                  <option>Perdita di peso</option>
-                  <option>Mantenimento</option>
-                  <option>Aumento massa</option>
-                  <option>Riduzione colesterolo</option>
-                  <option>Regolarizzazione glicemia</option>
-                </select>
+                <GoalSelect id="eGoal" value={form.goal} onChange={v => setForm(f => ({...f, goal: v}))} emptyLabel="—" />
               </div>
               <div className="field">
                 <label htmlFor="eWeight">Peso</label>

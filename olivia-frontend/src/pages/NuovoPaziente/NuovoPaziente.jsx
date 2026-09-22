@@ -4,6 +4,7 @@ import { createPatient } from '../../api/patients'
 import SuccessOverlay from '../../components/SuccessOverlay'
 import Breadcrumb from '../../components/Breadcrumb'
 import TimePicker from '../../components/TimePicker'
+import GoalSelect from '../../components/GoalSelect'
 import { splitList } from '../../utils/text'
 
 function ageFromDob(dob) {
@@ -214,14 +215,7 @@ export default function NuovoPaziente() {
                   </div>
                   <div className="field field--full">
                     <label htmlFor="goal">Obiettivo<span className="req">*</span></label>
-                    <select className={`select${invalidFields.goal ? ' invalid' : ''}`} id="goal" value={form.goal} onChange={e => setF('goal', e.target.value)}>
-                      <option value="" disabled>Seleziona un obiettivo…</option>
-                      <option value="Perdita di peso">Perdita di peso</option>
-                      <option value="Mantenimento">Mantenimento</option>
-                      <option value="Aumento massa">Aumento massa</option>
-                      <option value="Riduzione colesterolo">Riduzione colesterolo</option>
-                      <option value="Regolarizzazione glicemia">Regolarizzazione glicemia</option>
-                    </select>
+                    <GoalSelect id="goal" value={form.goal} onChange={v => setF('goal', v)} invalid={invalidFields.goal} emptyDisabled />
                   </div>
                   <div className="field field--full">
                     <label htmlFor="allergies">Allergie / intolleranze</label>
