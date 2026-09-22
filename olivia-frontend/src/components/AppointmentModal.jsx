@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import TimePicker from './TimePicker'
 import {
   DURATIONS,
   appointmentStatus,
@@ -181,13 +182,13 @@ export default function AppointmentModal({
             </div>
             <div className="field">
               <label>Ora <span className="req">*</span></label>
-              <input
-                type="time"
-                step="300"
-                className={`input${errors.time ? ' invalid' : ''}`}
+              <TimePicker
+                id="apptTime"
                 value={form.time}
-                onChange={e => set('time', e.target.value)}
+                onChange={v => set('time', v)}
+                defaultTime="09:00"
               />
+              {errors.time && <span className="field-help">Campo obbligatorio.</span>}
             </div>
             <div className="field">
               <label>Durata</label>
