@@ -51,6 +51,7 @@ class PatientListItem(BaseModel):
     created_at: Optional[datetime] = None
     last_interaction_at: Optional[datetime] = None
     active: bool = True
+    deactivated_reason: Optional[str] = None
 
 
 class PatientDetail(BaseModel):
@@ -102,6 +103,7 @@ class PatientDetail(BaseModel):
     active_diet_plan_id: Optional[str] = None
     active: bool = True
     deactivated_at: Optional[datetime] = None
+    deactivated_reason: Optional[str] = None
 
 
 class PatientUpdate(BaseModel):

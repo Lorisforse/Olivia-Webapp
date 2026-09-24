@@ -1,10 +1,32 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth import get_current_user
+from src.pending_diet import pending_diet_suspension_loop
 from src.routers import appointments, auth, diets, goal_options, logs, patients, reports
+from src.settings import settings
 
-app = FastAPI(title='Olivia API', version='0.3.0')
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = asyncio.create_task(pending_diet_suspension_loop())
+    yield
+    task.cancel()
+
+
+# In produzione (DEBUG=false) /docs, /redoc e lo schema OpenAPI restano
+# disattivati: non serve esporre la mappa dell'API in chiaro.
+app = FastAPI(
+    title='Olivia API',
+    version='0.3.0',
+    docs_url='/docs' if settings.debug else None,
+    redoc_url='/redoc' if settings.debug else None,
+    openapi_url='/openapi.json' if settings.debug else None,
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from src.database import get_database, get_diet_notifications_col
 from src.models.helpers import extract, sanitize_bson
+from src.pending_diet import DEACTIVATED_REASON_PENDING_DIET, archive_bot_link
 from src.schemas.diet import DietResponse
 from src.schemas.patient import (
     OnboardingResponse,
@@ -68,6 +69,7 @@ def _doc_to_list_item(doc: dict) -> PatientListItem:
         created_at=doc.get("created_at"),
         last_interaction_at=doc.get("last_interaction_at"),
         active=doc.get("active", True),
+        deactivated_reason=doc.get("deactivated_reason"),
     )
 
 
@@ -118,6 +120,7 @@ def _doc_to_detail(doc: dict) -> PatientDetail:
         active_diet_plan_id=diet_id,
         active=doc.get("active", True),
         deactivated_at=doc.get("deactivated_at"),
+        deactivated_reason=doc.get("deactivated_reason"),
     )
 
 
@@ -176,14 +179,12 @@ async def deactivate_patient(patient_id: str, db=Depends(get_database)):
     if not doc:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    update_set = {"active": False, "deactivated_at": datetime.now()}
-    update_unset = {}
-    if doc.get("chat_id") is not None:
-        update_set["archived_chat_id"] = doc["chat_id"]
-        update_unset["chat_id"] = ""
-    if doc.get("patient_id") is not None:
-        update_set["archived_patient_id"] = doc["patient_id"]
-        update_unset["patient_id"] = ""
+    update_set, update_unset = archive_bot_link(doc)
+    update_set["active"] = False
+    update_set["deactivated_at"] = datetime.now()
+    # Disattivazione manuale: non e' "in attesa di dieta" (vedi src/pending_diet.py),
+    # anche se il paziente veniva da li'.
+    update_unset["deactivated_reason"] = ""
 
     update = {"$set": update_set}
     if update_unset:
@@ -202,7 +203,7 @@ async def reactivate_patient(patient_id: str, db=Depends(get_database)):
         raise HTTPException(status_code=404, detail="Patient not found")
 
     update_set = {"active": True}
-    update_unset = {"deactivated_at": ""}
+    update_unset = {"deactivated_at": "", "deactivated_reason": ""}
     if "archived_chat_id" in doc:
         update_set["chat_id"] = doc["archived_chat_id"]
         update_unset["archived_chat_id"] = ""
@@ -235,13 +236,6 @@ async def patient_onboarding(patient_id: str, db=Depends(get_database)):
         # (vedi deactivate_patient) per bloccare anche un eventuale /start col
         # vecchio link salvato in chat; non va rigenerato qui.
         raise HTTPException(status_code=409, detail="Patient is deactivated")
-    if not doc.get("active_nutrition_plan"):
-        # Richiesta della dottoressa: il paziente non deve potersi collegare al
-        # bot prima di avere una dieta assegnata (finché non c'è dieta, niente
-        # QR/deep link, quindi niente chat_id, quindi il bot non gli risponde
-        # mai — stesso principio del blocco per disattivazione qui sopra).
-        raise HTTPException(status_code=409, detail="Patient has no diet assigned")
-
     # Pazienti creati prima dell'introduzione di `patient_id` (o dal bot senza
     # averlo impostato): lo si riempie ora con l'_id, senza mai sovrascriverne
     # uno già presente.
@@ -317,7 +311,13 @@ async def get_patient_diet(patient_id: str, db=Depends(get_database)):
 @router.post("/{patient_id}/diet/{diet_id}")
 async def assign_diet(patient_id: str, diet_id: str, db=Depends(get_database)):
     oid = _oid(patient_id)
-    patient = await db["users"].find_one({"_id": oid}, {"chat_id": 1, "active_nutrition_plan": 1})
+    patient = await db["users"].find_one(
+        {"_id": oid},
+        {
+            "chat_id": 1, "active_nutrition_plan": 1, "active": 1, "deactivated_reason": 1,
+            "archived_chat_id": 1, "archived_patient_id": 1,
+        },
+    )
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
@@ -329,10 +329,26 @@ async def assign_diet(patient_id: str, diet_id: str, db=Depends(get_database)):
     if not await db["nutrition-plans"].find_one({"_id": diet_oid}, {"_id": 1}):
         raise HTTPException(status_code=404, detail="Diet plan not found")
 
-    await db["users"].update_one(
-        {"_id": oid},
-        {"$set": {"active_nutrition_plan": {"$ref": "nutrition-plans", "$id": diet_oid}}},
-    )
+    update_set = {"active_nutrition_plan": {"$ref": "nutrition-plans", "$id": diet_oid}}
+    update_unset = {}
+    # Paziente sospeso da src/pending_diet.py perche' senza dieta: la dieta
+    # appena arrivata e' il segnale che aspettava, lo riattiva subito (stesso
+    # ripristino di reactivate_patient qui sopra).
+    if patient.get("active") is False and patient.get("deactivated_reason") == DEACTIVATED_REASON_PENDING_DIET:
+        update_set["active"] = True
+        update_unset["deactivated_at"] = ""
+        update_unset["deactivated_reason"] = ""
+        if "archived_chat_id" in patient:
+            update_set["chat_id"] = patient["archived_chat_id"]
+            update_unset["archived_chat_id"] = ""
+        if "archived_patient_id" in patient:
+            update_set["patient_id"] = patient["archived_patient_id"]
+            update_unset["archived_patient_id"] = ""
+
+    update = {"$set": update_set}
+    if update_unset:
+        update["$unset"] = update_unset
+    await db["users"].update_one({"_id": oid}, update)
 
     # Notifica via bot solo se il paziente e' gia' connesso e la dieta cambia
     # davvero rispetto a quella che aveva (non la prima assegnazione: a quel

@@ -39,6 +39,7 @@ export default function NuovoPaziente() {
   const [formError, setFormError] = useState('')
   const [invalidFields, setInvalidFields] = useState({})
   const [createdName, setCreatedName] = useState('')
+  const [createdId, setCreatedId] = useState('')
   const [form, setForm] = useState({
     firstName: '', lastName: '', dob: '', city: '', job: '',
     weight: '', height: '', goal: '', allergies: '',
@@ -97,7 +98,7 @@ export default function NuovoPaziente() {
     setSubmitting(true)
     try {
       const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`
-      await createPatient({
+      const created = await createPatient({
         full_name: fullName,
         gender: sex === 'F' ? 'Femmina' : sex === 'M' ? 'Maschio' : 'Non specificato',
         age: ageFromDob(form.dob),
@@ -118,6 +119,7 @@ export default function NuovoPaziente() {
         physical_activity_frequency: activity === 'si' ? (form.activityFreq || null) : null,
       })
       setCreatedName(fullName)
+      setCreatedId(created.id)
     } catch (err) {
       console.error('Creazione paziente fallita:', err.detail || err)
       setFormError('Non siamo riusciti a salvare la scheda. Controlla i dati e riprova.')
@@ -331,8 +333,8 @@ export default function NuovoPaziente() {
       <SuccessOverlay
         show={!!createdName}
         title="Paziente creato"
-        message={`Scheda di ${createdName} creata e pronta in elenco.`}
-        onDone={() => navigate('/pazienti')}
+        message={`Scheda di ${createdName} pronta: fai inquadrare il QR per collegarlo al bot.`}
+        onDone={() => navigate(createdId ? `/pazienti/${createdId}?tab=bot` : '/pazienti')}
       />
     </>
   )

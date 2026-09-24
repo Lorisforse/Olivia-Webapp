@@ -16,9 +16,10 @@ import TimePicker from '../../components/TimePicker'
 import GoalSelect from '../../components/GoalSelect'
 
 function deriveStatus(p) {
+  if (p.active === false && p.deactivated_reason === 'pending_diet') return 'pending'
   if (p.active === false) return 'inactive'
-  if (!p.active_diet_plan_id) return 'nodiet'
   if (!p.chat_id) return 'waiting'
+  if (!p.active_diet_plan_id) return 'nodiet'
   return 'active'
 }
 
@@ -72,10 +73,11 @@ const ACTIVITY_DOT_TITLE = {
 }
 
 const STATUS_CONFIG = {
-  active:   { label: 'Attivo',      pill: 'ok' },
-  nodiet:   { label: 'Senza dieta', pill: 'warn' },
-  waiting:  { label: 'In attesa',   pill: 'wait' },
-  inactive: { label: 'Disattivato', pill: 'off' },
+  active:   { label: 'Attivo',              pill: 'ok' },
+  nodiet:   { label: 'Senza dieta',         pill: 'warn' },
+  waiting:  { label: 'In attesa',           pill: 'wait' },
+  pending:  { label: 'Pronto per la dieta', pill: 'warn' },
+  inactive: { label: 'Disattivato',         pill: 'off' },
 }
 
 function MealIcon() {
@@ -495,6 +497,11 @@ function OnboardingPanel({ patientId, patientName }) {
             <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>
               Il collegamento vale solo per questo paziente. Finché non lo avvia, la scheda resta “In attesa”.
             </p>
+            <p className="muted" style={{ fontSize: 12, marginTop: 6, color: 'var(--warn)' }}>
+              Una volta che il paziente si collega e finisce di presentarsi al bot, se non ha ancora una
+              dieta assegnata viene sospeso in automatico dopo circa 5 minuti (si riattiva da solo appena
+              gliene assegni una).
+            </p>
           </div>
         </div>
       </div>
@@ -521,16 +528,32 @@ function BotTab({ patientId, status, patientName }) {
     return <OnboardingPanel patientId={patientId} patientName={patientName} />
   }
 
+  const pendingBanner = status === 'pending' && (
+    <div className="card" style={{ borderColor: 'var(--warn)', background: 'var(--warn-bg)', marginBottom: 16 }}>
+      <div className="card__body" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span className="pill pill--warn" style={{ flexShrink: 0 }}>Pronto per la dieta</span>
+        <p style={{ fontSize: 13.5, margin: 0, color: 'var(--warn)' }}>
+          {patientName} ha completato la conoscenza col bot ed è stato sospeso in automatico, in attesa di
+          una dieta: appena gliene assegni una dal tab "Dieta" torna a scrivergli da solo, senza bisogno di
+          far scansionare nulla di nuovo.
+        </p>
+      </div>
+    </div>
+  )
+
   if (showLoading) return <LoadingScreen label="Caricamento attività bot…" />
 
   if (!logs.length) {
     return (
-      <div className="card">
-        <div className="card__body">
-          <div className="empty-state">
-            <div className="empty-state__icon"><ChatIcon /></div>
-            <h3>Nessuna attività registrata</h3>
-            <p>Il bot non ha ancora registrato interazioni negli ultimi 7 giorni.</p>
+      <div>
+        {pendingBanner}
+        <div className="card">
+          <div className="card__body">
+            <div className="empty-state">
+              <div className="empty-state__icon"><ChatIcon /></div>
+              <h3>Nessuna attività registrata</h3>
+              <p>Il bot non ha ancora registrato interazioni negli ultimi 7 giorni.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -549,6 +572,7 @@ function BotTab({ patientId, status, patientName }) {
 
   return (
     <div>
+      {pendingBanner}
       <div className="bot-metrics">
         <div className="bot-metric">
           <div className="bot-metric__label">Aderenza 7gg</div>
@@ -1092,7 +1116,7 @@ export default function PatientDetail() {
                 Appuntamento
               </button>
             )}
-            {status === 'inactive' ? (
+            {patient.active === false ? (
               <button className="btn btn--secondary btn--sm" onClick={() => setReactivateModal(true)}>
                 <PlayIcon /> Riattiva
               </button>

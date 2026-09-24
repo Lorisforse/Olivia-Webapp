@@ -9,16 +9,18 @@ import SuccessOverlay from '../../components/SuccessOverlay'
 import { useMinDuration } from '../../hooks/useMinDuration'
 
 const STATUS_CONFIG = {
-  active:   { label: 'Attivo',      pill: 'ok',   action: 'Vedi attività' },
-  nodiet:   { label: 'Senza dieta', pill: 'warn', action: 'Assegna dieta' },
-  waiting:  { label: 'In attesa',   pill: 'wait', action: 'Onboarding' },
-  inactive: { label: 'Disattivato', pill: 'off',  action: '' },
+  active:   { label: 'Attivo',              pill: 'ok',   action: 'Vedi attività' },
+  nodiet:   { label: 'Senza dieta',         pill: 'warn', action: 'Assegna dieta' },
+  waiting:  { label: 'In attesa',           pill: 'wait', action: 'Onboarding' },
+  pending:  { label: 'Pronto per la dieta', pill: 'warn', action: 'Assegna dieta' },
+  inactive: { label: 'Disattivato',         pill: 'off',  action: '' },
 }
 
 function deriveStatus(p) {
+  if (p.active === false && p.deactivated_reason === 'pending_diet') return 'pending'
   if (p.active === false) return 'inactive'
-  if (!p.active_diet_plan_id) return 'nodiet'
   if (!p.chat_id) return 'waiting'
+  if (!p.active_diet_plan_id) return 'nodiet'
   return 'active'
 }
 
@@ -158,7 +160,7 @@ export default function PazientiPage() {
   function handleRowAction(e, patient) {
     e.stopPropagation()
     const st = patient._status
-    if (st === 'nodiet') setAssignModal(patient)
+    if (st === 'nodiet' || st === 'pending') setAssignModal(patient)
     else navigate(`/pazienti/${patient.id}?tab=bot`)
   }
 
@@ -332,16 +334,16 @@ export default function PazientiPage() {
                           </button>
                         )}
                         <button
-                          className={`btn-icon ${st === 'inactive' ? 'btn-icon--ok' : 'btn-icon--warn'}`}
+                          className={`btn-icon ${p.active === false ? 'btn-icon--ok' : 'btn-icon--warn'}`}
                           onClick={e => {
                             e.stopPropagation()
-                            if (st === 'inactive') setReactivateModal(p)
+                            if (p.active === false) setReactivateModal(p)
                             else setDeactivateModal(p)
                           }}
-                          aria-label={st === 'inactive' ? `Riattiva ${p.name || 'paziente'}` : `Disattiva ${p.name || 'paziente'}`}
-                          title={st === 'inactive' ? 'Riattiva paziente' : 'Disattiva paziente'}
+                          aria-label={p.active === false ? `Riattiva ${p.name || 'paziente'}` : `Disattiva ${p.name || 'paziente'}`}
+                          title={p.active === false ? 'Riattiva paziente' : 'Disattiva paziente'}
                         >
-                          {st === 'inactive' ? <PlayIcon /> : <PauseIcon />}
+                          {p.active === false ? <PlayIcon /> : <PauseIcon />}
                         </button>
                       </div>
                     </td>
