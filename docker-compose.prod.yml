@@ -18,6 +18,9 @@ services:
     networks:
       - olivia-network
     environment:
+      # Senza questa il container parte in UTC: created_at/deactivated_at
+      # (datetime.now() "nudo") sarebbero sfasati di 1-2h nella webapp.
+      - TZ=Europe/Rome
       - MONGODB_URL=${MONGODB_URL}
       - MONGODB_DB=${MONGODB_DB:-olivia}
       - DEBUG=false

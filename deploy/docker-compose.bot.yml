@@ -19,6 +19,11 @@ services:
     networks:
       - olivia-network
     environment:
+      # Senza questa il container parte in UTC: il bot calcola tutti gli orari
+      # (pasti, promemoria, sveglia/sonno) con datetime.now() locale, quindi
+      # sfaserebbe di 1-2h (a seconda dell'ora legale) rispetto all'orario
+      # reale del paziente.
+      - TZ=Europe/Rome
       - OLIVIA_TELEGRAM_TOKEN=${OLIVIA_TELEGRAM_TOKEN}
       - OLIVIA_LLM_API_KEY=${OLIVIA_LLM_API_KEY}
       - OLIVIA_LLM_BASE_URL=${OLIVIA_LLM_BASE_URL}
