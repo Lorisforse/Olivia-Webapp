@@ -249,7 +249,7 @@ function CohortSection() {
             </div>
           </div>
 
-          <div className="card" style={{ gridColumn: 'span 2' }}>
+          <div className="card">
             <div className="card__header">
               <h2 className="card__title">Messaggi scambiati col bot</h2>
             </div>
