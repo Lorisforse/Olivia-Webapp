@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getPatients, assignDiet, deactivatePatient, reactivatePatient } from '../../api/patients'
 import { getDiets } from '../../api/diets'
-import LoadingScreen from '../../components/LoadingScreen'
 import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import SuccessOverlay from '../../components/SuccessOverlay'
@@ -36,6 +35,28 @@ function PlayIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="6 3 20 12 6 21 6 3" />
     </svg>
+  )
+}
+
+function SkeletonRow() {
+  return (
+    <tr className="skeleton-row">
+      <td>
+        <div className="cell-name">
+          <span className="skeleton" style={{ width: 32, height: 32, borderRadius: '50%' }} />
+          <span className="col" style={{ gap: 6 }}>
+            <span className="skeleton" style={{ width: 130, height: 12 }} />
+            <span className="skeleton" style={{ width: 80, height: 10 }} />
+          </span>
+        </div>
+      </td>
+      <td><span className="skeleton" style={{ width: 70, height: 20, borderRadius: 999 }} /></td>
+      <td><span className="skeleton" style={{ width: 110, height: 12 }} /></td>
+      <td><span className="skeleton" style={{ width: 55, height: 12 }} /></td>
+      <td className="col-actions">
+        <span className="skeleton" style={{ width: 28, height: 28, borderRadius: 6, display: 'inline-block' }} />
+      </td>
+    </tr>
   )
 }
 
@@ -203,7 +224,6 @@ export default function PazientiPage() {
     })
   }, [])
 
-  if (showLoading) return <LoadingScreen label="Caricamento pazienti…" />
   if (error) return <div className="error-screen">Errore: {error}</div>
 
   return (
@@ -213,8 +233,12 @@ export default function PazientiPage() {
           <div>
             <h1 className="page-title">Pazienti</h1>
             <p className="page-subtitle">
-              {counts.all} pazienti totali · {counts.active} attivi · {counts.nodiet} senza dieta · {counts.waiting} in attesa
-              {counts.inactive > 0 ? ` · ${counts.inactive} disattivati` : ''}
+              {showLoading ? 'Caricamento…' : (
+                <>
+                  {counts.all} pazienti totali · {counts.active} attivi · {counts.nodiet} senza dieta · {counts.waiting} in attesa
+                  {counts.inactive > 0 ? ` · ${counts.inactive} disattivati` : ''}
+                </>
+              )}
             </p>
           </div>
           <div className="page-actions">
@@ -258,7 +282,7 @@ export default function PazientiPage() {
               ))}
             </div>
             <span className="table-count">
-              {filtered.length} {filtered.length === 1 ? 'paziente' : 'pazienti'}
+              {showLoading ? '' : `${filtered.length} ${filtered.length === 1 ? 'paziente' : 'pazienti'}`}
             </span>
           </div>
 
@@ -273,14 +297,15 @@ export default function PazientiPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 && (
+              {showLoading && Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
+              {!showLoading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--ink-4)' }}>
                     {query ? 'Nessun paziente corrisponde alla ricerca.' : 'Nessun paziente. Crea il primo!'}
                   </td>
                 </tr>
               )}
-              {filtered.map(p => {
+              {!showLoading && filtered.map(p => {
                 const st = p._status
                 const cfg = STATUS_CONFIG[st]
                 const dietName = p.active_diet_plan_id ? dietMap[p.active_diet_plan_id] : null

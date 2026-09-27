@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import OliviaLogo from './OliviaLogo'
 import { useAuth } from '../context/AuthContext'
@@ -15,6 +15,8 @@ export default function TopNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const btnRef = useRef(null)
+  const navRef = useRef(null)
+  const [indicator, setIndicator] = useState(null)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
@@ -22,6 +24,17 @@ export default function TopNav() {
   const isPazientiActive =
     location.pathname.startsWith('/pazienti') ||
     location.pathname === '/nuovo-paziente'
+
+  useLayoutEffect(() => {
+    function measure() {
+      const active = navRef.current?.querySelector('a.active')
+      if (!active) { setIndicator(null); return }
+      setIndicator({ left: active.offsetLeft + 14, width: active.offsetWidth - 28 })
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [location.pathname])
 
   useEffect(() => {
     function handleClick(e) {
@@ -50,7 +63,7 @@ export default function TopNav() {
         <OliviaLogo height={40} />
       </NavLink>
 
-      <nav className="topbar__nav" aria-label="Sezioni principali">
+      <nav className="topbar__nav" aria-label="Sezioni principali" ref={navRef}>
         <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
           Home
         </NavLink>
@@ -63,6 +76,13 @@ export default function TopNav() {
         <NavLink to="/agenda" className={({ isActive }) => isActive ? 'active' : ''}>
           Agenda
         </NavLink>
+        {indicator && (
+          <span
+            className="topbar__nav-indicator"
+            style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
+            aria-hidden="true"
+          />
+        )}
       </nav>
 
       <button

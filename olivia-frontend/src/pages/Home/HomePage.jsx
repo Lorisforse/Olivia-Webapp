@@ -4,6 +4,7 @@ import { getPatients, getCohortReport } from '../../api/patients'
 import { getDiets } from '../../api/diets'
 import { useAuth } from '../../context/AuthContext'
 import { BarTrend } from '../../components/charts'
+import { CountUp } from '../../components/ui'
 
 const SLEEP_TILES = [
   ['buona', 'Buono', 'var(--ok)'],
@@ -329,7 +330,7 @@ export default function HomePage() {
       <section className="stat-grid mb-24" aria-label="Indicatori principali">
         <article className="stat">
           <div className="stat__label">Pazienti attivi</div>
-          <div className="stat__value">{stats.active}</div>
+          <div className="stat__value"><CountUp value={stats.active} /></div>
           <div className="stat__meta">
             <span className="muted">con dieta e bot attivo</span>
           </div>
@@ -337,7 +338,7 @@ export default function HomePage() {
 
         <article className="stat">
           <div className="stat__label">Pazienti senza dieta</div>
-          <div className="stat__value">{stats.nodiet}</div>
+          <div className="stat__value"><CountUp value={stats.nodiet} /></div>
           <div className="stat__meta">
             <span className="stat__delta--warn">●</span>
             <span className="muted">in attesa di un piano dietetico</span>
@@ -346,7 +347,7 @@ export default function HomePage() {
 
         <article className="stat">
           <div className="stat__label">Piani dietetici caricati</div>
-          <div className="stat__value">{stats.diets}</div>
+          <div className="stat__value"><CountUp value={stats.diets} /></div>
           <div className="stat__meta">
             <span className="muted">ultimo: {stats.lastDiet}</span>
           </div>

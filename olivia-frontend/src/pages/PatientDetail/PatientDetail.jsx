@@ -14,6 +14,7 @@ import { saveBlob, saveDataUri, svgToPngDataUri, printImage } from '../../utils/
 import { useMinDuration } from '../../hooks/useMinDuration'
 import TimePicker from '../../components/TimePicker'
 import GoalSelect from '../../components/GoalSelect'
+import { OliveSprig } from '../../components/ui'
 
 function deriveStatus(p) {
   if (p.active === false && p.deactivated_reason === 'pending_diet') return 'pending'
@@ -91,9 +92,6 @@ function WeightIcon() {
 }
 function MoodIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-}
-function ChatIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 }
 function PauseIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
@@ -426,7 +424,7 @@ function OnboardingPanel({ patientId, patientName }) {
       <div className="card">
         <div className="card__body">
           <div className="empty-state">
-            <div className="empty-state__icon"><ChatIcon /></div>
+            <div className="empty-state__icon"><OliveSprig /></div>
             <h3>Onboarding non disponibile</h3>
             <p>Non è stato possibile generare il QR di collegamento. Riprova più tardi.</p>
           </div>
@@ -550,7 +548,7 @@ function BotTab({ patientId, status, patientName }) {
         <div className="card">
           <div className="card__body">
             <div className="empty-state">
-              <div className="empty-state__icon"><ChatIcon /></div>
+              <div className="empty-state__icon"><OliveSprig /></div>
               <h3>Nessuna attività registrata</h3>
               <p>Il bot non ha ancora registrato interazioni negli ultimi 7 giorni.</p>
             </div>
@@ -729,7 +727,7 @@ function TrendsTab({ patientId, status }) {
       <div className="card">
         <div className="card__body">
           <div className="empty-state">
-            <div className="empty-state__icon"><ChatIcon /></div>
+            <div className="empty-state__icon"><OliveSprig /></div>
             <h3>Nessun dato ancora</h3>
             <p>L&#39;andamento comparirà non appena il paziente sarà collegato al bot.</p>
           </div>
@@ -941,7 +939,7 @@ function DietTab({ patientId }) {
       <div className="card">
         <div className="card__body">
           <div className="empty-state">
-            <div className="empty-state__icon"><MealIcon /></div>
+            <div className="empty-state__icon"><OliveSprig /></div>
             <h3>Nessun piano assegnato</h3>
             <p>Assegna un piano dietetico a questo paziente.</p>
             <button className="btn btn--primary mt-16" onClick={openAssignModal}>Assegna dieta</button>
