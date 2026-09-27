@@ -464,7 +464,9 @@ function OnboardingPanel({ patientId, patientName }) {
       <div className="card__body">
         <div className="onboarding-grid">
           <div className="onboarding-qr-col">
-            <img className="onboarding-qr" src={data.qr_svg} alt="QR code per collegare il paziente al bot Telegram" width={200} height={200} />
+            <div className="onboarding-qr">
+              <img src={data.qr_svg} alt="QR code per collegare il paziente al bot Telegram" width={200} height={200} />
+            </div>
             <div className="onboarding-qr-actions">
               <button className="btn btn--secondary btn--sm" onClick={downloadQr}>
                 <DownloadIcon /> Scarica
