@@ -8,7 +8,8 @@ import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
 import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import SuccessOverlay from '../../components/SuccessOverlay'
-import { BarTrend, LineTrend, AdherenceStrip, CategoryStrip, SLEEP_TONE, HUNGER_TONE } from '../../components/charts'
+import { getAppointments } from '../../api/appointments'
+import { BarTrend, LineTrend, CategoryCalendar, ADHERENCE_TONE, SLEEP_TONE, HUNGER_TONE } from '../../components/charts'
 import { splitList } from '../../utils/text'
 import { saveBlob, saveDataUri, svgToPngDataUri, printImage } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
@@ -670,11 +671,15 @@ function BotTab({ patientId, status, patientName }) {
   )
 }
 
-const TREND_PERIODS = [[7, '7gg'], [30, '30gg'], [90, '90gg']]
+const TREND_PERIODS = [
+  ['7', '7gg'], ['30', '30gg'], ['90', '3 mesi'], ['180', '6 mesi'], ['365', '1 anno'],
+  ['all', 'Tutto'], ['visit', 'Dall\'ultima visita'],
+]
+// Oltre questa durata barre e umore diventano medie settimanali (180 barre sarebbero illeggibili).
+const WEEKLY_FROM_DAYS = 60
 const MEAL_FIELDS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner']
 const ADHERENCE_SCORE = { completa: 1, parziale: 0.5, nulla: 0 }
 const SATISFACTION_SCORE = { soddisfatto: 1, neutro: 0.5, insoddisfatto: 0 }
-const HEATMAP_DAYS = 30
 
 function dayMealPct(mealIndicators, scoreMap) {
   if (!mealIndicators) return null
@@ -701,29 +706,86 @@ function dayMoodAvg(mood) {
   return +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)
 }
 
+function localIso(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function parseLocalIso(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 function formatShortDate(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })
+  return parseLocalIso(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })
+}
+
+function formatLongDate(dateStr) {
+  return parseLocalIso(dateStr).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function isoDaysAgo(n) {
-  return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10)
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return localIso(d)
+}
+
+function weekStartIso(dateStr) {
+  const d = parseLocalIso(dateStr)
+  d.setDate(d.getDate() - (d.getDay() + 6) % 7)
+  return localIso(d)
+}
+
+function toWeekly(points, digits = 0) {
+  const order = []
+  const values = {}
+  points.forEach(p => {
+    const week = weekStartIso(p.date)
+    if (!values[week]) { values[week] = []; order.push(week) }
+    if (p.value != null) values[week].push(p.value)
+  })
+  return order.map(week => {
+    const vals = values[week]
+    const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null
+    return {
+      date: week,
+      label: formatShortDate(week),
+      tip: `Settimana dal ${formatShortDate(week)}`,
+      value: avg == null ? null : +avg.toFixed(digits),
+    }
+  })
+}
+
+function lastPastVisit(appointments) {
+  const past = (appointments || []).filter(a => a.status !== 'reschedule_requested')
+  return past.length ? localIso(new Date(past[past.length - 1].scheduled_at)) : null
 }
 
 function TrendsTab({ patientId, status }) {
-  const [days, setDays] = useState(30)
+  const [period, setPeriod] = useState('30')
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
+  const [lastVisit, setLastVisit] = useState(undefined)  // undefined = in caricamento, null = nessuna visita
+
+  useEffect(() => {
+    getAppointments({ patientId, to: new Date().toISOString() })
+      .then(list => setLastVisit(lastPastVisit(list)))
+      .catch(() => setLastVisit(null))
+  }, [patientId])
+
+  const today = isoDaysAgo(0)
+  const fromDate = period === 'all' ? null
+    : period === 'visit' ? lastVisit
+    : isoDaysAgo(Number(period) - 1)
 
   useEffect(() => {
     if (status === 'waiting') { setLoading(false); return }
+    if (period === 'visit' && !fromDate) return
     setLoading(true)
-    const fetchDays = Math.max(days, HEATMAP_DAYS)
-    getDailyReports(patientId, { from: isoDaysAgo(fetchDays - 1), to: isoDaysAgo(0) })
+    getDailyReports(patientId, { from: fromDate || undefined, to: today })
       .then(setReports)
       .catch(() => setReports([]))
       .finally(() => setLoading(false))
-  }, [patientId, days, status])
+  }, [patientId, status, period, fromDate, today])
 
   if (status === 'waiting') {
     return (
@@ -744,39 +806,60 @@ function TrendsTab({ patientId, status }) {
   const byDate = {}
   reports.forEach(r => { byDate[r.date] = r })
 
-  const weightData = [], hydrationData = [], moodData = [], satisfactionData = [], messagesData = []
-  for (let i = days - 1; i >= 0; i--) {
-    const dateStr = isoDaysAgo(i)
-    const r = byDate[dateStr]
-    const label = formatShortDate(dateStr)
-    weightData.push({ label, value: r?.indicators?.weight ?? null })
-    hydrationData.push({ label, value: r?.indicators?.hydration != null ? Math.round(r.indicators.hydration) : null })
-    moodData.push({ label, value: dayMoodAvg(r?.indicators?.mood) })
-    satisfactionData.push({ label, value: daySatisfactionPct(r?.indicators?.meal_satisfaction) })
-    messagesData.push({ label, value: r?.indicators?.engagement?.messages_sent ?? null })
-  }
+  const rangeStart = fromDate ?? reports[0]?.date ?? today
+  const dates = []
+  for (let d = parseLocalIso(rangeStart); localIso(d) <= today; d.setDate(d.getDate() + 1)) dates.push(localIso(d))
+  const weekly = dates.length > WEEKLY_FROM_DAYS
 
-  const strip = [], sleepStrip = [], hungerStrip = []
-  for (let i = HEATMAP_DAYS - 1; i >= 0; i--) {
-    const dateStr = isoDaysAgo(i)
-    const dayReport = byDate[dateStr]
-    const label = formatShortDate(dateStr)
-    const pct = dayAdherencePct(dayReport?.indicators?.diet_compliance)
-    strip.push({ date: dateStr, label, tone: pct == null ? 'none' : pct >= 70 ? 'good' : 'warn' })
-    sleepStrip.push({ date: dateStr, label, tone: dayReport?.indicators?.sleep_quality || 'none' })
-    hungerStrip.push({ date: dateStr, label, tone: dayReport?.indicators?.hunger || 'none' })
-  }
+  const weightData = [], hydrationDaily = [], moodDaily = [], satisfactionDaily = [], messagesDaily = []
+  const adherenceDays = [], sleepDays = [], hungerDays = []
+  dates.forEach(date => {
+    const ind = byDate[date]?.indicators
+    const label = formatShortDate(date)
+    weightData.push({ date, label, value: ind?.weight ?? null })
+    hydrationDaily.push({ date, label, value: ind?.hydration != null ? Math.round(ind.hydration) : null })
+    moodDaily.push({ date, label, value: dayMoodAvg(ind?.mood) })
+    satisfactionDaily.push({ date, label, value: daySatisfactionPct(ind?.meal_satisfaction) })
+    messagesDaily.push({ date, label, value: ind?.engagement?.messages_sent ?? null })
+
+    const pct = dayAdherencePct(ind?.diet_compliance)
+    adherenceDays.push({ date, tone: pct == null ? 'none' : pct >= 70 ? 'good' : 'warn' })
+    sleepDays.push({ date, tone: ind?.sleep_quality || 'none' })
+    hungerDays.push({ date, tone: ind?.hunger || 'none' })
+  })
+
+  const hydrationData = weekly ? toWeekly(hydrationDaily) : hydrationDaily
+  const moodData = weekly ? toWeekly(moodDaily, 2) : moodDaily
+  const satisfactionData = weekly ? toWeekly(satisfactionDaily) : satisfactionDaily
+  const messagesData = weekly ? toWeekly(messagesDaily, 1) : messagesDaily
+
+  const rangeText = (period === 'visit'
+    ? `Dall'ultima visita del ${formatLongDate(rangeStart)} a oggi`
+    : `Dal ${formatLongDate(rangeStart)} a oggi`)
+    + (weekly ? ' · idratazione, gradimento, messaggi e umore come media settimanale' : '')
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 10 }}>
         <h2 className="page-eyebrow" style={{ margin: 0 }}>Andamento</h2>
         <div className="period-select" role="group" aria-label="Periodo">
-          {TREND_PERIODS.map(([v, l]) => (
-            <button key={v} className={days === v ? 'active' : ''} onClick={() => setDays(v)}>{l}</button>
-          ))}
+          {TREND_PERIODS.map(([v, l]) => {
+            const noVisit = v === 'visit' && !lastVisit
+            return (
+              <button
+                key={v}
+                className={period === v ? 'active' : ''}
+                onClick={() => setPeriod(v)}
+                disabled={noVisit}
+                title={noVisit && lastVisit === null ? 'Nessuna visita passata in Agenda per questo paziente' : undefined}
+              >
+                {l}
+              </button>
+            )
+          })}
         </div>
       </div>
+      <p className="muted" style={{ fontSize: 13, margin: '0 0 16px' }}>{rangeText}</p>
 
       <div className="card">
         <div className="card__header"><h2 className="card__title">Peso</h2></div>
@@ -786,9 +869,9 @@ function TrendsTab({ patientId, status }) {
       </div>
 
       <div className="card mt-16">
-        <div className="card__header"><h2 className="card__title">Aderenza pasti — ultimi 30 giorni</h2></div>
+        <div className="card__header"><h2 className="card__title">Aderenza pasti</h2></div>
         <div className="card__body">
-          <AdherenceStrip days={strip} />
+          <CategoryCalendar days={adherenceDays} legend={ADHERENCE_TONE} />
         </div>
       </div>
 
@@ -800,16 +883,16 @@ function TrendsTab({ patientId, status }) {
       </div>
 
       <div className="card mt-16">
-        <div className="card__header"><h2 className="card__title">Qualità del sonno — ultimi 30 giorni</h2></div>
+        <div className="card__header"><h2 className="card__title">Qualità del sonno</h2></div>
         <div className="card__body">
-          <CategoryStrip days={sleepStrip} legend={SLEEP_TONE} />
+          <CategoryCalendar days={sleepDays} legend={SLEEP_TONE} />
         </div>
       </div>
 
       <div className="card mt-16">
-        <div className="card__header"><h2 className="card__title">Livello di fame — ultimi 30 giorni</h2></div>
+        <div className="card__header"><h2 className="card__title">Livello di fame</h2></div>
         <div className="card__body">
-          <CategoryStrip days={hungerStrip} legend={HUNGER_TONE} />
+          <CategoryCalendar days={hungerDays} legend={HUNGER_TONE} />
         </div>
       </div>
 

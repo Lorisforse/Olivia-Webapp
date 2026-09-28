@@ -10,9 +10,9 @@ const TARGET_COLOR = '#8B8E80'
 
 function ChartTooltip({ active, payload, unit }) {
   if (!active || !payload?.length) return null
-  const { label, value } = payload[0].payload
+  const { label, tip, value } = payload[0].payload
   if (value == null) return null
-  return <div className="chart-tooltip">{`${label}: ${value}${unit}`}</div>
+  return <div className="chart-tooltip">{`${tip ?? label}: ${value}${unit}`}</div>
 }
 
 export function BarTrend({ data, target, unit = '', height = 170, color = 'var(--brand)', emptyLabel = 'Nessun dato nel periodo' }) {
@@ -76,7 +76,7 @@ export function LineTrend({ data, unit = '', height = 190, color = 'var(--brand)
   )
 }
 
-const ADHERENCE_TONE = {
+export const ADHERENCE_TONE = {
   good: { fill: '#CBE0A0', title: 'Buona aderenza' },
   warn: { fill: '#F5B65B', title: 'Aderenza parziale' },
   none: { fill: '#E3E4DA', title: 'Nessun dato' },
@@ -96,20 +96,104 @@ export const HUNGER_TONE = {
   none: { fill: '#E3E4DA', title: 'Nessun dato' },
 }
 
-export function CategoryStrip({ days, legend }) {
+const WEEKDAYS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
+// Fino a ~2 mesi: righe-settimana a tutta larghezza; oltre: un mini calendario per mese.
+const WEEK_ROWS_MAX_DAYS = 62
+
+function parseIsoDate(s) {
+  const [y, m, d] = s.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function toIsoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function addDays(d, n) {
+  const r = new Date(d)
+  r.setDate(r.getDate() + n)
+  return r
+}
+
+function mondayOf(d) {
+  return addDays(d, -((d.getDay() + 6) % 7))
+}
+
+function CalendarCell({ date, entry, legend, showMonth }) {
+  if (!entry) {
+    return <span className="cal-cell cal-cell--out">{date.getDate()}</span>
+  }
+  const tone = legend[entry.tone] ?? legend.none
+  const fullLabel = date.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
+  return (
+    <span className="cal-cell" style={{ background: tone.fill }} title={`${fullLabel}: ${tone.title}`}>
+      {showMonth ? date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }) : date.getDate()}
+    </span>
+  )
+}
+
+function WeekRows({ first, last, byDate, legend }) {
+  const cells = []
+  const end = addDays(mondayOf(last), 6)
+  for (let d = mondayOf(first); d <= end; d = addDays(d, 1)) cells.push(d)
+  return (
+    <div className="cal-grid cal-grid--wide">
+      {WEEKDAYS.map((w, i) => <span key={i} className="cal-grid__dow">{w}</span>)}
+      {cells.map(d => {
+        const iso = toIsoDate(d)
+        return (
+          <CalendarCell
+            key={iso}
+            date={d}
+            entry={byDate[iso]}
+            legend={legend}
+            showMonth={d.getDate() === 1 || iso === toIsoDate(first)}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+function MonthGrids({ first, last, byDate, legend }) {
+  const months = []
+  for (let m = new Date(first.getFullYear(), first.getMonth(), 1); m <= last; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
+    months.push(m)
+  }
+  return (
+    <div className="cal-months">
+      {months.map(m => {
+        const daysInMonth = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate()
+        const offset = (m.getDay() + 6) % 7
+        return (
+          <div key={toIsoDate(m)} className="cal-month">
+            <div className="cal-month__title">{m.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}</div>
+            <div className="cal-grid">
+              {WEEKDAYS.map((w, i) => <span key={i} className="cal-grid__dow">{w}</span>)}
+              {Array.from({ length: offset }, (_, i) => <span key={`b${i}`} />)}
+              {Array.from({ length: daysInMonth }, (_, i) => {
+                const d = new Date(m.getFullYear(), m.getMonth(), i + 1)
+                const iso = toIsoDate(d)
+                return <CalendarCell key={iso} date={d} entry={byDate[iso]} legend={legend} />
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// days: [{ date: 'YYYY-MM-DD', tone }] in ordine, uno per ogni giorno del periodo scelto.
+export function CategoryCalendar({ days, legend }) {
   if (!days.length) return <div className="chart-empty">Nessun dato nel periodo</div>
+  const byDate = Object.fromEntries(days.map(d => [d.date, d]))
+  const first = parseIsoDate(days[0].date)
+  const last = parseIsoDate(days[days.length - 1].date)
+  const Layout = days.length <= WEEK_ROWS_MAX_DAYS ? WeekRows : MonthGrids
   return (
     <div>
-      <div className="adherence-strip">
-        {days.map((d, i) => (
-          <span
-            key={i}
-            className="adherence-strip__cell"
-            style={{ background: legend[d.tone]?.fill ?? legend.none.fill }}
-            title={`${d.label} — ${legend[d.tone]?.title ?? legend.none.title}`}
-          />
-        ))}
-      </div>
+      <Layout first={first} last={last} byDate={byDate} legend={legend} />
       <div className="chart-legend">
         {Object.entries(legend).map(([k, v]) => (
           <span key={k} className="chart-legend__item">
@@ -120,8 +204,4 @@ export function CategoryStrip({ days, legend }) {
       </div>
     </div>
   )
-}
-
-export function AdherenceStrip({ days }) {
-  return <CategoryStrip days={days} legend={ADHERENCE_TONE} />
 }
