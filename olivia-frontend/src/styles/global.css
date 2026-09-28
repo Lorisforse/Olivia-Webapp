@@ -1599,7 +1599,7 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
-  background: var(--surface-2);
+  background: #EEEBE1;
   padding: 3px;
   border-radius: var(--r-md);
   border: 1px solid var(--line);
@@ -1612,7 +1612,12 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   border-radius: var(--r-sm);
   cursor: pointer;
 }
-.period-select button.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+.period-select button.active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--line), 0 1px 3px rgba(31, 36, 25, .12);
+}
 .period-select button:disabled { color: var(--ink-5); cursor: not-allowed; }
 
 .attention-list { display: flex; flex-direction: column; }
