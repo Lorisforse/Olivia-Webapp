@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import TimePicker from './TimePicker'
+import PatientPicker from './PatientPicker'
 import {
   DURATIONS,
   appointmentStatus,
@@ -49,7 +50,12 @@ export default function AppointmentModal({
   const patientOptions = useMemo(() => {
     const list = (patients || []).filter(p => p.active !== false || p.id === form.patient_id)
     return list
-      .map(p => ({ id: p.id, name: p.name || 'Paziente senza nome', linked: Boolean(p.chat_id) }))
+      .map(p => ({
+        id: p.id,
+        name: p.name || 'Paziente senza nome',
+        linked: Boolean(p.chat_id),
+        note: p.chat_id ? null : 'non collegato al bot',
+      }))
       .sort((a, b) => a.name.localeCompare(b.name, 'it'))
   }, [patients, form.patient_id])
 
@@ -155,16 +161,12 @@ export default function AppointmentModal({
             {!isEdit && (
               <div className="field field--full">
                 <label>Paziente <span className="req">*</span></label>
-                <select
-                  className={`select input${errors.patient_id ? ' invalid' : ''}`}
+                <PatientPicker
+                  options={patientOptions}
                   value={form.patient_id}
-                  onChange={e => set('patient_id', e.target.value)}
-                >
-                  <option value="">Seleziona un paziente</option>
-                  {patientOptions.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}{p.linked ? '' : ' (non collegato al bot)'}</option>
-                  ))}
-                </select>
+                  onChange={id => set('patient_id', id)}
+                  invalid={errors.patient_id}
+                />
                 {selectedPatient && !selectedPatient.linked && config?.bot_reminders_enabled && (
                   <span className="field-help">Il paziente non è collegato al bot, non riceverà la notifica.</span>
                 )}

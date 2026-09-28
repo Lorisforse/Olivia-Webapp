@@ -681,6 +681,59 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 }
 .field-help { font-size: 12px; color: var(--ink-4); }
 
+/* Ricerca paziente (PatientPicker) */
+.picker__control { position: relative; }
+.picker__icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  color: var(--ink-4);
+  pointer-events: none;
+}
+.picker__input { width: 100%; padding-left: 34px; padding-right: 34px; }
+.picker__clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-sm);
+  font-size: 18px;
+  line-height: 1;
+  color: var(--ink-4);
+  cursor: pointer;
+}
+.picker__clear:hover { background: var(--surface-2); color: var(--ink); }
+.picker__list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.picker__option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  font-size: 13.5px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.picker__option.is-active { background: var(--brand-50); }
+.picker__option.is-selected .picker__name { font-weight: 600; }
+.picker__note { font-size: 12px; color: var(--ink-4); white-space: nowrap; }
+.picker__empty { padding: 12px 10px; font-size: 13px; color: var(--ink-4); text-align: center; }
+
 .radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .radio-pill {
   position: relative;
