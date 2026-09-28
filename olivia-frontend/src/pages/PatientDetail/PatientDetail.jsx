@@ -611,11 +611,12 @@ function BotTab({ patientId, status, patientName }) {
             const label = `${DOW[d.getDay()]} ${d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}`
             const items = []
             ;(day.meals || []).forEach((m, i) => {
+              const foodText = (m.food || []).join(', ') || '—'
               items.push({
                 type: 'meal',
                 time: '—',
                 title: m.meal_type || 'Pasto',
-                desc: (m.food || []).join(', ') || '—',
+                desc: m.adherence_reason ? `${foodText} — ${m.adherence_reason}` : foodText,
                 badge: m.adherence || 'n.d.',
                 tone: (m.adherence || '').toLowerCase().includes('complet') ? 'ok' : 'wait',
               })
