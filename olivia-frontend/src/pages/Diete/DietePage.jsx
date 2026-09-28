@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { getPatients, assignDiet as assignDietToPatient } from '../../api/patients'
 import { getDiets, createDiet, updateDiet, deleteDiet, parseDietPdf, uploadDietPdf, downloadDietPdf } from '../../api/diets'
 import LoadingScreen from '../../components/LoadingScreen'
+import SuccessOverlay from '../../components/SuccessOverlay'
 import WeeklyPlanGrid from '../../components/WeeklyPlanGrid'
 import { useMinDuration } from '../../hooks/useMinDuration'
 import { saveBlob } from '../../utils/download'
@@ -103,12 +104,11 @@ function DietEditor({ mode, diet, onCancel, onSaved, onToast }) {
           await uploadDietPdf(saved.id, pdfFile)
         } catch {
           onToast('Piano salvato, ma il PDF non è stato allegato')
-          onSaved()
+          onSaved(null)
           return
         }
       }
-      onToast(mode === 'create' ? 'Piano creato' : 'Piano aggiornato')
-      onSaved()
+      onSaved({ mode, name: saved.name || payload.name })
     } catch (err) {
       onToast('Errore nel salvataggio' + (err.detail?.detail ? `: ${err.detail.detail}` : ''))
     } finally {
@@ -250,6 +250,7 @@ export default function DietePage() {
   const [selected, setSelected] = useState(new Set())
   const [assigning, setAssigning] = useState(false)
   const [toast, setToast] = useState('')
+  const [savedPlan, setSavedPlan] = useState(null)  // { mode, name }
 
   function loadData() {
     return Promise.all([getDiets(), getPatients()])
@@ -289,10 +290,13 @@ export default function DietePage() {
     return patients.filter(p => (p.name || '').toLowerCase().includes(q))
   }, [patients, assignQuery])
 
-  async function handleEditorSaved() {
+  async function handleEditorSaved(savedInfo) {
     setEditor(null)
+    if (savedInfo) setSavedPlan(savedInfo)
     await loadData()
   }
+
+  const closeSavedOverlay = useCallback(() => setSavedPlan(null), [])
 
   async function handleDeleteConfirm() {
     setDeleting(true)
@@ -568,6 +572,15 @@ export default function DietePage() {
           </div>
         </div>
       )}
+
+      <SuccessOverlay
+        show={!!savedPlan}
+        title={savedPlan?.mode === 'create' ? 'Piano creato' : 'Piano aggiornato'}
+        message={savedPlan?.mode === 'create'
+          ? `«${savedPlan.name}» è pronto: puoi assegnarlo ai pazienti dalla lista.`
+          : `Le modifiche a «${savedPlan?.name}» sono state salvate.`}
+        onDone={closeSavedOverlay}
+      />
 
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
     </>

@@ -54,7 +54,7 @@ TASKS = [
      "riattivalo.»"),
     ("Appuntamento e agenda",
      "«Il signor Marco Neri, dopo la visita di controllo, ti chiede un appuntamento di richiamo tra "
-     "tre settimane: fissalo in agenda.»"),
+     "tre settimane, alle 10:00, della durata di 30 minuti: fissalo in agenda.»"),
 ]
 
 
@@ -105,16 +105,7 @@ def build_scenari(out_path):
     width = doc.width
     story = [
         Paragraph("Scenari di test – Olivia webapp", st["title"]),
-        Paragraph("Compiti da far eseguire al partecipante – da leggere ad alta voce", st["sub"]),
-        Paragraph(
-            "Note per il moderatore: chiedi al partecipante di pensare ad alta voce durante "
-            "l'esecuzione. Intervieni solo se resta bloccato per più di due minuti o lo chiede "
-            "esplicitamente (in tal caso il compito è \u201ccompletato con aiuto\u201d). Tra un "
-            "compito e l'altro riporta l'applicazione alla Home.",
-            st["note"]),
-        Paragraph("Partecipante n. ____________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                   "Data: ____________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                   "Osservatore: ____________", st["fields"]),
+        Paragraph("Pensa ad alta voce mentre esegui ciascun compito.", st["sub"]),
     ]
     for i, (title, text) in enumerate(TASKS, start=1):
         block = [
