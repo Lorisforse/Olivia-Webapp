@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 Rigenera i materiali stampabili per i test di usabilita' di Olivia:
-- Scenari_di_test.pdf (foglio del moderatore, 7 compiti)
-- Foglio_osservazione.pdf (uno per soggetto, 7 compiti + colloquio finale)
+- Scenari_di_test.pdf (foglio del moderatore, 8 compiti)
+- Foglio_osservazione.pdf (uno per soggetto, 8 compiti + colloquio finale)
 - Domande_per_incontro.pdf (lista di domande per l'incontro di organizzazione)
 
 Nessuno script generatore originale esisteva nel repo per i primi due file
-(erano stati creati a mano/altrove): questo li ricostruisce da zero con
-contenuto identico a quello gia' in uso, piu' il 7deg compito sull'Agenda e
-le due aggiunte minori (ricerca nel compito 1, riattivazione nel compito 6).
+(erano stati creati a mano/altrove): questo li ricostruisce da zero. Il
+compito 6 originale (cambio dieta + sospensione) e' stato separato in due
+compiti distinti (6: cambio dieta, 7: sospensione e riattivazione), e il
+vecchio 7 (agenda) e' ora l'8deg.
 """
 import os
 import sys
@@ -31,9 +32,9 @@ TASKS = [
      "questo momento e quanti sono senza dieta. Poi cerca la paziente Elisa Marchetti e dimmi qual è "
      "il suo obiettivo.»"),
     ("Nuovo paziente",
-     "«Hai appena visitato la signora Lucia Ferri, 54 anni, di Bari, impiegata, che si sveglia alle "
-     "6:30. Pesa 86 kg ed è alta 165 cm; l'obiettivo è ridurre la pressione arteriosa. Registrala e "
-     "fai in modo di poterle consegnare il codice per collegarsi al bot.»"),
+     "«Hai appena visitato la signora Lucia Ferri, nata il 12/05/1972, di Bari, impiegata, che si "
+     "sveglia alle 6:30. Pesa 86 kg ed è alta 165 cm; l'obiettivo è ridurre la pressione arteriosa. "
+     "Registrala e fai in modo di poterle consegnare il codice per collegarsi al bot.»"),
     ("Importazione di una dieta",
      "«Hai preparato il piano alimentare della signora Ferri in PDF (il file è sul desktop). Caricalo "
      "in piattaforma, controlla che sia stato letto correttamente, chiamalo «Mediterranea 1600, fase "
@@ -44,14 +45,16 @@ TASKS = [
     ("Andamento prima della visita",
      "«Il signor Marco Neri ha la visita di controllo tra un'ora. Verifica come è andato il suo peso "
      "nell'ultimo mese e se beve abbastanza.»"),
-    ("Cambio di dieta e sospensione",
+    ("Cambio di dieta",
      "«Il piano «Mediterranea 1600, fase 1» va aggiornato: il pranzo del sabato diventa «pesce al "
-     "forno con verdure». Fai la modifica. Poi, il paziente Andrea Vitale ha sospeso il percorso per "
-     "un mese: fai in modo che il bot non lo contatti, senza perdere i suoi dati. Dopo un ripensamento, "
-     "decide di riprendere subito: riattivalo.»"),
+     "forno con verdure». Fai la modifica.»"),
+    ("Sospensione e riattivazione",
+     "«Il paziente Andrea Vitale ha sospeso il percorso per un mese: fai in modo che il bot non lo "
+     "contatti, senza perdere i suoi dati. Dopo un ripensamento, decide di riprendere subito: "
+     "riattivalo.»"),
     ("Appuntamento e agenda",
      "«Il signor Marco Neri, dopo la visita di controllo, ti chiede un appuntamento di richiamo tra "
-     "tre settimane: fissalo in agenda. Poi dimmi quanti appuntamenti hai in agenda questa settimana.»"),
+     "tre settimane: fissalo in agenda.»"),
 ]
 
 
@@ -174,9 +177,8 @@ def build_domande(out_path):
     story = [
         Paragraph("Domande per l'incontro – organizzazione test di usabilità", st["title"]),
         Paragraph(
-            "Da usare per chiudere i punti ancora aperti del Capitolo 7 (criteri di reclutamento, "
-            "profilo partecipanti, logistica). Nella tesi le 3 persone restano anonime: identificale "
-            "come P1 / P2 / P3, mai per nome.",
+            "Da usare per chiudere il profilo dei partecipanti per il Capitolo 7. Nella tesi le 3 "
+            "persone restano anonime: identificale come P1 / P2 / P3, mai per nome.",
             st["sub"]),
         Spacer(1, 0.2 * cm),
     ]
@@ -184,35 +186,19 @@ def build_domande(out_path):
     sections = [
         ("Per ciascuna delle 3 persone (P1 / P2 / P3)", [
             "Ruolo esatto (nutrizionista, dottoressa, altro)",
-            "Da quanti anni svolge questo ruolo",
-            "Che rapporto ha con il reclutamento pazienti per Olivia: fa lei le visite, "
-            "segue da remoto, altro?",
-            "Usa già altri strumenti digitali/gestionali nel lavoro quotidiano? Quali "
+            "Da quanti anni svolgi questo ruolo",
+            "Che rapporto hai con il reclutamento pazienti per Olivia: fai tu le visite, "
+            "segui da remoto, altro?",
+            "Usi già altri strumenti digitali/gestionali nel lavoro quotidiano? Quali "
             "(cartelle cliniche elettroniche, altre app)?",
-            "Userebbe lei stessa la piattaforma in pratica, o è più un'altra figura a usarla?",
-        ]),
-        ("Criteri di reclutamento (per il testo del Capitolo 7)", [
-            "Come sono state scelte queste 3 persone? C'è un criterio comune esplicito "
-            "(es. tutte coinvolte nel reclutamento pazienti)?",
-            "Il campione di 3 è definitivo, o ce ne sono altre potenzialmente coinvolgibili "
-            "in futuro?",
-        ]),
-        ("Logistica della sessione di oggi/domani", [
-            "Ordine tra le 3 sessioni: chi prima, chi dopo?",
-            "C'è una sala/postazione tranquilla a disposizione, o serve portare il portatile?",
-            "Confermano il consenso a registrazione audio/schermo (dati tutti fittizi, nessun "
-            "paziente reale coinvolto)?",
-            "Tempo a disposizione per ciascuna sessione (indicativamente 30-60 min)? Serve "
-            "una pausa di 5-10 min tra una sessione e l'altra (per il reset del database di "
-            "prova)?",
-            "Serve far firmare un consenso cartaceo prima di iniziare, o è già stato gestito?",
+            "Useresti tu stessa la piattaforma in pratica, o è più un'altra figura a usarla?",
         ]),
     ]
 
     for heading, items in sections:
         story.append(Paragraph(heading, st["h2"]))
         for it in items:
-            story.append(Paragraph(f"[ ] {it}", st["q"]))
+            story.append(Paragraph(it, st["q"]))
             story.append(ruled_lines(width, n=1))
             story.append(Spacer(1, 0.15 * cm))
         story.append(Spacer(1, 0.25 * cm))
