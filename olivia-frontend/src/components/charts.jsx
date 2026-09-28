@@ -76,129 +76,115 @@ export function LineTrend({ data, unit = '', height = 190, color = 'var(--brand)
   )
 }
 
+const TONE_GOOD = '#B5D38A'
+const TONE_MID = '#F5B65B'
+const TONE_BAD = '#E8998A'
+const TONE_NONE = '#E3E4DA'
+
 export const ADHERENCE_TONE = {
-  good: { fill: '#CBE0A0', title: 'Buona aderenza' },
-  warn: { fill: '#F5B65B', title: 'Aderenza parziale' },
-  none: { fill: '#E3E4DA', title: 'Nessun dato' },
+  good: { fill: TONE_GOOD, title: 'Buona aderenza', short: 'buona' },
+  warn: { fill: TONE_MID, title: 'Aderenza parziale', short: 'parziale' },
+  none: { fill: TONE_NONE, title: 'Nessun dato', short: 'senza dati' },
 }
 
 export const SLEEP_TONE = {
-  buona: { fill: '#CBE0A0', title: 'Sonno buono' },
-  discreta: { fill: '#F5B65B', title: 'Sonno discreto' },
-  scarsa: { fill: 'var(--danger-bg)', title: 'Sonno scarso' },
-  none: { fill: '#E3E4DA', title: 'Nessun dato' },
+  buona: { fill: TONE_GOOD, title: 'Sonno buono', short: 'buono' },
+  discreta: { fill: TONE_MID, title: 'Sonno discreto', short: 'discreto' },
+  scarsa: { fill: TONE_BAD, title: 'Sonno scarso', short: 'scarso' },
+  none: { fill: TONE_NONE, title: 'Nessun dato', short: 'senza dati' },
 }
 
 export const HUNGER_TONE = {
-  bassa: { fill: '#CBE0A0', title: 'Fame bassa' },
-  moderata: { fill: '#F5B65B', title: 'Fame moderata' },
-  alta: { fill: 'var(--danger-bg)', title: 'Fame alta' },
-  none: { fill: '#E3E4DA', title: 'Nessun dato' },
+  bassa: { fill: TONE_GOOD, title: 'Fame bassa', short: 'bassa' },
+  moderata: { fill: TONE_MID, title: 'Fame moderata', short: 'moderata' },
+  alta: { fill: TONE_BAD, title: 'Fame alta', short: 'alta' },
+  none: { fill: TONE_NONE, title: 'Nessun dato', short: 'senza dati' },
 }
-
-const WEEKDAYS = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
-// Fino a ~2 mesi: righe-settimana a tutta larghezza; oltre: un mini calendario per mese.
-const WEEK_ROWS_MAX_DAYS = 62
 
 function parseIsoDate(s) {
   const [y, m, d] = s.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
 
-function toIsoDate(d) {
+function shortDate(iso) {
+  return parseIsoDate(iso).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })
+}
+
+function weekStart(iso) {
+  const d = parseIsoDate(iso)
+  d.setDate(d.getDate() - (d.getDay() + 6) % 7)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function addDays(d, n) {
-  const r = new Date(d)
-  r.setDate(r.getDate() + n)
-  return r
+// Una casella per settimana, col colore più frequente tra i giorni che hanno un dato.
+function groupByWeek(days) {
+  const weeks = []
+  const byWeek = {}
+  days.forEach(d => {
+    const w = weekStart(d.date)
+    if (!byWeek[w]) { byWeek[w] = {}; weeks.push(w) }
+    if (d.tone !== 'none') byWeek[w][d.tone] = (byWeek[w][d.tone] || 0) + 1
+  })
+  return weeks.map(w => {
+    const counts = Object.entries(byWeek[w]).sort((a, b) => b[1] - a[1])
+    return { date: w, tone: counts.length ? counts[0][0] : 'none', week: true }
+  })
 }
 
-function mondayOf(d) {
-  return addDays(d, -((d.getDay() + 6) % 7))
+function countTones(days, legend) {
+  const counts = {}
+  days.forEach(d => { counts[d.tone] = (counts[d.tone] || 0) + 1 })
+  return Object.keys(legend).filter(k => counts[k]).map(k => ({ key: k, n: counts[k], ...legend[k] }))
 }
 
-function CalendarCell({ date, entry, legend, showMonth }) {
-  if (!entry) {
-    return <span className="cal-cell cal-cell--out">{date.getDate()}</span>
-  }
-  const tone = legend[entry.tone] ?? legend.none
-  const fullLabel = date.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
-  return (
-    <span className="cal-cell" style={{ background: tone.fill }} title={`${fullLabel}: ${tone.title}`}>
-      {showMonth ? date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }) : date.getDate()}
-    </span>
-  )
+function cellTitle(cell, tone) {
+  if (cell.week) return `Settimana dal ${shortDate(cell.date)}: ${tone.title.toLowerCase()} (prevalente)`
+  const label = parseIsoDate(cell.date).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })
+  return `${label}: ${tone.title}`
 }
 
-function WeekRows({ first, last, byDate, legend }) {
-  const cells = []
-  const end = addDays(mondayOf(last), 6)
-  for (let d = mondayOf(first); d <= end; d = addDays(d, 1)) cells.push(d)
-  return (
-    <div className="cal-grid cal-grid--wide">
-      {WEEKDAYS.map((w, i) => <span key={i} className="cal-grid__dow">{w}</span>)}
-      {cells.map(d => {
-        const iso = toIsoDate(d)
-        return (
-          <CalendarCell
-            key={iso}
-            date={d}
-            entry={byDate[iso]}
-            legend={legend}
-            showMonth={d.getDate() === 1 || iso === toIsoDate(first)}
-          />
-        )
-      })}
-    </div>
-  )
-}
-
-function MonthGrids({ first, last, byDate, legend }) {
-  const months = []
-  for (let m = new Date(first.getFullYear(), first.getMonth(), 1); m <= last; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
-    months.push(m)
-  }
-  return (
-    <div className="cal-months">
-      {months.map(m => {
-        const daysInMonth = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate()
-        const offset = (m.getDay() + 6) % 7
-        return (
-          <div key={toIsoDate(m)} className="cal-month">
-            <div className="cal-month__title">{m.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}</div>
-            <div className="cal-grid">
-              {WEEKDAYS.map((w, i) => <span key={i} className="cal-grid__dow">{w}</span>)}
-              {Array.from({ length: offset }, (_, i) => <span key={`b${i}`} />)}
-              {Array.from({ length: daysInMonth }, (_, i) => {
-                const d = new Date(m.getFullYear(), m.getMonth(), i + 1)
-                const iso = toIsoDate(d)
-                return <CalendarCell key={iso} date={d} entry={byDate[iso]} legend={legend} />
-              })}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// days: [{ date: 'YYYY-MM-DD', tone }] in ordine, uno per ogni giorno del periodo scelto.
-export function CategoryCalendar({ days, legend }) {
+// rows: [{ key, label, days: [{ date: 'YYYY-MM-DD', tone }], legend }], stesse date per tutte le righe.
+export function DailyDiary({ rows, weekly = false }) {
+  const days = rows[0]?.days ?? []
   if (!days.length) return <div className="chart-empty">Nessun dato nel periodo</div>
-  const byDate = Object.fromEntries(days.map(d => [d.date, d]))
-  const first = parseIsoDate(days[0].date)
-  const last = parseIsoDate(days[days.length - 1].date)
-  const Layout = days.length <= WEEK_ROWS_MAX_DAYS ? WeekRows : MonthGrids
+
+  const cellsByRow = rows.map(r => (weekly ? groupByWeek(r.days) : r.days))
+  const axisCells = cellsByRow[0]
+  const n = axisCells.length
+  const fractions = n < 10 ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1]
+  const tickIdx = [...new Set(fractions.map(f => Math.round(f * (n - 1))))]
+
   return (
-    <div>
-      <Layout first={first} last={last} byDate={byDate} legend={legend} />
-      <div className="chart-legend">
-        {Object.entries(legend).map(([k, v]) => (
-          <span key={k} className="chart-legend__item">
-            <span className="chart-legend__swatch" style={{ background: v.fill }} />
-            {v.title}
+    <div className="diary">
+      {rows.map((row, i) => (
+        <div key={row.key} className="diary__row">
+          <div className="diary__head">
+            <span className="diary__label">{row.label}</span>
+            <span className="diary__counts">
+              {countTones(row.days, row.legend).map(c => (
+                <span key={c.key} className="diary__count">
+                  <span className="diary__dot" style={{ background: c.fill }} />
+                  {c.n} gg {c.short}
+                </span>
+              ))}
+            </span>
+          </div>
+          <div className="diary__strip">
+            {cellsByRow[i].map(cell => {
+              const tone = row.legend[cell.tone] ?? row.legend.none
+              return <span key={cell.date} style={{ background: tone.fill }} title={cellTitle(cell, tone)} />
+            })}
+          </div>
+        </div>
+      ))}
+      <div className="diary__axis">
+        {tickIdx.map((idx, k) => (
+          <span
+            key={idx}
+            style={{ left: `${((idx + 0.5) / n) * 100}%` }}
+            className={k === 0 ? 'is-first' : k === tickIdx.length - 1 ? 'is-last' : ''}
+          >
+            {shortDate(axisCells[idx].date)}
           </span>
         ))}
       </div>

@@ -9,7 +9,7 @@ import DeactivatePatientModal from '../../components/DeactivatePatientModal'
 import ReactivatePatientModal from '../../components/ReactivatePatientModal'
 import SuccessOverlay from '../../components/SuccessOverlay'
 import { getAppointments } from '../../api/appointments'
-import { BarTrend, LineTrend, CategoryCalendar, ADHERENCE_TONE, SLEEP_TONE, HUNGER_TONE } from '../../components/charts'
+import { BarTrend, LineTrend, DailyDiary, ADHERENCE_TONE, SLEEP_TONE, HUNGER_TONE } from '../../components/charts'
 import { splitList } from '../../utils/text'
 import { saveBlob, saveDataUri, svgToPngDataUri, printImage } from '../../utils/download'
 import { useMinDuration } from '../../hooks/useMinDuration'
@@ -836,7 +836,7 @@ function TrendsTab({ patientId, status }) {
   const rangeText = (period === 'visit'
     ? `Dall'ultima visita del ${formatLongDate(rangeStart)} a oggi`
     : `Dal ${formatLongDate(rangeStart)} a oggi`)
-    + (weekly ? ' · idratazione, gradimento, messaggi e umore come media settimanale' : '')
+    + (weekly ? ' · diario, idratazione, gradimento, messaggi e umore raggruppati per settimana' : '')
 
   return (
     <div>
@@ -869,9 +869,16 @@ function TrendsTab({ patientId, status }) {
       </div>
 
       <div className="card mt-16">
-        <div className="card__header"><h2 className="card__title">Aderenza pasti</h2></div>
+        <div className="card__header"><h2 className="card__title">Diario giornaliero</h2></div>
         <div className="card__body">
-          <CategoryCalendar days={adherenceDays} legend={ADHERENCE_TONE} />
+          <DailyDiary
+            weekly={weekly}
+            rows={[
+              { key: 'adherence', label: 'Aderenza pasti', days: adherenceDays, legend: ADHERENCE_TONE },
+              { key: 'sleep', label: 'Qualità del sonno', days: sleepDays, legend: SLEEP_TONE },
+              { key: 'hunger', label: 'Livello di fame', days: hungerDays, legend: HUNGER_TONE },
+            ]}
+          />
         </div>
       </div>
 
@@ -879,20 +886,6 @@ function TrendsTab({ patientId, status }) {
         <div className="card__header"><h2 className="card__title">Gradimento pasti</h2></div>
         <div className="card__body">
           <BarTrend data={satisfactionData} unit="%" color="#C08552" emptyLabel="Nessun gradimento registrato nel periodo" />
-        </div>
-      </div>
-
-      <div className="card mt-16">
-        <div className="card__header"><h2 className="card__title">Qualità del sonno</h2></div>
-        <div className="card__body">
-          <CategoryCalendar days={sleepDays} legend={SLEEP_TONE} />
-        </div>
-      </div>
-
-      <div className="card mt-16">
-        <div className="card__header"><h2 className="card__title">Livello di fame</h2></div>
-        <div className="card__body">
-          <CategoryCalendar days={hungerDays} legend={HUNGER_TONE} />
         </div>
       </div>
 
