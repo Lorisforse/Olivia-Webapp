@@ -171,7 +171,7 @@ function CohortSection() {
               </div>
               {loading
                 ? <div className="chart-empty">Caricamento…</div>
-                : <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={110} />
+                : <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={140} />
               }
             </div>
           </div>
@@ -261,7 +261,7 @@ function CohortSection() {
               </div>
               {loading
                 ? <div className="chart-empty">Caricamento…</div>
-                : <BarTrend data={messagesData} color="#7A9E8E" height={110} />
+                : <BarTrend data={messagesData} color="#7A9E8E" height={140} />
               }
             </div>
           </div>

@@ -1515,8 +1515,8 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .chart-gridline { stroke: var(--line); stroke-width: 1; }
 .chart-axis-label {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 9px;
-  fill: var(--ink-4);
+  font-size: 12px;
+  fill: var(--ink-3);
 }
 .chart-empty {
   display: flex;
@@ -1532,8 +1532,8 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
-  padding: 4px 9px;
-  font-size: 12px;
+  padding: 5px 10px;
+  font-size: 13px;
   color: var(--ink-2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -1550,7 +1550,7 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   flex-wrap: wrap;
   gap: 14px;
   margin-top: 12px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-3);
 }
 .chart-legend__item { display: inline-flex; align-items: center; gap: 6px; }
@@ -1564,7 +1564,7 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   flex-wrap: wrap;
 }
 .trend-head__val { font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 500; color: var(--ink); }
-.trend-head__sub { font-size: 12.5px; color: var(--ink-4); }
+.trend-head__sub { font-size: 13px; color: var(--ink-3); }
 
 .period-select {
   display: inline-flex;

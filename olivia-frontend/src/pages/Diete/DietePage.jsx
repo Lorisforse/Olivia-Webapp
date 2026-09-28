@@ -575,6 +575,7 @@ export default function DietePage() {
 
       <SuccessOverlay
         show={!!savedPlan}
+        duration={2200}
         title={savedPlan?.mode === 'create' ? 'Piano creato' : 'Piano aggiornato'}
         message={savedPlan?.mode === 'create'
           ? `«${savedPlan.name}» è pronto: puoi assegnarlo ai pazienti dalla lista.`

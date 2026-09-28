@@ -3,7 +3,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
 } from 'recharts'
 
-const TICK_STYLE = { fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 9, fill: '#8B8E80' }
+const TICK_STYLE = { fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 12, fill: 'var(--ink-3)' }
+const X_TICK_GAP = 14
 const GRID_COLOR = '#E2DFD2'
 const TARGET_COLOR = '#8B8E80'
 
@@ -14,14 +15,14 @@ function ChartTooltip({ active, payload, unit }) {
   return <div className="chart-tooltip">{`${label}: ${value}${unit}`}</div>
 }
 
-export function BarTrend({ data, target, unit = '', height = 140, color = 'var(--brand)', emptyLabel = 'Nessun dato nel periodo' }) {
+export function BarTrend({ data, target, unit = '', height = 170, color = 'var(--brand)', emptyLabel = 'Nessun dato nel periodo' }) {
   const values = data.map(d => d.value).filter(v => v != null)
   if (!values.length) return <div className="chart-empty">{emptyLabel}</div>
 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 10, right: 4, left: 4, bottom: 0 }}>
-        <XAxis dataKey="label" tick={TICK_STYLE} tickLine={false} axisLine={false} />
+        <XAxis dataKey="label" tick={TICK_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={X_TICK_GAP} />
         <YAxis hide domain={[0, dataMax => Math.max(dataMax, target ?? 0)]} />
         {target != null && (
           <ReferenceLine y={target} stroke={TARGET_COLOR} strokeDasharray="3 3" />
@@ -37,7 +38,7 @@ export function BarTrend({ data, target, unit = '', height = 140, color = 'var(-
   )
 }
 
-export function LineTrend({ data, unit = '', height = 160, color = 'var(--brand)', emptyLabel = 'Nessun dato nel periodo' }) {
+export function LineTrend({ data, unit = '', height = 190, color = 'var(--brand)', emptyLabel = 'Nessun dato nel periodo' }) {
   const values = data.map(d => d.value).filter(v => v != null)
   if (values.length < 2) return <div className="chart-empty">{emptyLabel}</div>
 
@@ -54,12 +55,12 @@ export function LineTrend({ data, unit = '', height = 160, color = 'var(--brand)
           tick={TICK_STYLE}
           tickLine={false}
           axisLine={false}
-          width={34}
+          width={46}
           domain={[yMin, yMax]}
           ticks={[yMin, yMid, yMax]}
           tickFormatter={v => v.toFixed(1)}
         />
-        <XAxis dataKey="label" tick={TICK_STYLE} tickLine={false} axisLine={false} />
+        <XAxis dataKey="label" tick={TICK_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={X_TICK_GAP} />
         <Tooltip content={<ChartTooltip unit={unit} />} />
         <Line
           type="linear"

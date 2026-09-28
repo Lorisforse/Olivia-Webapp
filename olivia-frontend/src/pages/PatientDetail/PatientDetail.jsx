@@ -816,14 +816,14 @@ function TrendsTab({ patientId, status }) {
       <div className="card mt-16">
         <div className="card__header"><h2 className="card__title">Idratazione</h2></div>
         <div className="card__body">
-          <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={120} emptyLabel="Nessuna idratazione registrata nel periodo" />
+          <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={140} emptyLabel="Nessuna idratazione registrata nel periodo" />
         </div>
       </div>
 
       <div className="card mt-16">
         <div className="card__header"><h2 className="card__title">Messaggi scambiati col bot</h2></div>
         <div className="card__body">
-          <BarTrend data={messagesData} emptyLabel="Nessun messaggio registrato nel periodo" color="#7A9E8E" height={120} />
+          <BarTrend data={messagesData} emptyLabel="Nessun messaggio registrato nel periodo" color="#7A9E8E" height={140} />
         </div>
       </div>
 
