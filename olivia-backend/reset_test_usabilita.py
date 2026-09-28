@@ -228,6 +228,43 @@ async def seed_meal_logs_da_seguire(db, uid, rng: random.Random):
     await db["daily-reports"].insert_many(reports)
 
 
+async def seed_bot_logs_da_seguire(db, uid, rng: random.Random):
+    """Peso/idratazione/umore per Chiara Lombardi: alimentano le card in cima ad
+    'Attivita bot' (lette da weight-logs/hydration-logs/wellness-logs, collezioni
+    separate da daily-reports - vedi src/routers/logs.py)."""
+    now = datetime.now()
+    today = datetime(now.year, now.month, now.day)
+    base_weight = 79.0
+    moods = ["ansioso", "triste", "neutro"]  # vocabolario reale: prompts/morning/extract_mood.yml
+    for i in range(7):
+        d = today - timedelta(days=6 - i)
+
+        if i in (0, 6):  # due sole pesate nella settimana, come nell'uso reale
+            w = base_weight + (0.3 if i == 6 else 0.0)
+            await db["weight-logs"].insert_one({
+                "user": dbref("users", uid), "date": d,
+                "weights": [{"value_kg": round(w, 1), "created_at": d + timedelta(hours=7, minutes=30)}],
+            })
+
+        total_ml = rng.randint(900, 1400)  # sempre sotto l'obiettivo di 2 L
+        await db["hydration-logs"].insert_one({
+            "user": dbref("users", uid), "date": d,
+            "hydrations": [
+                {"value_ml": round(total_ml * 0.4), "created_at": d + timedelta(hours=10)},
+                {"value_ml": round(total_ml * 0.6), "created_at": d + timedelta(hours=17)},
+            ],
+        })
+
+        await db["wellness-logs"].insert_one({
+            "user": dbref("users", uid), "date": d,
+            "entries": [
+                {"type": "mood", "mood": rng.choice(moods), "cause": None, "created_at": d + timedelta(hours=9)},
+                {"type": "sleep", "sleep_quality": "scarsa", "created_at": d + timedelta(hours=9)},
+                {"type": "hunger", "hunger": "alta", "created_at": d + timedelta(hours=9)},
+            ],
+        })
+
+
 async def run():
     client = AsyncIOMotorClient(MONGODB_URL)
     db = client[DB_NAME]
@@ -264,6 +301,7 @@ async def run():
         diet_id=plan_id, connected=True, rng_seed=600000003,
     )
     await seed_meal_logs_da_seguire(db, chiara_id, rng=rng)
+    await seed_bot_logs_da_seguire(db, chiara_id, rng=rng)
 
     await make_patient(
         db, name="Sara Bruno", gender="Femmina", age=31, job="Insegnante", living_at="Bari",
