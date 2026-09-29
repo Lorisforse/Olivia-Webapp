@@ -24,10 +24,6 @@ export async function getDiets() {
   return _json(await fetch(`${API_URL}/diets/`, { headers: authHeaders() }))
 }
 
-export async function getDiet(id) {
-  return _json(await fetch(`${API_URL}/diets/${id}`, { headers: authHeaders() }))
-}
-
 export async function createDiet(payload) {
   return _json(await fetch(`${API_URL}/diets/`, {
     method: 'POST',

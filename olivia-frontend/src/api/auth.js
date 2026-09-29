@@ -76,7 +76,3 @@ export async function fetchMe() {
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
-
-export function logout() {
-  clearSession()
-}

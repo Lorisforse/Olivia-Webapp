@@ -10,7 +10,6 @@
   --surface-2:    #FAF8F2;
   --cream:        #E8E4D6;
   --cream-soft:   #F0EDE0;
-  --cream-strong: #DAD4BF;
 
   --brand:        #4A5528;
   --brand-700:    #3B4420;
@@ -33,8 +32,6 @@
   --ok-bg:        #E4E7D5;
   --warn:         #9A6B22;
   --warn-bg:      #F2E6CC;
-  --wait:         #5C5F52;
-  --wait-bg:      #E5E2D5;
   --danger:       #8C3A2A;
   --danger-bg:    #F1DCD4;
 
@@ -345,7 +342,6 @@ body {
   font-feature-settings: 'tnum' 1;
 }
 .stat__meta { font-size: 12.5px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
-.stat__delta--up { color: var(--brand); }
 .stat__delta--warn { color: var(--warn); }
 
 /* quick actions */
@@ -946,11 +942,6 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .feed__icon svg { width: 14px; height: 14px; }
 .feed__title { font-size: 13.5px; color: var(--ink); font-weight: 500; }
 .feed__desc { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
-.feed__badge { font-size: 12px; color: var(--ink-4); font-feature-settings: 'tnum' 1; padding-top: 2px; }
-
-.mini-bars { display: flex; gap: 4px; align-items: flex-end; height: 26px; }
-.mini-bars span { width: 6px; background: var(--brand-100); border-radius: 1px; }
-.mini-bars span.full { background: var(--brand); }
 
 /* ============================================================
    UPLOAD
@@ -1326,16 +1317,16 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .login__submit { width: 100%; margin-top: 6px; }
 .login__submit:disabled { opacity: .6; cursor: default; }
 
-.login-note, .login-error {
+.login-error {
   margin-top: 18px;
   padding: 10px 12px;
-  border: 1px solid;
+  border: 1px solid #DCBDB2;
   border-radius: var(--r-sm);
   font-size: 12.5px;
   line-height: 1.45;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
-.login-note { background: var(--cream-soft); border-color: var(--cream-strong); color: var(--ink-2); }
-.login-error { background: var(--danger-bg); border-color: #DCBDB2; color: var(--danger); }
 
 /* mostra/nascondi password dentro al campo */
 .input--with-toggle { padding-right: 88px; }
@@ -1563,14 +1554,6 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 /* ============================================================
    CHARTS — grafici minimi (home + andamento paziente)
    ============================================================ */
-.chart-svg { display: block; width: 100%; height: auto; }
-.chart-target-line { stroke: var(--ink-4); stroke-width: 1; stroke-dasharray: 3 3; }
-.chart-gridline { stroke: var(--line); stroke-width: 1; }
-.chart-axis-label {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 12px;
-  fill: var(--ink-3);
-}
 .chart-empty {
   display: flex;
   align-items: center;
@@ -1617,16 +1600,6 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .diary__axis span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
 .diary__axis span.is-first { left: 0 !important; transform: none; }
 .diary__axis span.is-last { left: auto !important; right: 0; transform: none; }
-.chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--ink-3);
-}
-.chart-legend__item { display: inline-flex; align-items: center; gap: 6px; }
-.chart-legend__swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
 .trend-head {
   display: flex;

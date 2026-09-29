@@ -89,14 +89,6 @@ export async function getDailyReports(id, { from, to } = {}) {
   return _json(await fetch(`${API_URL}/patients/${id}/reports/daily${qs ? '?' + qs : ''}`, { headers: authHeaders() }))
 }
 
-export async function getWeeklyReports(id, { from, to } = {}) {
-  const params = new URLSearchParams()
-  if (from) params.set('from', from)
-  if (to) params.set('to', to)
-  const qs = params.toString()
-  return _json(await fetch(`${API_URL}/patients/${id}/reports/weekly${qs ? '?' + qs : ''}`, { headers: authHeaders() }))
-}
-
 export async function getCohortReport({ days = 14 } = {}) {
   return _json(await fetch(`${API_URL}/patients/reports/cohort?days=${days}`, { headers: authHeaders() }))
 }

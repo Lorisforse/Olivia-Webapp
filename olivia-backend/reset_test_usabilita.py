@@ -110,7 +110,7 @@ async def wipe_user_and_data(db, name: str):
     # DBRef) - vedi src/routers/appointments.py. Senza questa riga, un
     # appuntamento creato al compito 8 sopravvivrebbe orfano al reset, perche'
     # lo user viene ricreato con un _id nuovo.
-    await db["appointments"].delete_many({"user_id": uid})
+    await db["webapp-appointments"].delete_many({"user_id": uid})
     await db["users"].delete_one({"_id": uid})
 
 

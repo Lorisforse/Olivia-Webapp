@@ -30,14 +30,6 @@ export function reminderInfo(a, config) {
   return { tone: 'muted', text: 'Nessun promemoria: appuntamento troppo vicino.' }
 }
 
-export function startOfWeek(date) {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  const day = (d.getDay() + 6) % 7
-  d.setDate(d.getDate() - day)
-  return d
-}
-
 export function addDays(date, n) {
   const d = new Date(date)
   d.setDate(d.getDate() + n)

@@ -14,23 +14,9 @@ def get_database():
     return db
 
 
-def get_users_col(database): return database["users"]
 # Account di accesso alla dashboard (medici/nutrizionisti): collection separata da
 # "users", che invece appartiene ai pazienti del bot e non va toccata.
 def get_webapp_users_col(database): return database["webapp-users"]
-# Il bot chiama questa collection "nutrition-plans" (vedi olivia-chatbot/src/models/nutrition_plan.py)
-def get_nutrition_plans_col(database): return database["nutrition-plans"]
-def get_meal_logs_col(database): return database["meal-logs"]
-def get_weight_logs_col(database): return database["weight-logs"]
-def get_hydration_logs_col(database): return database["hydration-logs"]
-def get_wellness_logs_col(database): return database["wellness-logs"]
-def get_daily_reports_col(database): return database["daily-reports"]
-def get_weekly_reports_col(database): return database["weekly-reports"]
-# Collection solo-webapp (il bot non la conosce, come "webapp-users"): archivia il
-# PDF originale del piano dietetico caricato dal medico, così può riscaricarlo.
-# Referenzia il piano con `plan_id` -> "nutrition-plans": nessun campo aggiunto
-# alla collection del bot.
-def get_diet_pdfs_col(database): return database["webapp-diet-pdfs"]
 # Appuntamenti dell'agenda. Collection solo-webapp letta anche dal bot con il
 # modulo appuntamenti, che invia il promemoria e aggiorna `status` alla risposta.
 def get_appointments_col(database): return database["webapp-appointments"]

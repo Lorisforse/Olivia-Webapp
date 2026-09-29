@@ -93,11 +93,6 @@ const ACTIVITY_DOT_TITLE = {
   bad: 'Non scrive al bot da almeno una settimana',
 }
 
-function formatDate(dt) {
-  if (!dt) return '—'
-  return new Date(dt).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
 function Toast({ message, onHide }) {
   useEffect(() => {
     if (!message) return
