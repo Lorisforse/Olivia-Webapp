@@ -29,6 +29,9 @@ class AppointmentResponse(BaseModel):
     patient_name: Optional[str] = None
     patient_linked: bool = False
     patient_active: bool = True
+    # True se il paziente a cui punta l'appuntamento non esiste più in "users"
+    # (es. cancellato da uno script di reset): l'appuntamento è rimasto orfano.
+    patient_missing: bool = False
     scheduled_at: datetime
     duration_minutes: int
     notes: Optional[str] = None

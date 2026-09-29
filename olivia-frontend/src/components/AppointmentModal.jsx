@@ -5,6 +5,7 @@ import {
   DURATIONS,
   appointmentStatus,
   fromInputs,
+  patientLabel,
   reminderInfo,
   toDateInput,
   toTimeInput,
@@ -138,8 +139,8 @@ export default function AppointmentModal({
           {isEdit ? (
             <div className="appt-modal__status">
               <span className={`pill pill--${status.pill}`}>{status.label}</span>
-              {appointment.patient_name && <span className="muted">{appointment.patient_name}</span>}
-              {onOpenPatient && (
+              <span className="muted">{patientLabel(appointment)}</span>
+              {onOpenPatient && !appointment.patient_missing && (
                 <button type="button" className="appt-modal__link" onClick={() => onOpenPatient(appointment)}>
                   Apri scheda
                 </button>

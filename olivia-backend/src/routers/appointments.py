@@ -81,6 +81,7 @@ def _to_response(doc: dict, patient: Optional[dict]) -> AppointmentResponse:
         patient_name=extract(profile.get("name")) if patient else None,
         patient_linked=bool(patient and patient.get("chat_id") is not None),
         patient_active=bool(patient and patient.get("active", True)),
+        patient_missing=patient is None,
         scheduled_at=_as_utc(doc["scheduled_at"]),
         duration_minutes=doc.get("duration_minutes", 30),
         notes=doc.get("notes"),

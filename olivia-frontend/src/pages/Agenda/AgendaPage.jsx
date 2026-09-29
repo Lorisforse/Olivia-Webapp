@@ -22,6 +22,7 @@ import {
   appointmentStatus,
   formatDayLabel,
   formatTime,
+  patientLabel,
   sameDay,
   toDateInput,
 } from '../../utils/appointments'
@@ -216,7 +217,7 @@ export default function AgendaPage() {
     const end = new Date(start.getTime() + (a.duration_minutes || 30) * 60000)
     return {
       id: a.id,
-      title: a.patient_name || 'Paziente',
+      title: patientLabel(a),
       start,
       end,
       backgroundColor: colors.bg,
@@ -337,9 +338,9 @@ export default function AgendaPage() {
                         onClick={() => setModal({ appointment: a })}
                       >
                         <span className="agenda-list__time">{formatTime(a.scheduled_at)}</span>
-                        <span className="agenda-list__name">
-                          {a.patient_name || 'Paziente'}
-                          {!a.patient_linked && config?.bot_reminders_enabled && (
+                        <span className={`agenda-list__name${a.patient_missing ? ' is-missing' : ''}`}>
+                          {patientLabel(a)}
+                          {!a.patient_missing && !a.patient_linked && config?.bot_reminders_enabled && (
                             <span className="agenda-list__flag" title="Il paziente non è collegato al bot, non riceverà la notifica.">non collegato</span>
                           )}
                         </span>

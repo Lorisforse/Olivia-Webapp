@@ -5,7 +5,15 @@ export const PATIENT_NOT_LINKED_MSG =
 export const PATIENT_INACTIVE_MSG =
   'Il paziente è disattivato: il bot non gli invierà la notifica.'
 
+const PATIENT_MISSING_MSG =
+  'Il paziente di questo appuntamento non esiste più: puoi eliminare l\'appuntamento.'
+
 export const DURATIONS = [15, 30, 45, 60, 90]
+
+export function patientLabel(a) {
+  if (a.patient_missing) return 'Paziente eliminato'
+  return a.patient_name || 'Paziente senza nome'
+}
 
 export function appointmentStatus(a) {
   if (a.status === 'confirmed') return { key: 'confirmed', label: 'Confermato', pill: 'ok' }
@@ -15,6 +23,7 @@ export function appointmentStatus(a) {
 }
 
 export function reminderInfo(a, config) {
+  if (a.patient_missing) return { tone: 'warn', text: PATIENT_MISSING_MSG }
   if (config && !config.bot_reminders_enabled) return { tone: 'warn', text: BOT_DISABLED_MSG }
   if (!a.patient_linked) return { tone: 'warn', text: PATIENT_NOT_LINKED_MSG }
   if (a.patient_active === false) return { tone: 'warn', text: PATIENT_INACTIVE_MSG }
