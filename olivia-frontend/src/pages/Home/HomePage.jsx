@@ -119,6 +119,7 @@ function AttentionAlert({ attention, threshold }) {
         </span>
         <h2 className="attention-alert__title">
           Serve attenzione <span className="attention-alert__reason">- bassa aderenza</span>
+          <span className="attention-alert__threshold">(pazienti sotto il {threshold}%)</span>
         </h2>
         {hasItems && (
           <span className="attention-alert__count">
