@@ -1646,28 +1646,71 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 }
 .period-select button:disabled { color: var(--ink-5); cursor: not-allowed; }
 
-.attention-list { display: flex; flex-direction: column; }
+/* "Serve attenzione" in Home: un avviso in cima, non un grafico come gli altri */
+.attention-alert {
+  background: #FBEDE8;
+  border: 1px solid #E5B9AC;
+  border-left: 5px solid var(--danger);
+  border-radius: var(--r-lg);
+  padding: 16px 20px 14px;
+  box-shadow: var(--shadow-sm);
+}
+.attention-alert__head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.attention-alert__icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+}
+.attention-alert__title { margin: 0; font-size: 17px; font-weight: 600; color: var(--danger); letter-spacing: -0.01em; }
+.attention-alert__count {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--danger);
+  background: #F6D5CC;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.attention-alert__empty { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-3); }
+.attention-alert__note { margin: 10px 0 0; font-size: 12px; color: var(--ink-4); }
+/* nessuno da segnalare: resta al suo posto, ma senza allarmare */
+.attention-alert--calm { background: var(--surface); border-color: var(--line); border-left-color: var(--ok); }
+.attention-alert--calm .attention-alert__icon { background: var(--ok-bg); color: var(--ok); }
+.attention-alert--calm .attention-alert__title { color: var(--ink); }
+
+.attention-list { display: flex; flex-direction: column; margin: 0 -10px; }
 .attention-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 0;
-  border-top: 1px solid var(--line-soft);
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border-top: 1px solid #EFCFC5;
+  border-radius: var(--r-sm);
+  text-align: left;
   cursor: pointer;
   transition: background .15s;
 }
-.attention-row:hover { background: var(--surface-2); }
+.attention-row:hover { background: rgba(255, 255, 255, .7); }
+.attention-row:focus-visible { outline: 2px solid var(--danger); outline-offset: -2px; }
 .attention-list .attention-row:first-child { border-top: 0; }
-.attention-row__name { flex: 1; font-size: 13.5px; color: var(--ink); font-weight: 500; }
-.attention-row__meta { font-size: 11.5px; color: var(--ink-4); }
+.attention-row__name { flex: 1; font-size: 14.5px; color: var(--ink); font-weight: 600; }
+.attention-row__meta { font-size: 12.5px; color: var(--ink-3); }
 .attention-row__pct {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warn);
-  min-width: 40px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--danger);
+  min-width: 48px;
   text-align: right;
 }
+.attention-row__arrow { color: var(--ink-4); flex-shrink: 0; }
 
 .mood-breakdown { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
 .mood-tile { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; }

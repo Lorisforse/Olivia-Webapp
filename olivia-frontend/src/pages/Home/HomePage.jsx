@@ -56,19 +56,61 @@ const PERIODS = [
   [30, '30gg'],
 ]
 
-function CohortSection() {
+function AttentionAlert({ attention }) {
   const navigate = useNavigate()
-  const [days, setDays] = useState(14)
-  const [cohort, setCohort] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const loading = attention === undefined
+  const hasItems = !!attention?.length
 
-  useEffect(() => {
-    setLoading(true)
-    getCohortReport({ days })
-      .then(setCohort)
-      .catch(() => setCohort(null))
-      .finally(() => setLoading(false))
-  }, [days])
+  return (
+    <section
+      className={`attention-alert mb-24${hasItems ? '' : ' attention-alert--calm'}`}
+      aria-label="Serve attenzione"
+    >
+      <div className="attention-alert__head">
+        <span className="attention-alert__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </span>
+        <h2 className="attention-alert__title">Serve attenzione</h2>
+        {hasItems && (
+          <span className="attention-alert__count">
+            {attention.length} {attention.length === 1 ? 'paziente' : 'pazienti'}
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <p className="attention-alert__empty">Caricamento…</p>
+      ) : !hasItems ? (
+        <p className="attention-alert__empty">Nessun paziente con aderenza bassa negli ultimi 7 giorni.</p>
+      ) : (
+        <div className="attention-list">
+          {attention.map(a => (
+            <button key={a.patient_id} type="button" className="attention-row" onClick={() => navigate(`/pazienti/${a.patient_id}`)}>
+              <span className="attention-row__name">{a.name || '—'}</span>
+              <span className="attention-row__meta">
+                {a.days_logged} {a.days_logged === 1 ? 'giorno registrato' : 'giorni registrati'}
+              </span>
+              <span className="attention-row__pct">{a.adherence_pct}%</span>
+              <svg className="attention-row__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <p className="attention-alert__note">
+        I 5 pazienti con l&#39;aderenza media più bassa negli ultimi 7 giorni (solo chi ha
+        registrato almeno 2 giorni in quel periodo), indipendentemente dal periodo dei grafici.
+      </p>
+    </section>
+  )
+}
+
+function CohortSection({ days, setDays, cohort, loading }) {
 
   const adherenceData = (cohort?.daily || []).map(d => ({
     label: formatDayLabel(d.date),
@@ -127,38 +169,7 @@ function CohortSection() {
             </div>
           </div>
 
-          <div className="card">
-            <div className="card__header">
-              <h2 className="card__title">Serve attenzione</h2>
-            </div>
-            <div className="card__body">
-              {loading ? (
-                <div className="chart-empty">Caricamento…</div>
-              ) : !cohort?.attention?.length ? (
-                <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-                  Nessun paziente con aderenza bassa negli ultimi 7 giorni.
-                </p>
-              ) : (
-                <div className="attention-list">
-                  {cohort.attention.map(a => (
-                    <div key={a.patient_id} className="attention-row" onClick={() => navigate(`/pazienti/${a.patient_id}`)}>
-                      <span className="attention-row__name">{a.name || '—'}</span>
-                      <span className="attention-row__meta">{a.days_logged}gg loggati</span>
-                      <span className="attention-row__pct">{a.adherence_pct}%</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {!loading && (
-                <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
-                  I 5 pazienti con l&#39;aderenza media più bassa negli ultimi 7 giorni (solo chi ha
-                  registrato almeno 2 giorni in quel periodo), indipendentemente dal periodo scelto sopra.
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="card">
+          <div className="card" style={{ gridColumn: 'span 2' }}>
             <div className="card__header">
               <h2 className="card__title">Idratazione</h2>
             </div>
@@ -298,6 +309,26 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [stats, setStats] = useState({ active: '—', nodiet: '—', diets: '—', lastDiet: '—' })
+  const [days, setDays] = useState(14)
+  const [cohort, setCohort] = useState(null)
+  const [loading, setLoading] = useState(true)
+  // "Serve attenzione" guarda sempre gli ultimi 7 giorni: tenuto a parte, cosi'
+  // cambiando periodo dei grafici l'avviso non torna a "Caricamento…".
+  const [attention, setAttention] = useState(undefined)
+
+  useEffect(() => {
+    setLoading(true)
+    getCohortReport({ days })
+      .then(data => {
+        setCohort(data)
+        setAttention(data?.attention || [])
+      })
+      .catch(() => {
+        setCohort(null)
+        setAttention(prev => prev ?? [])
+      })
+      .finally(() => setLoading(false))
+  }, [days])
 
   useEffect(() => {
     Promise.all([getPatients(), getDiets()])
@@ -354,7 +385,9 @@ export default function HomePage() {
         </article>
       </section>
 
-      <CohortSection />
+      <AttentionAlert attention={attention} />
+
+      <CohortSection days={days} setDays={setDays} cohort={cohort} loading={loading} />
 
       <section aria-label="Azioni rapide">
         <h2 className="page-eyebrow" style={{ marginBottom: 12 }}>Azioni rapide</h2>
