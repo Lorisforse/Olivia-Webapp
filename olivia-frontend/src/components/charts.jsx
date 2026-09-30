@@ -159,7 +159,7 @@ export function DailyDiary({ rows, weekly = false }) {
       {rows.map((row, i) => (
         <div key={row.key} className="diary__row">
           <div className="diary__head">
-            <span className="diary__label">{row.label}</span>
+            <span className="diary__label">{row.icon}{row.label}</span>
             <span className="diary__counts">
               {countTones(row.days, row.legend).map(c => (
                 <span key={c.key} className="diary__count">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { METRICS, METRIC_LABELS } from '../utils/metrics'
+import MetricIcon from './MetricIcon'
 
 function SlidersIcon() {
   return (
@@ -94,6 +95,7 @@ export default function MetricsCustomizer({ metrics, onSave, defaultOrder, scree
                   <li key={m.key} className={`metrics-list__row${m.visible ? '' : ' is-hidden'}`}>
                     <label className="metrics-list__label">
                       <input type="checkbox" checked={m.visible} onChange={() => toggle(m.key)} />
+                      <MetricIcon metric={m.key} size="sm" />
                       <span>{METRIC_LABELS[m.key]}</span>
                       {screen === 'home' && onlyPatient[m.key] && (
                         <span className="metrics-list__note">solo scheda paziente</span>

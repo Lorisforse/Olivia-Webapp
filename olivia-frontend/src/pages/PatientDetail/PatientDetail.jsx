@@ -16,6 +16,7 @@ import { useMinDuration } from '../../hooks/useMinDuration'
 import TimePicker from '../../components/TimePicker'
 import GoalSelect from '../../components/GoalSelect'
 import { OliveSprig } from '../../components/ui'
+import MetricIcon from '../../components/MetricIcon'
 import MetricsCustomizer from '../../components/MetricsCustomizer'
 import useMetricPrefs from '../../hooks/useMetricPrefs'
 import { PATIENT_DEFAULT_ORDER } from '../../utils/metrics'
@@ -840,9 +841,9 @@ function TrendsTab({ patientId, status }) {
   const messagesData = weekly ? toWeekly(messagesDaily, 1) : messagesDaily
 
   const diaryRows = {
-    adherence: { key: 'adherence', label: 'Aderenza pasti', days: adherenceDays, legend: ADHERENCE_TONE },
-    sleep: { key: 'sleep', label: 'Qualità del sonno', days: sleepDays, legend: SLEEP_TONE },
-    hunger: { key: 'hunger', label: 'Livello di fame', days: hungerDays, legend: HUNGER_TONE },
+    adherence: { key: 'adherence', icon: <MetricIcon metric="adherence" size="sm" />, label: 'Aderenza pasti', days: adherenceDays, legend: ADHERENCE_TONE },
+    sleep: { key: 'sleep', icon: <MetricIcon metric="sleep" size="sm" />, label: 'Qualità del sonno', days: sleepDays, legend: SLEEP_TONE },
+    hunger: { key: 'hunger', icon: <MetricIcon metric="hunger" size="sm" />, label: 'Livello di fame', days: hungerDays, legend: HUNGER_TONE },
   }
   const visible = metrics.filter(m => m.visible).map(m => m.key)
   const visibleDiary = visible.filter(key => DIARY_KEYS.includes(key))
@@ -850,7 +851,7 @@ function TrendsTab({ patientId, status }) {
   const cards = {
     weight: (
       <>
-        <div className="card__header"><h2 className="card__title">Peso</h2></div>
+        <div className="card__header"><h2 className="card__title card__title--icon"><MetricIcon metric="weight" />Peso</h2></div>
         <div className="card__body">
           <LineTrend data={weightData} unit=" kg" color="var(--brand)" emptyLabel="Nessun peso registrato nel periodo" />
         </div>
@@ -858,7 +859,7 @@ function TrendsTab({ patientId, status }) {
     ),
     diary: (
       <>
-        <div className="card__header"><h2 className="card__title">Diario giornaliero</h2></div>
+        <div className="card__header"><h2 className="card__title card__title--icon"><MetricIcon metric="diary" />Diario giornaliero</h2></div>
         <div className="card__body">
           <DailyDiary weekly={weekly} rows={visibleDiary.map(key => diaryRows[key])} />
         </div>
@@ -866,7 +867,7 @@ function TrendsTab({ patientId, status }) {
     ),
     satisfaction: (
       <>
-        <div className="card__header"><h2 className="card__title">Gradimento pasti</h2></div>
+        <div className="card__header"><h2 className="card__title card__title--icon"><MetricIcon metric="satisfaction" />Gradimento pasti</h2></div>
         <div className="card__body">
           <BarTrend data={satisfactionData} unit="%" color="#C08552" emptyLabel="Nessun gradimento registrato nel periodo" />
         </div>
@@ -874,7 +875,7 @@ function TrendsTab({ patientId, status }) {
     ),
     hydration: (
       <>
-        <div className="card__header"><h2 className="card__title">Idratazione</h2></div>
+        <div className="card__header"><h2 className="card__title card__title--icon"><MetricIcon metric="hydration" />Idratazione</h2></div>
         <div className="card__body">
           <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={140} emptyLabel="Nessuna idratazione registrata nel periodo" />
         </div>
@@ -882,7 +883,7 @@ function TrendsTab({ patientId, status }) {
     ),
     messages: (
       <>
-        <div className="card__header"><h2 className="card__title">Messaggi scambiati col bot</h2></div>
+        <div className="card__header"><h2 className="card__title card__title--icon"><MetricIcon metric="messages" />Messaggi scambiati col bot</h2></div>
         <div className="card__body">
           <BarTrend data={messagesData} emptyLabel="Nessun messaggio registrato nel periodo" color="#7A9E8E" height={140} />
         </div>
@@ -890,7 +891,7 @@ function TrendsTab({ patientId, status }) {
     ),
     mood: (
       <>
-        <div className="card__header"><h2 className="card__title">Umore</h2></div>
+        <div className="card__header"><h2 className="card__title card__title--icon"><MetricIcon metric="mood" />Umore</h2></div>
         <div className="card__body">
           <LineTrend data={moodData} color="#B98A3E" emptyLabel="Nessun umore registrato nel periodo" />
           <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>

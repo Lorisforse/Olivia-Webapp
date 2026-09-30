@@ -5,6 +5,7 @@ import { getDiets } from '../../api/diets'
 import { useAuth } from '../../context/AuthContext'
 import { BarTrend } from '../../components/charts'
 import { CountUp } from '../../components/ui'
+import MetricIcon from '../../components/MetricIcon'
 import MetricsCustomizer from '../../components/MetricsCustomizer'
 import useMetricPrefs from '../../hooks/useMetricPrefs'
 import { HOME_DEFAULT_ORDER } from '../../utils/metrics'
@@ -194,7 +195,7 @@ function CohortSection({ days, setDays, cohort, loading, metrics, onSaveMetrics 
       body: (
         <>
           <div className="card__header">
-            <h2 className="card__title">Aderenza alla dieta</h2>
+            <h2 className="card__title card__title--icon"><MetricIcon metric="adherence" />Aderenza alla dieta</h2>
             {cohort?.avg_adherence_pct != null && (
               <span className="pill pill--ok">{cohort.avg_adherence_pct}% media</span>
             )}
@@ -216,7 +217,7 @@ function CohortSection({ days, setDays, cohort, loading, metrics, onSaveMetrics 
       body: (
         <>
           <div className="card__header">
-            <h2 className="card__title">Idratazione</h2>
+            <h2 className="card__title card__title--icon"><MetricIcon metric="hydration" />Idratazione</h2>
           </div>
           <div className="card__body">
             <div className="trend-head">
@@ -238,7 +239,7 @@ function CohortSection({ days, setDays, cohort, loading, metrics, onSaveMetrics 
       body: (
         <>
           <div className="card__header">
-            <h2 className="card__title">Gradimento pasti</h2>
+            <h2 className="card__title card__title--icon"><MetricIcon metric="satisfaction" />Gradimento pasti</h2>
             {cohort?.avg_satisfaction_pct != null && (
               <span className="pill pill--ok">{cohort.avg_satisfaction_pct}% media</span>
             )}
@@ -260,7 +261,7 @@ function CohortSection({ days, setDays, cohort, loading, metrics, onSaveMetrics 
       body: (
         <>
           <div className="card__header">
-            <h2 className="card__title">Umore</h2>
+            <h2 className="card__title card__title--icon"><MetricIcon metric="mood" />Umore</h2>
           </div>
           <div className="card__body">
             {loading ? (
@@ -297,7 +298,7 @@ function CohortSection({ days, setDays, cohort, loading, metrics, onSaveMetrics 
       body: (
         <>
           <div className="card__header">
-            <h2 className="card__title">Qualità del sonno</h2>
+            <h2 className="card__title card__title--icon"><MetricIcon metric="sleep" />Qualità del sonno</h2>
           </div>
           <div className="card__body">
             {loading ? (
@@ -324,7 +325,7 @@ function CohortSection({ days, setDays, cohort, loading, metrics, onSaveMetrics 
       body: (
         <>
           <div className="card__header">
-            <h2 className="card__title">Messaggi scambiati col bot</h2>
+            <h2 className="card__title card__title--icon"><MetricIcon metric="messages" />Messaggi scambiati col bot</h2>
           </div>
           <div className="card__body">
             <div className="trend-head">
@@ -344,7 +345,7 @@ function CohortSection({ days, setDays, cohort, loading, metrics, onSaveMetrics 
       body: (
         <>
           <div className="card__header">
-            <h2 className="card__title">Livello di fame</h2>
+            <h2 className="card__title card__title--icon"><MetricIcon metric="hunger" />Livello di fame</h2>
           </div>
           <div className="card__body">
             {loading ? (

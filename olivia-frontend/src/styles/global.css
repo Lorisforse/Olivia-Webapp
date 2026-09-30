@@ -1593,7 +1593,7 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   gap: 4px 14px;
   margin-bottom: 6px;
 }
-.diary__label { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+.diary__label { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink); }
 .diary__counts { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--ink-3); }
 .diary__count { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
 .diary__dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
@@ -1756,3 +1756,18 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .metrics-list__error { margin: 10px 0 0; font-size: 13px; color: var(--danger); }
 .metrics-footer { justify-content: space-between; }
 .metrics-empty { padding: 20px 24px; }
+
+/* Icone colorate delle metriche (MetricIcon.jsx) */
+.metric-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+.metric-icon--md { width: 30px; height: 30px; }
+.metric-icon--md svg { width: 17px; height: 17px; }
+.metric-icon--sm { width: 24px; height: 24px; }
+.metric-icon--sm svg { width: 14px; height: 14px; }
+.card__title--icon { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink); }
+.card__header:has(.card__title--icon) { padding-top: 12px; padding-bottom: 12px; }
