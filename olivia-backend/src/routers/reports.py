@@ -133,15 +133,17 @@ async def get_weekly_reports(
 
 @router.get("/reports/cohort", response_model=CohortReportResponse)
 async def get_cohort_report(
-    days: int = Query(14, ge=1, le=90),
+    days: int = Query(14, ge=0, le=366),
     db=Depends(get_database),
 ):
     """Vista aggregata per la home page: solo pazienti collegati al bot
     (chat_id valorizzato) e non disattivati. Percorso `/patients/reports/cohort`
     (non `/patients/{patient_id}/...`): con soli 2 segmenti dopo il prefisso
-    non può mai essere scambiato per un patient_id dalle altre rotte."""
+    non può mai essere scambiato per un patient_id dalle altre rotte.
+
+    `days=0` vuol dire "Sempre": dal primo daily-report dei pazienti attivi a oggi.
+    I punti restano giornalieri: il raggruppamento per settimana/mese lo fa il frontend."""
     today = date.today()
-    start = today - timedelta(days=days - 1)
     week_start = today - timedelta(days=6)
 
     patients = await db["users"].find(
@@ -155,6 +157,15 @@ async def get_cohort_report(
         return CohortReportResponse(
             days=days, active_patients=0, daily=[], attention=[], mood=CohortMoodBreakdown(),
         )
+
+    if days == 0:
+        first = await db["daily-reports"].find_one(
+            {"user.$id": {"$in": patient_ids}}, {"date": 1}, sort=[("date", 1)],
+        )
+        raw_first = first.get("date") if first else None
+        first_day = raw_first.date() if isinstance(raw_first, datetime) else raw_first
+        days = (today - first_day).days + 1 if first_day and first_day <= today else 1
+    start = today - timedelta(days=days - 1)
 
     docs = await db["daily-reports"].find({
         "user.$id": {"$in": patient_ids},

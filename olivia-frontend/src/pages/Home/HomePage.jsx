@@ -50,11 +50,51 @@ function formatToday() {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+// 0 = "Sempre": il backend parte dal primo report dei pazienti attivi.
 const PERIODS = [
   [7, '7gg'],
   [14, '14gg'],
   [30, '30gg'],
+  [365, '1 anno'],
+  [0, 'Sempre'],
 ]
+// Oltre questi giorni le barre giornaliere diventano illeggibili: si raggruppa.
+const WEEKLY_FROM_DAYS = 60
+const MONTHLY_FROM_DAYS = 400
+
+function weekStartIso(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00')
+  d.setDate(d.getDate() - (d.getDay() + 6) % 7)
+  return d.toISOString().slice(0, 10)
+}
+
+function formatMonth(monthStr, style) {
+  const d = new Date(monthStr + '-15T12:00:00')
+  return d.toLocaleDateString('it-IT', style === 'long' ? { month: 'long', year: 'numeric' } : { month: 'short', year: '2-digit' })
+}
+
+// Punti giornalieri -> medie per settimana (da lunedì) o per mese; giorni senza dato esclusi.
+function groupDaily(daily, field, grouping, digits = 0) {
+  if (grouping === 'day') {
+    return daily.map(d => ({ label: formatDayLabel(d.date), value: d[field] == null ? null : +d[field].toFixed(digits) }))
+  }
+  const order = []
+  const values = {}
+  daily.forEach(d => {
+    const key = grouping === 'month' ? d.date.slice(0, 7) : weekStartIso(d.date)
+    if (!values[key]) { values[key] = []; order.push(key) }
+    if (d[field] != null) values[key].push(d[field])
+  })
+  return order.map(key => {
+    const vals = values[key]
+    const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null
+    return {
+      label: grouping === 'month' ? formatMonth(key) : formatDayLabel(key),
+      tip: grouping === 'month' ? formatMonth(key, 'long') : `Settimana dal ${formatDayLabel(key)}`,
+      value: avg == null ? null : +avg.toFixed(digits),
+    }
+  })
+}
 
 function AttentionAlert({ attention }) {
   const navigate = useNavigate()
@@ -111,23 +151,21 @@ function AttentionAlert({ attention }) {
 }
 
 function CohortSection({ days, setDays, cohort, loading }) {
+  const daily = cohort?.daily || []
+  const grouping = daily.length > MONTHLY_FROM_DAYS ? 'month' : daily.length > WEEKLY_FROM_DAYS ? 'week' : 'day'
 
-  const adherenceData = (cohort?.daily || []).map(d => ({
-    label: formatDayLabel(d.date),
-    value: d.adherence_pct,
-  }))
-  const hydrationData = (cohort?.daily || []).map(d => ({
-    label: formatDayLabel(d.date),
-    value: d.hydration_ml != null ? Math.round(d.hydration_ml) : null,
-  }))
-  const satisfactionData = (cohort?.daily || []).map(d => ({
-    label: formatDayLabel(d.date),
-    value: d.satisfaction_pct,
-  }))
-  const messagesData = (cohort?.daily || []).map(d => ({
-    label: formatDayLabel(d.date),
-    value: d.messages_avg,
-  }))
+  const adherenceData = groupDaily(daily, 'adherence_pct', grouping, 1)
+  const hydrationData = groupDaily(daily, 'hydration_ml', grouping)
+  const satisfactionData = groupDaily(daily, 'satisfaction_pct', grouping, 1)
+  const messagesData = groupDaily(daily, 'messages_avg', grouping, 1)
+
+  const periodNote = !loading && daily.length > 0 && (days === 0 || grouping !== 'day')
+    ? [
+        days === 0 && `Dal ${formatDate(daily[0].date + 'T12:00:00')}, primo giorno registrato`,
+        grouping === 'week' && 'medie settimanali',
+        grouping === 'month' && 'medie mensili',
+      ].filter(Boolean).join(' · ')
+    : null
 
   return (
     <section aria-label="Andamento coorte" className="mb-24">
@@ -139,6 +177,9 @@ function CohortSection({ days, setDays, cohort, loading }) {
           ))}
         </div>
       </div>
+      {periodNote && (
+        <p className="muted" style={{ fontSize: 12.5, margin: '-4px 0 12px' }}>{periodNote}</p>
+      )}
 
       {!loading && cohort && cohort.active_patients === 0 && (
         <div className="card card-empty-note">
