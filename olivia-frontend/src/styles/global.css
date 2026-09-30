@@ -951,6 +951,18 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .feed__icon svg { width: 14px; height: 14px; }
 .feed__title { font-size: 13.5px; color: var(--ink); font-weight: 500; }
 .feed__desc { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+/* motivo della non aderenza: riga a parte, stesso ambra della pillola "pasto non completo" */
+.feed__reason {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: var(--r-sm);
+  background: #FCEBD0;
+  border: 1px solid #F0C27E;
+  font-size: 12.5px;
+  color: #5C3600;
+}
+.feed__reason-label { font-weight: 600; }
 
 /* ============================================================
    UPLOAD

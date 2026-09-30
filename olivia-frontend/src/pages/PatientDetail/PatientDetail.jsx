@@ -616,14 +616,14 @@ function BotTab({ patientId, status, patientName }) {
             const label = `${DOW[d.getDay()]} ${d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}`
             const items = []
             ;(day.meals || []).forEach((m, i) => {
-              const foodText = (m.food || []).join(', ') || '—'
               items.push({
                 type: 'meal',
                 time: '—',
                 title: m.meal_type || 'Pasto',
-                desc: m.adherence_reason ? `${foodText} — ${m.adherence_reason}` : foodText,
+                desc: (m.food || []).join(', ') || '—',
+                reason: m.adherence_reason || null,
                 badge: m.adherence || 'n.d.',
-                tone: (m.adherence || '').toLowerCase().includes('complet') ? 'ok' : 'wait',
+                tone: (m.adherence || '').toLowerCase().includes('complet') ? 'ok' : 'warn',
               })
             })
             ;(day.weights || []).forEach(w => {
@@ -662,6 +662,11 @@ function BotTab({ patientId, status, patientName }) {
                     <div>
                       <div className="feed__title">{item.title}</div>
                       <div className="feed__desc">{item.desc}</div>
+                      {item.reason && (
+                        <div className="feed__reason">
+                          <span className="feed__reason-label">Motivo:</span> {item.reason}
+                        </div>
+                      )}
                     </div>
                     {item.badge && <span className={`pill pill--${item.tone}`}>{item.badge}</span>}
                   </div>
