@@ -1668,6 +1668,7 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
   color: #fff;
 }
 .attention-alert__title { margin: 0; font-size: 17px; font-weight: 600; color: var(--danger); letter-spacing: -0.01em; }
+.attention-alert__reason { font-weight: 500; }
 .attention-alert__count {
   margin-left: auto;
   font-size: 12.5px;

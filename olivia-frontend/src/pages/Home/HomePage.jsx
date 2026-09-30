@@ -104,7 +104,7 @@ function AttentionAlert({ attention }) {
   return (
     <section
       className={`attention-alert mb-24${hasItems ? '' : ' attention-alert--calm'}`}
-      aria-label="Serve attenzione"
+      aria-label="Serve attenzione: bassa aderenza"
     >
       <div className="attention-alert__head">
         <span className="attention-alert__icon" aria-hidden="true">
@@ -113,7 +113,9 @@ function AttentionAlert({ attention }) {
             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
         </span>
-        <h2 className="attention-alert__title">Serve attenzione</h2>
+        <h2 className="attention-alert__title">
+          Serve attenzione <span className="attention-alert__reason">- bassa aderenza</span>
+        </h2>
         {hasItems && (
           <span className="attention-alert__count">
             {attention.length} {attention.length === 1 ? 'paziente' : 'pazienti'}
