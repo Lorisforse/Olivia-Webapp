@@ -99,7 +99,7 @@ function groupDaily(daily, field, grouping, digits = 0) {
   })
 }
 
-function AttentionAlert({ attention }) {
+function AttentionAlert({ attention, threshold }) {
   const navigate = useNavigate()
   const loading = attention === undefined
   const hasItems = !!attention?.length
@@ -129,7 +129,7 @@ function AttentionAlert({ attention }) {
       {loading ? (
         <p className="attention-alert__empty">Caricamento…</p>
       ) : !hasItems ? (
-        <p className="attention-alert__empty">Nessun paziente con aderenza bassa negli ultimi 7 giorni.</p>
+        <p className="attention-alert__empty">Nessun paziente sotto il {threshold}% di aderenza negli ultimi 7 giorni.</p>
       ) : (
         <div className="attention-list">
           {attention.map(a => (
@@ -148,8 +148,8 @@ function AttentionAlert({ attention }) {
       )}
 
       <p className="attention-alert__note">
-        I 5 pazienti con l&#39;aderenza media più bassa negli ultimi 7 giorni (solo chi ha
-        registrato almeno 2 giorni in quel periodo), indipendentemente dal periodo dei grafici.
+        Pazienti con aderenza media sotto il {threshold}% negli ultimi 7 giorni, dal più basso (al
+        massimo 5, solo chi ha registrato almeno 2 giorni), indipendentemente dal periodo dei grafici.
       </p>
     </section>
   )
@@ -427,6 +427,7 @@ export default function HomePage() {
   // "Serve attenzione" guarda sempre gli ultimi 7 giorni: tenuto a parte, cosi'
   // cambiando periodo dei grafici l'avviso non torna a "Caricamento…".
   const [attention, setAttention] = useState(undefined)
+  const [attentionThreshold, setAttentionThreshold] = useState(70)
 
   useEffect(() => {
     setLoading(true)
@@ -434,6 +435,7 @@ export default function HomePage() {
       .then(data => {
         setCohort(data)
         setAttention(data?.attention || [])
+        if (data?.attention_threshold_pct != null) setAttentionThreshold(data.attention_threshold_pct)
       })
       .catch(() => {
         setCohort(null)
@@ -497,7 +499,7 @@ export default function HomePage() {
         </article>
       </section>
 
-      <AttentionAlert attention={attention} />
+      <AttentionAlert attention={attention} threshold={attentionThreshold} />
 
       <CohortSection
         days={days}

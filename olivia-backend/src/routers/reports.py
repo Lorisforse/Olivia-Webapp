@@ -28,6 +28,9 @@ _ADHERENCE_SCORE = {"completa": 1.0, "parziale": 0.5, "nulla": 0.0}
 # stessa logica per il gradimento: "soddisfatto" pieno, "neutro" mezzo, "insoddisfatto" zero.
 _SATISFACTION_SCORE = {"soddisfatto": 1.0, "neutro": 0.5, "insoddisfatto": 0.0}
 _MEAL_FIELDS = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner"]
+# Sotto questa aderenza media (ultimi 7 giorni) il paziente finisce in "Serve attenzione".
+# Stesso 70% con cui il Diario giornaliero della scheda paziente colora un giorno come non buono.
+ATTENTION_THRESHOLD_PCT = 70
 
 
 def _day_meal_pct(meal_indicators: dict, score_map: dict) -> Optional[float]:
@@ -156,6 +159,7 @@ async def get_cohort_report(
     if not patient_ids:
         return CohortReportResponse(
             days=days, active_patients=0, daily=[], attention=[], mood=CohortMoodBreakdown(),
+            attention_threshold_pct=ATTENTION_THRESHOLD_PCT,
         )
 
     if days == 0:
@@ -242,16 +246,19 @@ async def get_cohort_report(
     all_satisfaction_vals = [p.satisfaction_pct for p in daily_points if p.satisfaction_pct is not None]
     all_messages_vals = [p.messages_avg for p in daily_points if p.messages_avg is not None]
 
-    # "Serve attenzione": aderenza media ultimi 7gg, solo chi ha almeno 2 giorni
-    # loggati (un solo giorno storto non basta a segnalare nessuno).
+    # "Serve attenzione": aderenza media ultimi 7gg sotto soglia, solo chi ha almeno
+    # 2 giorni loggati (un solo giorno storto non basta a segnalare nessuno).
     attention = []
     for pid, vals in by_patient_week.items():
         if len(vals) < 2:
             continue
+        avg = round(sum(vals) / len(vals), 1)
+        if avg >= ATTENTION_THRESHOLD_PCT:
+            continue
         attention.append(CohortAttentionPatient(
             patient_id=str(pid),
             name=name_by_id.get(pid),
-            adherence_pct=round(sum(vals) / len(vals), 1),
+            adherence_pct=avg,
             days_logged=len(vals),
         ))
     attention.sort(key=lambda a: a.adherence_pct)
@@ -314,6 +321,7 @@ async def get_cohort_report(
         avg_messages=round(sum(all_messages_vals) / len(all_messages_vals), 1) if all_messages_vals else None,
         daily=daily_points,
         attention=attention,
+        attention_threshold_pct=ATTENTION_THRESHOLD_PCT,
         mood=mood,
         sleep=sleep,
         hunger=hunger,

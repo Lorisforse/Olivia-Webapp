@@ -125,6 +125,7 @@ class CohortReportResponse(BaseModel):
     avg_messages: Optional[float] = None
     daily: list[CohortDayPoint]
     attention: list[CohortAttentionPatient]
+    attention_threshold_pct: int = 70  # soglia di "Serve attenzione", per il testo in Home
     mood: CohortMoodBreakdown
     sleep: CohortSleepBreakdown = Field(default_factory=CohortSleepBreakdown)
     hunger: CohortHungerBreakdown = Field(default_factory=CohortHungerBreakdown)
