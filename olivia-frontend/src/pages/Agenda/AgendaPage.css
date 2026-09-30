@@ -7,7 +7,7 @@
   align-items: start;
 }
 
-.agenda-side { position: sticky; top: 88px; }
+.agenda-side { position: sticky; top: 96px; }
 .agenda-list { max-height: calc(100vh - 200px); overflow-y: auto; }
 .agenda-list__day { padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
 .agenda-list__day:last-child { border-bottom: 0; }
