@@ -204,7 +204,11 @@ body {
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
-  animation: page-in .25s ease both;
+  /* "backwards" e non "both": a fine animazione il transform non deve restare applicato.
+     Qualunque transform sulla pagina (anche translateY(0)) fa posizionare le modali
+     (position: fixed) rispetto alla pagina invece che allo schermo, e su pagine lunghe
+     restano mezze fuori vista. */
+  animation: page-in .25s ease backwards;
 }
 .page--narrow { max-width: 880px; }
 @keyframes page-in {
