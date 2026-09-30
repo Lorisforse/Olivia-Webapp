@@ -16,6 +16,9 @@ import { useMinDuration } from '../../hooks/useMinDuration'
 import TimePicker from '../../components/TimePicker'
 import GoalSelect from '../../components/GoalSelect'
 import { OliveSprig } from '../../components/ui'
+import MetricsCustomizer from '../../components/MetricsCustomizer'
+import useMetricPrefs from '../../hooks/useMetricPrefs'
+import { PATIENT_DEFAULT_ORDER } from '../../utils/metrics'
 
 function deriveStatus(p) {
   if (p.active === false && p.deactivated_reason === 'pending_diet') return 'pending'
@@ -760,7 +763,10 @@ function lastPastVisit(appointments) {
   return past.length ? localIso(new Date(past[past.length - 1].scheduled_at)) : null
 }
 
+const DIARY_KEYS = ['adherence', 'sleep', 'hunger']
+
 function TrendsTab({ patientId, status }) {
+  const { metrics, save: saveMetrics } = useMetricPrefs(PATIENT_DEFAULT_ORDER)
   const [period, setPeriod] = useState('30')
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
@@ -833,77 +839,57 @@ function TrendsTab({ patientId, status }) {
   const satisfactionData = weekly ? toWeekly(satisfactionDaily) : satisfactionDaily
   const messagesData = weekly ? toWeekly(messagesDaily, 1) : messagesDaily
 
-  const rangeText = (period === 'visit'
-    ? `Dall'ultima visita del ${formatLongDate(rangeStart)} a oggi`
-    : `Dal ${formatLongDate(rangeStart)} a oggi`)
-    + (weekly ? ' · diario, idratazione, gradimento, messaggi e umore raggruppati per settimana' : '')
+  const diaryRows = {
+    adherence: { key: 'adherence', label: 'Aderenza pasti', days: adherenceDays, legend: ADHERENCE_TONE },
+    sleep: { key: 'sleep', label: 'Qualità del sonno', days: sleepDays, legend: SLEEP_TONE },
+    hunger: { key: 'hunger', label: 'Livello di fame', days: hungerDays, legend: HUNGER_TONE },
+  }
+  const visible = metrics.filter(m => m.visible).map(m => m.key)
+  const visibleDiary = visible.filter(key => DIARY_KEYS.includes(key))
 
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 10 }}>
-        <h2 className="page-eyebrow" style={{ margin: 0 }}>Andamento</h2>
-        <div className="period-select" role="group" aria-label="Periodo">
-          {TREND_PERIODS.map(([v, l]) => {
-            const noVisit = v === 'visit' && !lastVisit
-            return (
-              <button
-                key={v}
-                className={period === v ? 'active' : ''}
-                onClick={() => setPeriod(v)}
-                disabled={noVisit}
-                title={noVisit && lastVisit === null ? 'Nessuna visita passata in Agenda per questo paziente' : undefined}
-              >
-                {l}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-      <p className="muted" style={{ fontSize: 13, margin: '0 0 16px' }}>{rangeText}</p>
-
-      <div className="card">
+  const cards = {
+    weight: (
+      <>
         <div className="card__header"><h2 className="card__title">Peso</h2></div>
         <div className="card__body">
           <LineTrend data={weightData} unit=" kg" color="var(--brand)" emptyLabel="Nessun peso registrato nel periodo" />
         </div>
-      </div>
-
-      <div className="card mt-16">
+      </>
+    ),
+    diary: (
+      <>
         <div className="card__header"><h2 className="card__title">Diario giornaliero</h2></div>
         <div className="card__body">
-          <DailyDiary
-            weekly={weekly}
-            rows={[
-              { key: 'adherence', label: 'Aderenza pasti', days: adherenceDays, legend: ADHERENCE_TONE },
-              { key: 'sleep', label: 'Qualità del sonno', days: sleepDays, legend: SLEEP_TONE },
-              { key: 'hunger', label: 'Livello di fame', days: hungerDays, legend: HUNGER_TONE },
-            ]}
-          />
+          <DailyDiary weekly={weekly} rows={visibleDiary.map(key => diaryRows[key])} />
         </div>
-      </div>
-
-      <div className="card mt-16">
+      </>
+    ),
+    satisfaction: (
+      <>
         <div className="card__header"><h2 className="card__title">Gradimento pasti</h2></div>
         <div className="card__body">
           <BarTrend data={satisfactionData} unit="%" color="#C08552" emptyLabel="Nessun gradimento registrato nel periodo" />
         </div>
-      </div>
-
-      <div className="card mt-16">
+      </>
+    ),
+    hydration: (
+      <>
         <div className="card__header"><h2 className="card__title">Idratazione</h2></div>
         <div className="card__body">
           <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={140} emptyLabel="Nessuna idratazione registrata nel periodo" />
         </div>
-      </div>
-
-      <div className="card mt-16">
+      </>
+    ),
+    messages: (
+      <>
         <div className="card__header"><h2 className="card__title">Messaggi scambiati col bot</h2></div>
         <div className="card__body">
           <BarTrend data={messagesData} emptyLabel="Nessun messaggio registrato nel periodo" color="#7A9E8E" height={140} />
         </div>
-      </div>
-
-      <div className="card mt-16">
+      </>
+    ),
+    mood: (
+      <>
         <div className="card__header"><h2 className="card__title">Umore</h2></div>
         <div className="card__body">
           <LineTrend data={moodData} color="#B98A3E" emptyLabel="Nessun umore registrato nel periodo" />
@@ -911,7 +897,59 @@ function TrendsTab({ patientId, status }) {
             Scala da -1 (negativo) a +1 (positivo), media delle rilevazioni della giornata.
           </p>
         </div>
+      </>
+    ),
+  }
+  // Aderenza, sonno e fame stanno in un'unica card ("Diario giornaliero"): la card
+  // prende il posto della prima delle tre nell'ordine scelto, le righe seguono l'ordine.
+  const orderedCards = []
+  visible.forEach(key => {
+    const cardKey = DIARY_KEYS.includes(key) ? 'diary' : key
+    if (cards[cardKey] && !orderedCards.includes(cardKey)) orderedCards.push(cardKey)
+  })
+
+  const rangeText = (period === 'visit'
+    ? `Dall'ultima visita del ${formatLongDate(rangeStart)} a oggi`
+    : `Dal ${formatLongDate(rangeStart)} a oggi`)
+    + (weekly ? ' · diario, idratazione, gradimento, messaggi e umore raggruppati per settimana' : '')
+
+  return (
+    <div>
+      <div className="section-head" style={{ marginBottom: 6 }}>
+        <h2 className="page-eyebrow" style={{ margin: 0 }}>Andamento</h2>
+        <div className="section-head__actions">
+          <div className="period-select" role="group" aria-label="Periodo">
+            {TREND_PERIODS.map(([v, l]) => {
+              const noVisit = v === 'visit' && !lastVisit
+              return (
+                <button
+                  key={v}
+                  className={period === v ? 'active' : ''}
+                  onClick={() => setPeriod(v)}
+                  disabled={noVisit}
+                  title={noVisit && lastVisit === null ? 'Nessuna visita passata in Agenda per questo paziente' : undefined}
+                >
+                  {l}
+                </button>
+              )
+            })}
+          </div>
+          <MetricsCustomizer metrics={metrics} onSave={saveMetrics} defaultOrder={PATIENT_DEFAULT_ORDER} screen="patient" />
+        </div>
       </div>
+      <p className="muted" style={{ fontSize: 13, margin: '0 0 16px' }}>{rangeText}</p>
+
+      {orderedCards.length === 0 ? (
+        <div className="card metrics-empty">
+          <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
+            Tutti i grafici sono nascosti: usa &laquo;Personalizza&raquo; per mostrarli.
+          </p>
+        </div>
+      ) : orderedCards.map((key, i) => (
+        <div key={key} className={`card${i > 0 ? ' mt-16' : ''}`}>
+          {cards[key]}
+        </div>
+      ))}
     </div>
   )
 }

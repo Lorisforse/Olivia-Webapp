@@ -5,6 +5,9 @@ import { getDiets } from '../../api/diets'
 import { useAuth } from '../../context/AuthContext'
 import { BarTrend } from '../../components/charts'
 import { CountUp } from '../../components/ui'
+import MetricsCustomizer from '../../components/MetricsCustomizer'
+import useMetricPrefs from '../../hooks/useMetricPrefs'
+import { HOME_DEFAULT_ORDER } from '../../utils/metrics'
 
 const SLEEP_TILES = [
   ['buona', 'Buono', 'var(--ok)'],
@@ -152,7 +155,23 @@ function AttentionAlert({ attention }) {
   )
 }
 
-function CohortSection({ days, setDays, cohort, loading }) {
+// Griglia a 2 colonne: le card "larghe" occupano la riga intera. Una card stretta
+// che resterebbe da sola (seguita da una larga, o ultima) si allarga, cosi' non
+// restano buchi e l'ordine scelto non cambia.
+function homeLayout(keys, cards) {
+  const layout = []
+  let col = 0
+  keys.forEach((key, i) => {
+    if (cards[key].wide) { layout.push({ key, span: 2 }); col = 0; return }
+    const next = keys[i + 1]
+    if (col === 0 && (!next || cards[next].wide)) { layout.push({ key, span: 2 }); return }
+    layout.push({ key, span: 1 })
+    col = col === 0 ? 1 : 0
+  })
+  return layout
+}
+
+function CohortSection({ days, setDays, cohort, loading, metrics, onSaveMetrics }) {
   const daily = cohort?.daily || []
   const grouping = daily.length > MONTHLY_FROM_DAYS ? 'month' : daily.length > WEEKLY_FROM_DAYS ? 'week' : 'day'
 
@@ -169,14 +188,198 @@ function CohortSection({ days, setDays, cohort, loading }) {
       ].filter(Boolean).join(' · ')
     : null
 
+  const cards = {
+    adherence: {
+      wide: true,
+      body: (
+        <>
+          <div className="card__header">
+            <h2 className="card__title">Aderenza alla dieta</h2>
+            {cohort?.avg_adherence_pct != null && (
+              <span className="pill pill--ok">{cohort.avg_adherence_pct}% media</span>
+            )}
+          </div>
+          <div className="card__body">
+            {loading
+              ? <div className="chart-empty">Caricamento…</div>
+              : <BarTrend data={adherenceData} target={80} unit="%" color="var(--brand)" />
+            }
+            <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
+              Media giornaliera sui {cohort?.active_patients ?? '—'} pazienti attivi collegati al bot · obiettivo 80%.
+            </p>
+          </div>
+        </>
+      ),
+    },
+    hydration: {
+      wide: true,
+      body: (
+        <>
+          <div className="card__header">
+            <h2 className="card__title">Idratazione</h2>
+          </div>
+          <div className="card__body">
+            <div className="trend-head">
+              <span className="trend-head__val">
+                {cohort?.avg_hydration_ml != null ? (cohort.avg_hydration_ml / 1000).toFixed(1) : '—'}
+              </span>
+              <span className="trend-head__sub">L medi al giorno · obiettivo 2,0 L</span>
+            </div>
+            {loading
+              ? <div className="chart-empty">Caricamento…</div>
+              : <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={140} />
+            }
+          </div>
+        </>
+      ),
+    },
+    satisfaction: {
+      wide: true,
+      body: (
+        <>
+          <div className="card__header">
+            <h2 className="card__title">Gradimento pasti</h2>
+            {cohort?.avg_satisfaction_pct != null && (
+              <span className="pill pill--ok">{cohort.avg_satisfaction_pct}% media</span>
+            )}
+          </div>
+          <div className="card__body">
+            {loading
+              ? <div className="chart-empty">Caricamento…</div>
+              : <BarTrend data={satisfactionData} unit="%" color="#C08552" />
+            }
+            <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
+              Media giornaliera di quanto i pazienti hanno gradito i pasti registrati.
+            </p>
+          </div>
+        </>
+      ),
+    },
+    mood: {
+      wide: false,
+      body: (
+        <>
+          <div className="card__header">
+            <h2 className="card__title">Umore</h2>
+          </div>
+          <div className="card__body">
+            {loading ? (
+              <div className="chart-empty">Caricamento…</div>
+            ) : (
+              <div className="mood-breakdown">
+                <div className="mood-tile">
+                  <span className="mood-tile__val" style={{ color: 'var(--ok)' }}>{cohort?.mood.sereno ?? 0}</span>
+                  <span className="mood-tile__label">Sereno</span>
+                </div>
+                <div className="mood-tile">
+                  <span className="mood-tile__val" style={{ color: 'var(--ink-3)' }}>{cohort?.mood.neutro ?? 0}</span>
+                  <span className="mood-tile__label">Neutro</span>
+                </div>
+                <div className="mood-tile">
+                  <span className="mood-tile__val" style={{ color: 'var(--warn)' }}>{cohort?.mood.in_difficolta ?? 0}</span>
+                  <span className="mood-tile__label">In difficoltà</span>
+                </div>
+                <div className="mood-tile">
+                  <span className="mood-tile__val" style={{ color: 'var(--ink-5)' }}>{cohort?.mood.senza_dati ?? 0}</span>
+                  <span className="mood-tile__label">Senza dati</span>
+                </div>
+              </div>
+            )}
+            <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
+              Numero di pazienti per fascia, in base all&#39;umore medio riferito al bot nel periodo.
+            </p>
+          </div>
+        </>
+      ),
+    },
+    sleep: {
+      wide: false,
+      body: (
+        <>
+          <div className="card__header">
+            <h2 className="card__title">Qualità del sonno</h2>
+          </div>
+          <div className="card__body">
+            {loading ? (
+              <div className="chart-empty">Caricamento…</div>
+            ) : (
+              <div className="mood-breakdown">
+                {SLEEP_TILES.map(([key, label, color]) => (
+                  <div key={key} className="mood-tile">
+                    <span className="mood-tile__val" style={{ color }}>{cohort?.sleep?.[key] ?? 0}</span>
+                    <span className="mood-tile__label">{label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
+              Numero di pazienti per qualità del sonno più riferita al bot nel periodo.
+            </p>
+          </div>
+        </>
+      ),
+    },
+    messages: {
+      wide: false,
+      body: (
+        <>
+          <div className="card__header">
+            <h2 className="card__title">Messaggi scambiati col bot</h2>
+          </div>
+          <div className="card__body">
+            <div className="trend-head">
+              <span className="trend-head__val">{cohort?.avg_messages ?? '—'}</span>
+              <span className="trend-head__sub">messaggi medi al giorno</span>
+            </div>
+            {loading
+              ? <div className="chart-empty">Caricamento…</div>
+              : <BarTrend data={messagesData} color="#7A9E8E" height={140} />
+            }
+          </div>
+        </>
+      ),
+    },
+    hunger: {
+      wide: false,
+      body: (
+        <>
+          <div className="card__header">
+            <h2 className="card__title">Livello di fame</h2>
+          </div>
+          <div className="card__body">
+            {loading ? (
+              <div className="chart-empty">Caricamento…</div>
+            ) : (
+              <div className="mood-breakdown">
+                {HUNGER_TILES.map(([key, label, color]) => (
+                  <div key={key} className="mood-tile">
+                    <span className="mood-tile__val" style={{ color }}>{cohort?.hunger?.[key] ?? 0}</span>
+                    <span className="mood-tile__label">{label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
+              Numero di pazienti per livello di fame più riferito al bot nel periodo.
+            </p>
+          </div>
+        </>
+      ),
+    },
+  }
+  const visibleKeys = metrics.filter(m => m.visible && cards[m.key]).map(m => m.key)
+
   return (
     <section aria-label="Andamento coorte" className="mb-24">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
+      <div className="section-head" style={{ marginBottom: 12 }}>
         <h2 className="page-eyebrow" style={{ margin: 0 }}>Andamento pazienti</h2>
-        <div className="period-select" role="group" aria-label="Periodo">
-          {PERIODS.map(([v, l]) => (
-            <button key={v} className={days === v ? 'active' : ''} onClick={() => setDays(v)}>{l}</button>
-          ))}
+        <div className="section-head__actions">
+          <div className="period-select" role="group" aria-label="Periodo">
+            {PERIODS.map(([v, l]) => (
+              <button key={v} className={days === v ? 'active' : ''} onClick={() => setDays(v)}>{l}</button>
+            ))}
+          </div>
+          <MetricsCustomizer metrics={metrics} onSave={onSaveMetrics} defaultOrder={HOME_DEFAULT_ORDER} screen="home" />
         </div>
       </div>
       {periodNote && (
@@ -193,156 +396,21 @@ function CohortSection({ days, setDays, cohort, loading }) {
       )}
 
       {(loading || (cohort && cohort.active_patients > 0)) && (
-        <div className="home-charts-grid">
-          <div className="card" style={{ gridColumn: 'span 2' }}>
-            <div className="card__header">
-              <h2 className="card__title">Aderenza alla dieta</h2>
-              {cohort?.avg_adherence_pct != null && (
-                <span className="pill pill--ok">{cohort.avg_adherence_pct}% media</span>
-              )}
-            </div>
-            <div className="card__body">
-              {loading
-                ? <div className="chart-empty">Caricamento…</div>
-                : <BarTrend data={adherenceData} target={80} unit="%" color="var(--brand)" />
-              }
-              <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
-                Media giornaliera sui {cohort?.active_patients ?? '—'} pazienti attivi collegati al bot · obiettivo 80%.
-              </p>
-            </div>
+        visibleKeys.length === 0 ? (
+          <div className="card metrics-empty">
+            <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
+              Tutti i grafici sono nascosti: usa &laquo;Personalizza&raquo; per mostrarli.
+            </p>
           </div>
-
-          <div className="card" style={{ gridColumn: 'span 2' }}>
-            <div className="card__header">
-              <h2 className="card__title">Idratazione</h2>
-            </div>
-            <div className="card__body">
-              <div className="trend-head">
-                <span className="trend-head__val">
-                  {cohort?.avg_hydration_ml != null ? (cohort.avg_hydration_ml / 1000).toFixed(1) : '—'}
-                </span>
-                <span className="trend-head__sub">L medi al giorno · obiettivo 2,0 L</span>
+        ) : (
+          <div className="home-charts-grid">
+            {homeLayout(visibleKeys, cards).map(({ key, span }) => (
+              <div key={key} className="card" style={span === 2 ? { gridColumn: 'span 2' } : undefined}>
+                {cards[key].body}
               </div>
-              {loading
-                ? <div className="chart-empty">Caricamento…</div>
-                : <BarTrend data={hydrationData} target={2000} unit=" ml" color="#8FB8CC" height={140} />
-              }
-            </div>
+            ))}
           </div>
-
-          <div className="card" style={{ gridColumn: 'span 2' }}>
-            <div className="card__header">
-              <h2 className="card__title">Gradimento pasti</h2>
-              {cohort?.avg_satisfaction_pct != null && (
-                <span className="pill pill--ok">{cohort.avg_satisfaction_pct}% media</span>
-              )}
-            </div>
-            <div className="card__body">
-              {loading
-                ? <div className="chart-empty">Caricamento…</div>
-                : <BarTrend data={satisfactionData} unit="%" color="#C08552" />
-              }
-              <p className="muted" style={{ fontSize: 12, marginTop: 10, marginBottom: 0 }}>
-                Media giornaliera di quanto i pazienti hanno gradito i pasti registrati.
-              </p>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card__header">
-              <h2 className="card__title">Umore</h2>
-            </div>
-            <div className="card__body">
-              {loading ? (
-                <div className="chart-empty">Caricamento…</div>
-              ) : (
-                <div className="mood-breakdown">
-                  <div className="mood-tile">
-                    <span className="mood-tile__val" style={{ color: 'var(--ok)' }}>{cohort?.mood.sereno ?? 0}</span>
-                    <span className="mood-tile__label">Sereno</span>
-                  </div>
-                  <div className="mood-tile">
-                    <span className="mood-tile__val" style={{ color: 'var(--ink-3)' }}>{cohort?.mood.neutro ?? 0}</span>
-                    <span className="mood-tile__label">Neutro</span>
-                  </div>
-                  <div className="mood-tile">
-                    <span className="mood-tile__val" style={{ color: 'var(--warn)' }}>{cohort?.mood.in_difficolta ?? 0}</span>
-                    <span className="mood-tile__label">In difficoltà</span>
-                  </div>
-                  <div className="mood-tile">
-                    <span className="mood-tile__val" style={{ color: 'var(--ink-5)' }}>{cohort?.mood.senza_dati ?? 0}</span>
-                    <span className="mood-tile__label">Senza dati</span>
-                  </div>
-                </div>
-              )}
-              <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
-                Numero di pazienti per fascia, in base all&#39;umore medio riferito al bot nel periodo.
-              </p>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card__header">
-              <h2 className="card__title">Qualità del sonno</h2>
-            </div>
-            <div className="card__body">
-              {loading ? (
-                <div className="chart-empty">Caricamento…</div>
-              ) : (
-                <div className="mood-breakdown">
-                  {SLEEP_TILES.map(([key, label, color]) => (
-                    <div key={key} className="mood-tile">
-                      <span className="mood-tile__val" style={{ color }}>{cohort?.sleep?.[key] ?? 0}</span>
-                      <span className="mood-tile__label">{label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
-                Numero di pazienti per qualità del sonno più riferita al bot nel periodo.
-              </p>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card__header">
-              <h2 className="card__title">Messaggi scambiati col bot</h2>
-            </div>
-            <div className="card__body">
-              <div className="trend-head">
-                <span className="trend-head__val">{cohort?.avg_messages ?? '—'}</span>
-                <span className="trend-head__sub">messaggi medi al giorno</span>
-              </div>
-              {loading
-                ? <div className="chart-empty">Caricamento…</div>
-                : <BarTrend data={messagesData} color="#7A9E8E" height={140} />
-              }
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card__header">
-              <h2 className="card__title">Livello di fame</h2>
-            </div>
-            <div className="card__body">
-              {loading ? (
-                <div className="chart-empty">Caricamento…</div>
-              ) : (
-                <div className="mood-breakdown">
-                  {HUNGER_TILES.map(([key, label, color]) => (
-                    <div key={key} className="mood-tile">
-                      <span className="mood-tile__val" style={{ color }}>{cohort?.hunger?.[key] ?? 0}</span>
-                      <span className="mood-tile__label">{label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p className="muted" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
-                Numero di pazienti per livello di fame più riferito al bot nel periodo.
-              </p>
-            </div>
-          </div>
-        </div>
+        )
       )}
     </section>
   )
@@ -353,6 +421,7 @@ export default function HomePage() {
   const { user } = useAuth()
   const [stats, setStats] = useState({ active: '—', nodiet: '—', diets: '—', lastDiet: '—' })
   const [days, setDays] = useState(14)
+  const { metrics, save: saveMetrics } = useMetricPrefs(HOME_DEFAULT_ORDER)
   const [cohort, setCohort] = useState(null)
   const [loading, setLoading] = useState(true)
   // "Serve attenzione" guarda sempre gli ultimi 7 giorni: tenuto a parte, cosi'
@@ -430,7 +499,14 @@ export default function HomePage() {
 
       <AttentionAlert attention={attention} />
 
-      <CohortSection days={days} setDays={setDays} cohort={cohort} loading={loading} />
+      <CohortSection
+        days={days}
+        setDays={setDays}
+        cohort={cohort}
+        loading={loading}
+        metrics={metrics}
+        onSaveMetrics={saveMetrics}
+      />
 
       <section aria-label="Azioni rapide">
         <h2 className="page-eyebrow" style={{ marginBottom: 12 }}>Azioni rapide</h2>

@@ -1717,3 +1717,42 @@ table.data tbody tr.is-inactive .cell-name__avatar { filter: grayscale(1); }
 .mood-tile { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; }
 .mood-tile__val { font-family: 'Fraunces', Georgia, serif; font-size: 34px; font-weight: 500; }
 .mood-tile__label { font-size: 13.5px; color: var(--ink-4); }
+
+/* ============================================================
+   PERSONALIZZA GRAFICI (punto 25, MetricsCustomizer.jsx)
+   ============================================================ */
+.section-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.section-head__actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.metrics-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.metrics-list__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.metrics-list__row.is-hidden { background: var(--surface-2); }
+.metrics-list__row.is-hidden .metrics-list__label span:first-of-type { color: var(--ink-4); }
+.metrics-list__label { flex: 1; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink); cursor: pointer; }
+.metrics-list__label input { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; }
+.metrics-list__note { font-size: 11.5px; color: var(--ink-4); background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 1px 8px; }
+.metrics-list__moves { display: flex; gap: 4px; }
+.metrics-list__move {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+  background: var(--surface);
+}
+.metrics-list__move:hover:not(:disabled) { background: var(--brand-50); border-color: var(--brand-300); color: var(--brand-900); }
+.metrics-list__move:disabled { opacity: .35; cursor: default; }
+.metrics-list__move:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.metrics-list__error { margin: 10px 0 0; font-size: 13px; color: var(--danger); }
+.metrics-footer { justify-content: space-between; }
+.metrics-empty { padding: 20px 24px; }
