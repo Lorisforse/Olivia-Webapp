@@ -10,6 +10,10 @@ const PATIENT_MISSING_MSG =
 
 export const DURATIONS = [15, 30, 45, 60, 90]
 
+// Ogni quanto il bot cerca i promemoria da inviare
+// (olivia-chatbot-calendario/src/appointments/manager.py, job "interval" di 15 minuti).
+const BOT_CHECK_MINUTES = 15
+
 export function patientLabel(a) {
   if (a.patient_missing) return 'Paziente eliminato'
   return a.patient_name || 'Paziente senza nome'
@@ -35,7 +39,17 @@ export function reminderInfo(a, config) {
     }
     return { tone: 'ok', text }
   }
-  if (a.reminder_at) return { tone: 'muted', text: `Promemoria previsto per ${formatDateTime(a.reminder_at)}.` }
+  if (a.reminder_at) {
+    // Se il momento previsto è già passato (es. appuntamento creato a meno di N giorni
+    // di distanza) il backend fissa il promemoria a "adesso": parte al prossimo giro del bot.
+    if (new Date(a.reminder_at) <= new Date()) {
+      return { tone: 'muted', text: `Promemoria in partenza: il bot lo invia al prossimo controllo, entro ${BOT_CHECK_MINUTES} minuti.` }
+    }
+    return {
+      tone: 'muted',
+      text: `Promemoria previsto per ${formatDateTime(a.reminder_at)} (può arrivare fino a ${BOT_CHECK_MINUTES} minuti dopo).`,
+    }
+  }
   return { tone: 'muted', text: 'Nessun promemoria: appuntamento troppo vicino.' }
 }
 
