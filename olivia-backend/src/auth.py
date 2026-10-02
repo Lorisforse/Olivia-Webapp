@@ -75,6 +75,7 @@ def doc_to_user(doc: dict) -> UserResponse:
         email=doc.get('email', ''),
         name=doc.get('name', ''),
         role=doc.get('role', 'Nutrizionista'),
+        can_link_bot=doc.get('can_link_bot', True),
     )
 
 

@@ -54,8 +54,8 @@ export default function AppointmentModal({
       .map(p => ({
         id: p.id,
         name: p.name || 'Paziente senza nome',
-        linked: Boolean(p.chat_id),
-        note: p.chat_id ? null : 'non collegato al bot',
+        linked: p.bot_connected,
+        note: p.bot_connected ? null : 'non collegato al bot',
       }))
       .sort((a, b) => a.name.localeCompare(b.name, 'it'))
   }, [patients, form.patient_id])

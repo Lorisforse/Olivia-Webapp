@@ -18,13 +18,14 @@ import GoalSelect from '../../components/GoalSelect'
 import { OliveSprig } from '../../components/ui'
 import MetricIcon from '../../components/MetricIcon'
 import MetricsCustomizer from '../../components/MetricsCustomizer'
+import { useAuth } from '../../context/AuthContext'
 import useMetricPrefs from '../../hooks/useMetricPrefs'
 import { PATIENT_DEFAULT_ORDER } from '../../utils/metrics'
 
 function deriveStatus(p) {
   if (p.active === false && p.deactivated_reason === 'pending_diet') return 'pending'
   if (p.active === false) return 'inactive'
-  if (!p.chat_id) return 'waiting'
+  if (!p.bot_connected) return 'waiting'
   if (!p.active_diet_plan_id) return 'nodiet'
   return 'active'
 }
@@ -261,9 +262,9 @@ function ProfileTab({ patient, onSave }) {
           </div>
           <div className="card__body">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: patient.chat_id ? 'var(--brand)' : 'var(--ink-5)', flexShrink: 0 }} />
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: patient.bot_connected ? 'var(--brand)' : 'var(--ink-5)', flexShrink: 0 }} />
               <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>
-                {patient.chat_id ? 'Connesso a Telegram' : 'Non connesso'}
+                {patient.bot_connected ? 'Connesso a Telegram' : 'Non connesso'}
               </span>
             </div>
             <div className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
@@ -277,13 +278,6 @@ function ProfileTab({ patient, onSave }) {
                 </>
               ) : 'Il paziente non ha ancora attivato il bot'}
             </div>
-            {patient.chat_id && (
-              <>
-                <div className="divider" />
-                <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-4)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Chat ID</div>
-                <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>{patient.chat_id}</div>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -514,7 +508,22 @@ function OnboardingPanel({ patientId, patientName }) {
   )
 }
 
+function BotLinkDisabled() {
+  return (
+    <div className="card">
+      <div className="card__body">
+        <div className="empty-state">
+          <div className="empty-state__icon"><OliveSprig /></div>
+          <h3>Collegamento al bot non disponibile</h3>
+          <p>Con questo account puoi consultare e modificare la scheda, ma non generare il QR per collegare il paziente al bot Telegram.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BotTab({ patientId, status, patientName }) {
+  const { user } = useAuth()
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const showLoading = useMinDuration(loading)
@@ -530,6 +539,7 @@ function BotTab({ patientId, status, patientName }) {
   }, [patientId, status])
 
   if (status === 'waiting') {
+    if (user?.can_link_bot === false) return <BotLinkDisabled />
     return <OnboardingPanel patientId={patientId} patientName={patientName} />
   }
 

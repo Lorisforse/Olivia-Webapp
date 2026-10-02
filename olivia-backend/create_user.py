@@ -11,6 +11,10 @@ Uso:
 Se si omette --password viene chiesta a schermo (non finisce nella cronologia
 della shell). Con --force si aggiorna un account già esistente.
 
+Con --no-bot-link l'account può fare tutto tranne collegare pazienti al bot
+Telegram (niente QR né link di onboarding): pensato per l'account dato agli
+studenti, che altrimenti potrebbero attivare il bot e consumare chiamate LLM.
+
 Richiede solo pymongo e un MongoDB raggiungibile: l'URL viene letto da
 --mongodb-url, dalla variabile d'ambiente MONGODB_URL o dal file .env.
 """
@@ -64,6 +68,8 @@ def main() -> int:
     parser.add_argument('--role', default='Nutrizionista', help='Ruolo mostrato nel menu utente')
     parser.add_argument('--mongodb-url', dest='mongodb_url', help='Override della connessione MongoDB')
     parser.add_argument('--force', action='store_true', help="Aggiorna l'account se l'email esiste già")
+    parser.add_argument('--no-bot-link', dest='no_bot_link', action='store_true',
+                        help='Impedisce di generare il QR di collegamento dei pazienti al bot')
     args = parser.parse_args()
 
     email = args.email.strip().lower()
@@ -95,6 +101,7 @@ def main() -> int:
         'role': args.role.strip(),
         'password_hash': hash_password(password),
         'is_active': True,
+        'can_link_bot': not args.no_bot_link,
     }
 
     if existing:

@@ -6,6 +6,7 @@ import Breadcrumb from '../../components/Breadcrumb'
 import TimePicker from '../../components/TimePicker'
 import GoalSelect from '../../components/GoalSelect'
 import { splitList } from '../../utils/text'
+import { useAuth } from '../../context/AuthContext'
 
 function ageFromDob(dob) {
   if (!dob) return null
@@ -31,6 +32,7 @@ const ANAGRAFICA_KEYS = ['firstName', 'lastName', 'sex', 'dob', 'city', 'job']
 const CLINICI_KEYS = ['weight', 'height', 'goal']
 
 export default function NuovoPaziente() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState({ anagrafica: true, clinici: true, abitudini: false })
   const [sex, setSex] = useState('')
@@ -333,7 +335,9 @@ export default function NuovoPaziente() {
       <SuccessOverlay
         show={!!createdName}
         title="Paziente creato"
-        message={`Scheda di ${createdName} pronta: fai inquadrare il QR per collegarlo al bot.`}
+        message={user?.can_link_bot === false
+          ? `Scheda di ${createdName} pronta.`
+          : `Scheda di ${createdName} pronta: fai inquadrare il QR per collegarlo al bot.`}
         onDone={() => navigate(createdId ? `/pazienti/${createdId}?tab=bot` : '/pazienti')}
       />
     </>

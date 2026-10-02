@@ -1,17 +1,25 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.auth import get_current_user
+from src.bot_link import rotate_guessable_link_codes
 from src.pending_diet import pending_diet_suspension_loop
 from src.routers import appointments, auth, diets, goal_options, logs, patients, reports
 from src.settings import settings
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    try:
+        await rotate_guessable_link_codes()
+    except Exception:
+        logger.exception("Errore nella sostituzione dei codici di collegamento bot")
     task = asyncio.create_task(pending_diet_suspension_loop())
     yield
     task.cancel()

@@ -38,8 +38,9 @@ class PatientCreate(BaseModel):
 
 class PatientListItem(BaseModel):
     id: str
-    chat_id: Optional[int] = None
-    username: Optional[str] = None
+    # True se il paziente ha avviato il bot. chat_id e username Telegram non
+    # escono dall'API, sono dati personali e alla dashboard basta sapere questo.
+    bot_connected: bool = False
     name: Optional[str] = None
     gender: Optional[str] = None
     age: Optional[int] = None
@@ -56,8 +57,9 @@ class PatientListItem(BaseModel):
 
 class PatientDetail(BaseModel):
     id: str
-    chat_id: Optional[int] = None
-    username: Optional[str] = None
+    # True se il paziente ha avviato il bot. chat_id e username Telegram non
+    # escono dall'API, sono dati personali e alla dashboard basta sapere questo.
+    bot_connected: bool = False
     # Personal
     name: Optional[str] = None
     gender: Optional[str] = None

@@ -5,9 +5,12 @@ import segno
 from bson import DBRef, ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
+from src.auth import get_current_user
+from src.bot_link import new_link_code
 from src.database import get_database, get_diet_notifications_col
 from src.models.helpers import extract, sanitize_bson
 from src.pending_diet import DEACTIVATED_REASON_PENDING_DIET, archive_bot_link
+from src.schemas.auth import UserResponse
 from src.schemas.diet import DietResponse
 from src.schemas.patient import (
     OnboardingResponse,
@@ -55,8 +58,7 @@ def _doc_to_list_item(doc: dict) -> PatientListItem:
     diet_id = _diet_id(doc.get("active_nutrition_plan"))
     return PatientListItem(
         id=str(doc["_id"]),
-        chat_id=doc.get("chat_id"),
-        username=doc.get("username"),
+        bot_connected=doc.get("chat_id") is not None,
         name=extract(profile.get("name")),
         gender=extract(profile.get("gender")),
         age=extract(profile.get("age")),
@@ -77,8 +79,7 @@ def _doc_to_detail(doc: dict) -> PatientDetail:
     diet_id = _diet_id(doc.get("active_nutrition_plan"))
     return PatientDetail(
         id=str(doc["_id"]),
-        chat_id=doc.get("chat_id"),
-        username=doc.get("username"),
+        bot_connected=doc.get("chat_id") is not None,
         name=extract(profile.get("name")),
         gender=extract(profile.get("gender")),
         age=extract(profile.get("age")),
@@ -142,11 +143,12 @@ async def create_patient(payload: PatientCreate, db=Depends(get_database)):
 
     # `patient_id` è la chiave con cui il bot collega il paziente via
     # `/start <patient_id>` (olivia-chatbot/src/user.py::get_or_update_user).
-    # Il bot lo definisce come stringa libera; noi usiamo l'_id in esadecimale.
+    # Il bot lo definisce come stringa libera; noi usiamo un codice casuale
+    # (vedi src/bot_link.py: l'_id no, perché si legge negli URL della webapp).
     oid = ObjectId()
     doc = {
         "_id": oid,
-        "patient_id": str(oid),
+        "patient_id": new_link_code(),
         "chat_id": None,
         "username": None,
         "profile": profile,
@@ -224,8 +226,16 @@ async def get_patient(patient_id: str, db=Depends(get_database)):
 
 
 @router.get("/{patient_id}/onboarding", response_model=OnboardingResponse)
-async def patient_onboarding(patient_id: str, db=Depends(get_database)):
+async def patient_onboarding(
+    patient_id: str,
+    db=Depends(get_database),
+    user: UserResponse = Depends(get_current_user),
+):
     """QR + deep link per collegare il paziente al bot Telegram."""
+    if not user.can_link_bot:
+        # Account senza permesso di collegamento (es. quello degli studenti):
+        # possono gestire le schede, ma non attivare il bot, che consuma LLM.
+        raise HTTPException(status_code=403, detail="Bot linking not allowed for this account")
     oid = _oid(patient_id)
     doc = await db["users"].find_one({"_id": oid})
     if not doc:
@@ -236,11 +246,11 @@ async def patient_onboarding(patient_id: str, db=Depends(get_database)):
         # vecchio link salvato in chat; non va rigenerato qui.
         raise HTTPException(status_code=409, detail="Patient is deactivated")
     # Pazienti creati prima dell'introduzione di `patient_id` (o dal bot senza
-    # averlo impostato): lo si riempie ora con l'_id, senza mai sovrascriverne
-    # uno già presente.
+    # averlo impostato): lo si genera ora, senza mai sovrascriverne uno già
+    # presente.
     pid = doc.get("patient_id")
     if not pid:
-        pid = str(doc["_id"])
+        pid = new_link_code()
         await db["users"].update_one({"_id": oid}, {"$set": {"patient_id": pid}})
 
     bot_username = settings.bot_username.lstrip("@")

@@ -23,7 +23,7 @@ function formatDate(dt) {
 function deriveStatus(p) {
   if (p.active === false && p.deactivated_reason === 'pending_diet') return 'pending'
   if (p.active === false) return 'inactive'
-  if (!p.chat_id) return 'waiting'
+  if (!p.bot_connected) return 'waiting'
   if (!p.active_diet_plan_id) return 'nodiet'
   return 'active'
 }

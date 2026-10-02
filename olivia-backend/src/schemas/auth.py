@@ -16,6 +16,9 @@ class UserResponse(BaseModel):
     email: str
     name: str
     role: str = 'Nutrizionista'
+    # False per gli account che non devono poter collegare pazienti al bot
+    # (es. quello dato agli studenti): niente QR né link di onboarding.
+    can_link_bot: bool = True
 
 
 class LoginResponse(BaseModel):
