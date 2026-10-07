@@ -18,6 +18,7 @@ Richiede il .env del backend (MONGODB_URL) e MongoDB attivo.
 import asyncio
 import os
 import random
+import secrets
 from datetime import datetime, timedelta
 
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -135,11 +136,12 @@ async def make_patient(db, *, name, gender, age, job, living_at, goal, weight, h
         "created_at": now - timedelta(days=60),
         "last_interaction_at": (now - timedelta(hours=rng_seed % 30 + 1)) if connected else None,
         "active": True,
+        # Codice casuale come in src/bot_link.py::new_link_code: l'_id si legge
+        # negli URL della webapp e non deve bastare a collegarsi al bot.
+        "patient_id": secrets.token_hex(12),
     }
     result = await db["users"].insert_one(doc)
-    uid = result.inserted_id
-    await db["users"].update_one({"_id": uid}, {"$set": {"patient_id": str(uid)}})
-    return uid
+    return result.inserted_id
 
 
 async def seed_daily_reports_andamento(db, uid, days: int, rng: random.Random):
