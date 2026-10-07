@@ -15,8 +15,9 @@ arrivano già a oggi e spostarli li porterebbe nel futuro.
 Il bot genera ogni notte un report giornaliero per tutti i pazienti, anche
 quelli di esempio (olivia-chatbot/src/reports/manager.py): dopo l'ultimo giorno
 di dati restano report vuoti, che andrebbero a sovrapporsi a quelli spostati.
-Lo script cancella quindi i report vuoti dei pazienti di esempio e, se per lo
-stesso giorno ce n'è più di uno, tiene il primo inserito.
+Lo script cancella quindi i report successivi all'ultimo giorno di dati e, se
+per lo stesso giorno ce n'è più di uno, tiene il primo non vuoto. I report vuoti
+dentro lo storico restano: sono i giorni "silenziosi" voluti dai seed.
 
 I weekly-reports non vengono toccati: la webapp non li usa.
 
@@ -130,23 +131,25 @@ async def run(dry_run: bool, days: int | None):
         client.close()
         return
 
-    empty_ids, seen, duplicate_ids = [], set(), []
+    first_empty_day = datetime(last.year, last.month, last.day) + timedelta(days=1)
+    after_ids, duplicate_ids, by_day = [], [], {}
     async for report in db["daily-reports"].find(user_filter, {"user": 1, "date": 1, "indicators": 1}).sort("_id", 1):
-        if is_empty_report(report):
-            empty_ids.append(report["_id"])
+        if report["date"] >= first_empty_day:
+            after_ids.append(report["_id"])
             continue
-        key = (ref_id(report["user"]), report["date"])
-        if key in seen:
-            duplicate_ids.append(report["_id"])
-        seen.add(key)
-    print(f"Report vuoti da cancellare: {len(empty_ids)}. Report doppi da cancellare: {len(duplicate_ids)}.")
+        by_day.setdefault((ref_id(report["user"]), report["date"]), []).append(report)
+    for reports in by_day.values():
+        keep = next((r for r in reports if not is_empty_report(r)), reports[0])
+        duplicate_ids += [r["_id"] for r in reports if r is not keep]
+    print(f"Report dopo l'ultimo giorno di dati (vuoti, del bot) da cancellare: {len(after_ids)}. "
+          f"Report doppi da cancellare: {len(duplicate_ids)}.")
 
     if dry_run:
         print("--dry-run: nessuna modifica scritta.")
         client.close()
         return
 
-    await db["daily-reports"].delete_many({"_id": {"$in": empty_ids + duplicate_ids}})
+    await db["daily-reports"].delete_many({"_id": {"$in": after_ids + duplicate_ids}})
 
     delta = timedelta(days=days)
     for coll in LOG_COLLECTIONS + ["daily-reports"]:
