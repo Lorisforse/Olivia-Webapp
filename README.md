@@ -15,6 +15,31 @@ Il sistema si integra con un chatbot Telegram esistente (**Olivia**) che interag
 - Assegnare le diete ai pazienti
 - Monitorare l'attività del bot e l'aderenza alla dieta
 
+### Screenshot
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/login.png" alt="Pagina di accesso"><br><sub><b>Accesso</b>: area riservata con login e "resta connesso"</sub></td>
+    <td width="50%"><img src="docs/screenshots/home.png" alt="Home: panoramica dello studio"><br><sub><b>Home</b>: panoramica dello studio, avviso sulla bassa aderenza e grafici</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/patients.png" alt="Elenco pazienti"><br><sub><b>Pazienti</b>: ricerca, filtri per stato e ultima attività del bot</sub></td>
+    <td width="50%"><img src="docs/screenshots/profile.png" alt="Profilo del paziente"><br><sub><b>Profilo paziente</b>: dati anagrafici, clinici e stato del bot</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/diet-plan.png" alt="Piano alimentare del paziente"><br><sub><b>Piano alimentare</b>: la griglia settimanale della dieta assegnata</sub></td>
+    <td width="50%"><img src="docs/screenshots/bot-activity.png" alt="Attività del bot e log della conversazione"><br><sub><b>Attività bot</b>: pasti, peso, idratazione e umore raccolti su Telegram</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/progress.png" alt="Andamento del paziente"><br><sub><b>Andamento</b>: peso e diario giornaliero di aderenza e sonno</sub></td>
+    <td width="50%"><img src="docs/screenshots/bot-onboarding.png" alt="Collegamento del paziente al bot tramite QR"><br><sub><b>Collegamento al bot</b>: QR code per avviare Olivia su Telegram</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/diet-editor.png" alt="Editor a griglia settimanale"><br><sub><b>Editor dieta</b>: griglia 7×5 con import da PDF</sub></td>
+    <td width="50%"><img src="docs/screenshots/agenda.png" alt="Agenda degli appuntamenti"><br><sub><b>Agenda</b>: calendario settimanale e prossimi appuntamenti</sub></td>
+  </tr>
+</table>
+
 ### Stack tecnologico
 
 | Layer | Tecnologia |
@@ -124,6 +149,31 @@ The system integrates with an existing Telegram chatbot (**Olivia**) that intera
 - Build diet plans with a weekly-grid editor, with assisted import from PDF
 - Assign diets to patients
 - Monitor bot activity and diet adherence
+
+### Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/login.png" alt="Sign-in page"><br><sub><b>Sign in</b>: restricted area with "keep me signed in"</sub></td>
+    <td width="50%"><img src="docs/screenshots/home.png" alt="Home: practice overview"><br><sub><b>Home</b>: practice overview, low-adherence alert and charts</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/patients.png" alt="Patient list"><br><sub><b>Patients</b>: search, status filters and last bot activity</sub></td>
+    <td width="50%"><img src="docs/screenshots/profile.png" alt="Patient profile"><br><sub><b>Patient profile</b>: personal data, clinical data and bot status</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/diet-plan.png" alt="Patient diet plan"><br><sub><b>Diet plan</b>: the weekly grid of the assigned diet</sub></td>
+    <td width="50%"><img src="docs/screenshots/bot-activity.png" alt="Bot activity and conversation log"><br><sub><b>Bot activity</b>: meals, weight, hydration and mood collected on Telegram</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/progress.png" alt="Patient progress"><br><sub><b>Progress</b>: weight and daily diary of adherence and sleep</sub></td>
+    <td width="50%"><img src="docs/screenshots/bot-onboarding.png" alt="Linking a patient to the bot via QR code"><br><sub><b>Bot linking</b>: QR code to start Olivia on Telegram</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/diet-editor.png" alt="Weekly grid editor"><br><sub><b>Diet editor</b>: 7×5 grid with PDF import</sub></td>
+    <td width="50%"><img src="docs/screenshots/agenda.png" alt="Appointments calendar"><br><sub><b>Agenda</b>: weekly calendar and upcoming appointments</sub></td>
+  </tr>
+</table>
 
 ### Tech Stack
 
